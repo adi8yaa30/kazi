@@ -2,7 +2,7 @@
    KAZI — JORHAT STALLIONS CASE STUDY
    Nav reveal (shared behaviour), entry fade-up after the
    card-to-hero transition, plus two slideable reel strips
-   ("Campaign Reels" / "Stallions TV"). In each, the centre reel
+   ("Stallions TV" / "Campaign Reels"). In each, the centre reel
    plays WITH audio (no control to mute), the sides play muted.
    ============================================================ */
 (() => {
@@ -209,6 +209,6 @@
     row.addEventListener('pointerleave', endDrag);
   }
 
-  initReelStrip('csReelsRow');
   initReelStrip('tvRow');
+  initReelStrip('csReelsRow');
 })();
