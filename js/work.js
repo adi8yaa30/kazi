@@ -178,9 +178,17 @@
      viewport: the cards grow, and because the canvas's wrap period is scaled
      by the same number, the composition and its spacing are unchanged — the
      visitor is simply standing closer to it. */
-  const NARROW = 768;
-  const narrow = () => vw() <= NARROW;
-  const vwz = () => vw() * (narrow() ? 2.6 : 1);
+  /* A phone reads as 0 here, a desktop as 1, and a tablet lands in between —
+     the sizes below interpolate rather than jumping at a breakpoint, so an
+     820px iPad is not handed the geometry of a 1440px monitor. */
+  const PHONE = 480, DESK = 1100;
+  const t = () => Math.max(0, Math.min(1, (vw() - PHONE) / (DESK - PHONE)));
+  const lerp = (phone, desk) => phone + (desk - phone) * t();
+
+  /* The imaginary viewport the canvas is laid out against. It never drops
+     below a floor that keeps the cards a usable size, and meets the real
+     width at 1280 so wide screens are laid out exactly as authored. */
+  const vwz = () => Math.max(vw(), Math.min(1280, 975 + (vw() - 375) * 0.35));
 
   let tileW = 0, tileH = 0, Mx = 0, My = 0;
   function layoutBases() {
@@ -448,10 +456,10 @@
   function featuredRects(idx) {
     /* a phone has no room for a 44%-wide card flanked by two more; the
        centre card takes most of the width and the neighbours just peek */
-    const cw = Math.min(vw() * (narrow() ? 0.80 : 0.44), 900), ch = cw * (2 / 3);
-    const sw = vw() * (narrow() ? 0.42 : 0.30), sh = sw * (2 / 3);
+    const cw = Math.min(vw() * lerp(0.80, 0.44), 900), ch = cw * (2 / 3);
+    const sw = vw() * lerp(0.42, 0.30), sh = sw * (2 / 3);
     const cy = vh() * 0.47;
-    const peek = vw() * (narrow() ? 0.12 : 0.205); /* larger peek → side cards sit closer, smaller gap */
+    const peek = vw() * lerp(0.12, 0.205); /* larger peek → side cards sit closer, smaller gap */
     const n = covers.length;
     const rects = {};
     covers.forEach((c, i) => {
@@ -495,9 +503,9 @@
 
   /* ---------- SNIPPETS ---------- */
   function arrangedRects(idx) {
-    const cw = vw() * (narrow() ? 0.58 : 0.225), chh = cw * (16 / 9);
-    const sw = vw() * (narrow() ? 0.40 : 0.19), sh = sw * (16 / 9);
-    const pitch = vw() * (narrow() ? 0.52 : 0.205);
+    const cw = vw() * lerp(0.58, 0.225), chh = cw * (16 / 9);
+    const sw = vw() * lerp(0.40, 0.19), sh = sw * (16 / 9);
+    const pitch = vw() * lerp(0.52, 0.205);
     const cy = vh() * 0.52;
     return reels.map((r, i) => {
       const d = i - idx;
@@ -588,7 +596,7 @@
     const r = it.el.getBoundingClientRect();
     /* the width term decides it on a phone, where 0.44 left the reel barely
        a third of the screen — a 9:16 clip should nearly fill a 9:16 device */
-    const fh = Math.min(vh() * (narrow() ? 0.72 : 0.74), vw() * (narrow() ? 0.86 : 0.44) * (16 / 9));
+    const fh = Math.min(vh() * lerp(0.72, 0.74), vw() * lerp(0.86, 0.44) * (16 / 9));
     const fw = fh * (9 / 16);
     dim.classList.add('is-on');
     it.el.style.zIndex = 50;
