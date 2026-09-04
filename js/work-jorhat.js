@@ -1,8 +1,9 @@
 /* ============================================================
    KAZI — JORHAT STALLIONS CASE STUDY
    Nav reveal (shared behaviour), entry fade-up after the
-   card-to-hero transition, reel playback: the centre reel plays
-   WITH audio (no control to mute), the sides play muted.
+   card-to-hero transition, plus two slideable reel strips
+   ("Campaign Reels" / "Stallions TV"). In each, the centre reel
+   plays WITH audio (no control to mute), the sides play muted.
    ============================================================ */
 (() => {
   /* ---------- Nav: shown at the top, hides on scroll down ---------- */
@@ -25,12 +26,13 @@
     requestAnimationFrame(() => requestAnimationFrame(() => main.classList.add('cs--enter-play')));
   }
 
-  /* ---------- Reels: slideable strip ----------
+  /* ---------- Slideable reel strip (one per section) ----------
      Drag (or tap a side reel) to move the strip; whichever reel lands in
      the centre becomes active — full size, unblurred, audio ON. Tapping
      the active reel toggles pause. Geometry mirrors the CSS sizes. */
-  const row = document.getElementById('csReelsRow');
-  if (row && typeof gsap !== 'undefined') {
+  function initReelStrip(rowId) {
+    const row = document.getElementById(rowId);
+    if (!row || typeof gsap === 'undefined') return;
     const reels = [...row.children];
     const vids = reels.map((el) => el.querySelector('video'));
 
@@ -172,7 +174,7 @@
         vids.forEach((v) => v.pause());
       }
     }, { threshold: 0, rootMargin: '-25% 0px -25% 0px' });
-    io.observe(document.querySelector('.cs__reels'));
+    io.observe(row.closest('.cs__reels'));   /* this strip's own section, not the first one on the page */
 
     /* drag / swipe / tap */
     row.addEventListener('pointerdown', (e) => {
@@ -206,4 +208,7 @@
     row.addEventListener('pointercancel', endDrag);
     row.addEventListener('pointerleave', endDrag);
   }
+
+  initReelStrip('csReelsRow');
+  initReelStrip('tvRow');
 })();
