@@ -109,7 +109,8 @@
       reels[active].classList.toggle('is-paused', paused);
     }
 
-    /* Arrow keys step the strip, matching a drag or a tap on a side reel.
+    /* Arrow keys step the strip, matching a drag or a tap on a side reel,
+       and Space pauses or resumes the centre one, matching a tap on it.
        The shared handler only fires while these reels are the thing on
        screen, so it never fights the page's own scrolling. */
     if (window.KaziKeyNav) {
@@ -120,6 +121,7 @@
           if (k < 0 || k > nR - 1) return false;   // at an end: let the page scroll
           setActive(k);
         },
+        toggle: togglePause,
       });
     }
 

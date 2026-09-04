@@ -16,6 +16,12 @@
     return /^(input|textarea|select|option)$/i.test(el.tagName);
   };
 
+  /* Things Space is meant to activate rather than reach the reels. */
+  const isPressable = (el) => {
+    if (!el || !el.closest) return false;
+    return !!el.closest('button, a[href], summary, [role="button"], [tabindex]');
+  };
+
   /* How far the slider's midline sits from the middle of the screen, or
      null when too little of it is on screen to be what the visitor means. */
   function centreOffset(el) {
@@ -27,12 +33,13 @@
     return Math.abs((r.top + r.bottom) / 2 - vh / 2);
   }
 
-  function pick(vertical) {
+  function pick(want) {
     let best = null;
     let bestDist = Infinity;
     for (const it of items) {
       if (!it.el.isConnected) continue;
-      if (vertical && !it.vertical) continue;
+      if (want === 'vertical' && !it.vertical) continue;
+      if (want === 'toggle' && typeof it.toggle !== 'function') continue;
       if (it.enabled && !it.enabled()) continue;
       const d = centreOffset(it.el);
       if (d === null || d >= bestDist) continue;
@@ -46,15 +53,27 @@
     if (e.altKey || e.ctrlKey || e.metaKey) return;
     if (isTyping(e.target)) return;
 
+    /* Space pauses and resumes whatever is playing, the same as clicking the
+       reel. A focused button or link keeps the key — Space is how those are
+       pressed. */
+    if (e.key === ' ' || e.key === 'Spacebar') {
+      if (isPressable(e.target)) return;
+      const t = pick('toggle');
+      if (!t) return;                                // let the page page-down
+      e.preventDefault();
+      t.toggle();
+      return;
+    }
+
     let dir = 0;
-    let vertical = false;
+    let want = 'any';
     if (e.key === 'ArrowRight') dir = 1;
     else if (e.key === 'ArrowLeft') dir = -1;
-    else if (e.key === 'ArrowDown') { dir = 1; vertical = true; }
-    else if (e.key === 'ArrowUp') { dir = -1; vertical = true; }
+    else if (e.key === 'ArrowDown') { dir = 1; want = 'vertical'; }
+    else if (e.key === 'ArrowUp') { dir = -1; want = 'vertical'; }
     else return;
 
-    const it = pick(vertical);
+    const it = pick(want);
     if (!it) return;                                 // nothing on screen: let the page scroll
     /* A slider that has run out of room returns false, and the key goes back
        to scrolling the page rather than dying under a preventDefault. */
@@ -62,10 +81,11 @@
     e.preventDefault();
   });
 
-  /* register({ el, step, vertical, enabled })
+  /* register({ el, step, vertical, toggle, enabled })
        el       the slider's section — used to decide what is on screen
        step     called with +1 / -1; return false to decline the key
        vertical also answer Up/Down (for sliders that move that way)
+       toggle   optional; Space calls it (pause / resume the active reel)
        enabled  optional guard, e.g. while an overlay owns the keys */
   window.KaziKeyNav = {
     register(item) {
