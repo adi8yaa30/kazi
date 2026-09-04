@@ -172,11 +172,21 @@
   const vh = () => window.innerHeight;
   const aspect = (it) => (it.type === 'cover' ? 2 / 3 : 16 / 9); /* h = w * aspect */
 
+  /* Every size on this screen is a fraction of the viewport width, which was
+     read off a 1440px frame. On a 390px phone that arithmetic turns the
+     cards into thumbnails. So the phone works against a wider imaginary
+     viewport: the cards grow, and because the canvas's wrap period is scaled
+     by the same number, the composition and its spacing are unchanged — the
+     visitor is simply standing closer to it. */
+  const NARROW = 768;
+  const narrow = () => vw() <= NARROW;
+  const vwz = () => vw() * (narrow() ? 2.6 : 1);
+
   let tileW = 0, tileH = 0, Mx = 0, My = 0;
   function layoutBases() {
     let maxW = 0, maxH = 0;
     ITEMS.forEach((it) => {
-      it.w = it.tile.w * vw();
+      it.w = it.tile.w * vwz();
       it.h = it.w * aspect(it);
       maxW = Math.max(maxW, it.w);
       maxH = Math.max(maxH, it.h);
@@ -188,8 +198,10 @@
        These multipliers keep the fill around 42%, and the tile fractions in
        ITEMS are packed against exactly this geometry — change one and the
        cards will start to touch. */
-    tileW = Math.max(vw() * 1.40, vw() + Mx + 20);
-    tileH = Math.max(vw() * 1.30, vh() + My + 20);
+    /* the first term keeps the fill density, the second guarantees the period
+       still covers the real viewport so the wrap never shows a seam */
+    tileW = Math.max(vwz() * 1.40, vw() + Mx + 20);
+    tileH = Math.max(vwz() * 1.30, vh() + My + 20);
     ITEMS.forEach((it) => {
       it.bx = it.tile.fx * tileW;
       it.by = it.tile.fy * tileH;
@@ -434,10 +446,12 @@
 
   /* ---------- FEATURED ---------- */
   function featuredRects(idx) {
-    const cw = Math.min(vw() * 0.44, 900), ch = cw * (2 / 3);
-    const sw = vw() * 0.30, sh = sw * (2 / 3);
+    /* a phone has no room for a 44%-wide card flanked by two more; the
+       centre card takes most of the width and the neighbours just peek */
+    const cw = Math.min(vw() * (narrow() ? 0.80 : 0.44), 900), ch = cw * (2 / 3);
+    const sw = vw() * (narrow() ? 0.42 : 0.30), sh = sw * (2 / 3);
     const cy = vh() * 0.47;
-    const peek = vw() * 0.205; /* larger peek → side cards sit closer, smaller gap */
+    const peek = vw() * (narrow() ? 0.12 : 0.205); /* larger peek → side cards sit closer, smaller gap */
     const n = covers.length;
     const rects = {};
     covers.forEach((c, i) => {
@@ -481,9 +495,9 @@
 
   /* ---------- SNIPPETS ---------- */
   function arrangedRects(idx) {
-    const cw = vw() * 0.225, chh = cw * (16 / 9);
-    const sw = vw() * 0.19, sh = sw * (16 / 9);
-    const pitch = vw() * 0.205;
+    const cw = vw() * (narrow() ? 0.58 : 0.225), chh = cw * (16 / 9);
+    const sw = vw() * (narrow() ? 0.40 : 0.19), sh = sw * (16 / 9);
+    const pitch = vw() * (narrow() ? 0.52 : 0.205);
     const cy = vh() * 0.52;
     return reels.map((r, i) => {
       const d = i - idx;
@@ -572,7 +586,9 @@
     focused = it;
     panEnabled = false;
     const r = it.el.getBoundingClientRect();
-    const fh = Math.min(vh() * 0.74, vw() * 0.44 * (16 / 9));
+    /* the width term decides it on a phone, where 0.44 left the reel barely
+       a third of the screen — a 9:16 clip should nearly fill a 9:16 device */
+    const fh = Math.min(vh() * (narrow() ? 0.72 : 0.74), vw() * (narrow() ? 0.86 : 0.44) * (16 / 9));
     const fw = fh * (9 / 16);
     dim.classList.add('is-on');
     it.el.style.zIndex = 50;
