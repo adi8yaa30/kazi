@@ -15,6 +15,25 @@
     requestAnimationFrame(() => requestAnimationFrame(() => main.classList.add('cs--enter-play')));
   }
 
+  /* Safari will not start a clip that has nothing buffered, and every reel
+     here is preload="none" — a bare play() is refused, which is why playback
+     only began after a click. Nudge the load, then play once the clip is
+     actually playable. Chromium was never fussy, so this changes nothing
+     there.
+
+     Declared out here rather than inside the reel-strip block below: the
+     feature video calls it too, and a function declaration inside a block is
+     scoped to that block, so from out here it was not a function yet — the
+     TypeError that threw before the strip was ever positioned. */
+  function safePlay(v) {
+    const go = () => v.play().catch(() => {});
+    if (v.readyState >= 2) { go(); return; }
+    v.preload = 'auto';
+    v.addEventListener('canplay', go, { once: true });
+    if (v.networkState === HTMLMediaElement.NETWORK_EMPTY) v.load();
+    go();
+  }
+
   /* ---------- Feature video: muted, autoplays constantly (never paused) ---------- */
   const feature = document.querySelector('.cs__feature-frame video');
   if (feature) {
@@ -31,20 +50,6 @@
   if (row && typeof gsap !== 'undefined') {
     const reels = [...row.children];
     const vids = reels.map((el) => el.querySelector('video'));
-
-    /* Safari will not start a clip that has nothing buffered, and every reel
-       here is preload="none" — a bare play() is refused, which is why playback
-       only began after a click. Nudge the load, then play once the clip is
-       actually playable. Chromium was never fussy, so this changes nothing
-       there. */
-    function safePlay(v) {
-      const go = () => v.play().catch(() => {});
-      if (v.readyState >= 2) { go(); return; }
-      v.preload = 'auto';
-      v.addEventListener('canplay', go, { once: true });
-      if (v.networkState === HTMLMediaElement.NETWORK_EMPTY) v.load();
-      go();
-    }
 
     const nR = reels.length;
     let active = 2;              // third reel starts in the centre
