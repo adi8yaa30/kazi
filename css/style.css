@@ -24,6 +24,12 @@
   --nav-h: 72px;
 }
 
+/* One focus ring for the whole site. The browser's default is a blue that
+   belongs to nothing else in the palette, and it turns up on any button the
+   visitor clicked as soon as they touch a key — the arrow keys included.
+   currentColor keeps it legible on cream and on orange alike. */
+:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; overflow-x: clip; }

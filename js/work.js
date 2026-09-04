@@ -719,6 +719,13 @@
   }
 
   /* ---- list content (built once; filtering only toggles rows) ---- */
+  /* A click leaves the button focused, so the next arrow key flips it to
+     :focus-visible and paints a ring around a card the visitor only pointed
+     at. Keyboard activation (detail 0) keeps its focus and its ring. */
+  function dropPointerFocus(e, el) {
+    if (e.detail > 0) el.blur();
+  }
+
   function buildList() {
     covers.forEach((it) => {
       const row = document.createElement('button');
@@ -728,7 +735,10 @@
         + '<span class="ex__row-name">' + it.name
         + '<span class="ex__row-tag">' + industryLabel(it.industry) + '</span></span>'
         + '<span class="ex__row-go">View Case Study &rarr;</span>';
-      row.addEventListener('click', () => openCase(it, row.querySelector('.ex__row-thumb')));
+      row.addEventListener('click', (e) => {
+        dropPointerFocus(e, row);
+        openCase(it, row.querySelector('.ex__row-thumb'));
+      });
       it.listEl = row;
       brandRows.appendChild(row);
     });
@@ -743,7 +753,8 @@
         + '<span class="ex__tile-name">' + it.name + '</span>'
         + '<span class="ex__tile-tag">' + industryLabel(it.industry) + '</span>'
         + '</span>';
-      tile.addEventListener('click', () => {
+      tile.addEventListener('click', (e) => {
+        dropPointerFocus(e, tile);
         if (tile.classList.contains('is-centre')) toggleListVideo(it);
         else centreTile(tile);
       });
