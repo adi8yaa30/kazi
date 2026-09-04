@@ -381,6 +381,12 @@ function servicesInteractive() {
     });
   });
   arrow && arrow.addEventListener('click', () => goTo(slideIdx + 1));
+
+  /* Arrow keys drive the same three slides as the arrow button and the
+     segment tabs, wrapping through goTo's modulo. */
+  if (window.KaziKeyNav) {
+    window.KaziKeyNav.register({ el: viewport, step: (dir) => goTo(slideIdx + dir) });
+  }
   segs.forEach((b, j) => b.addEventListener('click', () => goTo(j)));
 
   /* swipe */
@@ -563,12 +569,11 @@ function testimonials() {
   if (btnPrev) btnPrev.addEventListener('click', () => slide(-1));
   if (btnNext) btnNext.addEventListener('click', () => slide(1));
 
-  /* Arrow keys work once anything in the section has focus — tabbing to the
-     controls and then using the keyboard is the path a keyboard user takes. */
-  section.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); slide(1); }
-    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); slide(-1); }
-  });
+  /* The strip runs vertically, so it takes Up/Down as well as Left/Right.
+     No focus needed: the shared handler picks whichever slider is on screen. */
+  if (window.KaziKeyNav) {
+    window.KaziKeyNav.register({ el: section, step: slide, vertical: true });
+  }
 
   measure(); place(); highlight();
   const first = TESTIMONIALS[0];

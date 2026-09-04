@@ -374,6 +374,14 @@ function officeSeries() {
 
   btns.forEach((b) => b.addEventListener('click', () => setEpisode(Number(b.dataset.ep))));
 
+  /* Arrow keys move through the episodes, wrapping the way the deck does. */
+  if (window.KaziKeyNav) {
+    window.KaziKeyNav.register({
+      el: section,
+      step: (dir) => setEpisode((current + dir + slides.length) % slides.length),
+    });
+  }
+
   window.addEventListener('resize', () => slides.forEach((_, n) => park(n, current)));
 }
 

@@ -1053,8 +1053,16 @@
       if (e.key === 'ArrowLeft') { e.preventDefault(); stepStrip(-1); }
       return;
     }
-    if (view === 'featured') { if (e.key === 'ArrowRight') slideFeatured(1); if (e.key === 'ArrowLeft') slideFeatured(-1); }
-    if (view === 'snippets' && snippetMode === 'arranged') { if (e.key === 'ArrowRight') slideArranged(1); if (e.key === 'ArrowLeft') slideArranged(-1); }
+    /* preventDefault so the arrows move the reels instead of also scrolling
+       the page underneath the explorer */
+    if (view === 'featured') {
+      if (e.key === 'ArrowRight') { e.preventDefault(); slideFeatured(1); }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); slideFeatured(-1); }
+    }
+    if (view === 'snippets' && snippetMode === 'arranged') {
+      if (e.key === 'ArrowRight') { e.preventDefault(); slideArranged(1); }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); slideArranged(-1); }
+    }
   });
   window.addEventListener('resize', () => {
     if (view === 'landing') return;

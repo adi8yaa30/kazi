@@ -107,6 +107,20 @@
       reels[active].classList.toggle('is-paused', paused);
     }
 
+    /* Arrow keys step the strip, matching a drag or a tap on a side reel.
+       The shared handler only fires while these reels are the thing on
+       screen, so it never fights the page's own scrolling. */
+    if (window.KaziKeyNav) {
+      window.KaziKeyNav.register({
+        el: row.closest('section') || row,
+        step: (dir) => {
+          const k = active + dir;
+          if (k < 0 || k > nR - 1) return false;   // at an end: let the page scroll
+          setActive(k);
+        },
+      });
+    }
+
     /* initial position (reels stay paused until scrolled into view) */
     gsap.set(row, { x: xFor(active) });
     window.addEventListener('resize', () => { if (!dragging) gsap.set(row, { x: xFor(active) }); });
