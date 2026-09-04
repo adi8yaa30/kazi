@@ -1057,24 +1057,28 @@
       else closeExplorer();
       return;
     }
-    /* the list is its own context: the arrows belong to the snippet strip, and
-       preventDefault stops the browser scrolling the list instead */
-    if (listOpen) {
-      if (e.key === 'ArrowRight') { e.preventDefault(); stepStrip(1); }
-      if (e.key === 'ArrowLeft') { e.preventDefault(); stepStrip(-1); }
-      return;
-    }
-    /* preventDefault so the arrows move the reels instead of also scrolling
-       the page underneath the explorer */
-    if (view === 'featured') {
-      if (e.key === 'ArrowRight') { e.preventDefault(); slideFeatured(1); }
-      if (e.key === 'ArrowLeft') { e.preventDefault(); slideFeatured(-1); }
-    }
-    if (view === 'snippets' && snippetMode === 'arranged') {
-      if (e.key === 'ArrowRight') { e.preventDefault(); slideArranged(1); }
-      if (e.key === 'ArrowLeft') { e.preventDefault(); slideArranged(-1); }
-    }
+    /* The arrows themselves are the shared handler's job — see the
+       registrations below, which also pick up trackpad swipes. */
   });
+
+  /* Each of the explorer's three strips registers with the shared slider
+     input, guarded by the context it belongs to: only one of them is ever
+     live, so the arrows and a two-finger swipe always reach the right one. */
+  if (window.KaziKeyNav) {
+    const quiet = () => !busy && !focused && !filterMenuOpen();
+    window.KaziKeyNav.register({
+      el: ex, step: slideFeatured,
+      enabled: () => quiet() && !listOpen && view === 'featured',
+    });
+    window.KaziKeyNav.register({
+      el: ex, step: slideArranged,
+      enabled: () => quiet() && !listOpen && view === 'snippets' && snippetMode === 'arranged',
+    });
+    window.KaziKeyNav.register({
+      el: ex, step: stepStrip,
+      enabled: () => quiet() && listOpen,
+    });
+  }
   window.addEventListener('resize', () => {
     if (view === 'landing') return;
     if (listOpen) { layoutBases(); sizeItems(); syncListOffset(); return; }

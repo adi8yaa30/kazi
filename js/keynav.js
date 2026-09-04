@@ -1,10 +1,12 @@
 /* ============================================================
-   KAZI — SHARED ARROW-KEY NAVIGATION
-   Every slider on the site registers itself here and one window
-   listener routes the arrow keys to whichever registered slider is
-   nearest the centre of the viewport — so the keys always drive the
-   thing the visitor is actually looking at, without each page having
-   to invent its own focus rules.
+   KAZI — SHARED SLIDER INPUT (keyboard + trackpad)
+   Every slider on the site registers itself here. One window listener
+   routes the arrow keys to whichever registered slider is nearest the
+   centre of the viewport — so the keys always drive the thing the
+   visitor is actually looking at, without each page having to invent
+   its own focus rules — and each slider gets a wheel listener of its
+   own, so a two-finger sideways swipe on a trackpad moves it the way
+   a drag does.
    ============================================================ */
 (() => {
   const items = [];
@@ -81,16 +83,54 @@
     e.preventDefault();
   });
 
+  /* A two-finger sideways swipe arrives as wheel events carrying deltaX.
+     They come in a long stream — the gesture plus the trackpad's inertia —
+     so the deltas accumulate to a threshold and then the slider is locked
+     out briefly, otherwise one flick would run through every slide. */
+  const STEP_DELTA = 60;      // how far a swipe travels before it counts
+  const SETTLE_MS = 320;      // roughly one slide's animation
+
+  function bindWheel(it) {
+    let acc = 0;
+    let locked = false;
+    let lastAt = 0;
+
+    it.el.addEventListener('wheel', (e) => {
+      /* A mostly-vertical wheel is the page scrolling past, not a swipe at
+         the slider — leave it alone, including on a mouse's single wheel. */
+      if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
+      if (it.enabled && !it.enabled()) return;
+
+      e.preventDefault();     // stop the browser treating it as back/forward
+
+      const now = e.timeStamp || Date.now();
+      if (now - lastAt > 200) { acc = 0; locked = false; }   // a fresh gesture
+      lastAt = now;
+      if (locked) return;     // still riding the inertia of the last step
+
+      acc += e.deltaX;
+      if (Math.abs(acc) < STEP_DELTA) return;
+
+      const dir = acc > 0 ? 1 : -1;
+      acc = 0;
+      if (it.step(dir) === false) return;
+      locked = true;
+      setTimeout(() => { locked = false; }, SETTLE_MS);
+    }, { passive: false });
+  }
+
   /* register({ el, step, vertical, toggle, enabled })
-       el       the slider's section — used to decide what is on screen
-       step     called with +1 / -1; return false to decline the key
+       el       the slider's section — decides what is on screen, and takes
+                the wheel listener for trackpad swipes
+       step     called with +1 / -1; return false to decline the input
        vertical also answer Up/Down (for sliders that move that way)
        toggle   optional; Space calls it (pause / resume the active reel)
-       enabled  optional guard, e.g. while an overlay owns the keys */
+       enabled  optional guard, e.g. while an overlay owns the input */
   window.KaziKeyNav = {
     register(item) {
       if (!item || !item.el || typeof item.step !== 'function') return;
       items.push(item);
+      bindWheel(item);
     },
   };
 })();

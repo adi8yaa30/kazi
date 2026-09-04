@@ -385,7 +385,12 @@ function servicesInteractive() {
   /* Arrow keys drive the same three slides as the arrow button and the
      segment tabs, wrapping through goTo's modulo. */
   if (window.KaziKeyNav) {
-    window.KaziKeyNav.register({ el: viewport, step: (dir) => goTo(slideIdx + dir) });
+    /* the whole section, not just the viewport — a trackpad swipe over the
+       segment tabs or the footer below the slides means the same thing */
+    window.KaziKeyNav.register({
+      el: viewport.closest('section') || viewport,
+      step: (dir) => goTo(slideIdx + dir),
+    });
   }
   segs.forEach((b, j) => b.addEventListener('click', () => goTo(j)));
 
