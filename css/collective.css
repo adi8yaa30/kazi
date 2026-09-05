@@ -1,0 +1,507 @@
+/* ============================================================
+   KAZI NETWORK — The Collective
+   The whole page sits on the accent, so cream becomes the ink.
+   ============================================================ */
+/* style.css sets `scroll-behavior: smooth` globally. That fights a scrubbed
+   ScrollTrigger — every scroll event lands on an animated, lagging scroll
+   position — so the pinned hero needs it off. This rule only ships with this
+   page's stylesheet, so the rest of the site keeps its smooth scrolling. */
+html { scroll-behavior: auto; }
+
+.collective-page {
+  background: var(--color-accent);
+  color: var(--color-bg);
+}
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0;
+}
+
+/* The nav sits on orange here, so the frosted dark pill needs a lighter edge. */
+.collective-page .nav { background: rgba(20, 18, 16, 0.28); }
+
+/* ============================================================
+   HERO — pinned, scroll-driven zoom
+   ============================================================ */
+.clh {
+  position: relative;
+  /* No explicit height: ScrollTrigger wraps .clh__pin in a pin-spacer whose
+     height IS the scroll distance the sequence consumes. Constraining the
+     section here would clamp that spacer and the pin would never travel. */
+}
+.clh__pin {
+  position: relative;
+  height: 100vh;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+}
+
+/* --- Stage: sized to the photo frame; everything else hangs off it --- */
+.clh__stage {
+  position: relative;
+  /* The 44vh term keeps MEET clear of the nav on short viewports — the whole
+     composition scales down together rather than clipping. */
+  --stage-w: min(34vw, 520px, 44vh);
+  width: var(--stage-w);
+  aspect-ratio: 370 / 233;   /* the frame's proportions in the Figma */
+}
+
+/* --- Headline ------------------------------------------------ */
+.clh__title {
+  margin: 0;
+  pointer-events: none;
+  font-weight: 800;
+  line-height: .78;
+  letter-spacing: -0.045em;
+  font-size: calc(var(--stage-w) * 0.385);
+}
+/* Each word is placed against the frame's box, in the Figma's proportions. */
+.clh__word {
+  position: absolute;
+  z-index: 1;
+  display: block;
+  white-space: nowrap;
+  will-change: transform;
+}
+.clh__word[data-w='meet'] { right: 50%;    bottom: 123.6%; }
+.clh__word[data-w='the']  { left: 55.4%;   bottom: 110.7%; }
+.clh__word[data-w='kazi'] { right: 110.8%; top: 60%; transform: translateY(-50%); }
+.clh__word[data-w='team'] { left: 113.5%;  top: 60%; transform: translateY(-50%); }
+
+/* --- Framed photo -------------------------------------------- */
+.clh__framewrap {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  transform-origin: center center;
+  will-change: transform;
+}
+.clh__frame {
+  height: 100%;
+  background: var(--color-bg);
+  overflow: hidden;
+}
+.clh__img { width: 100%; height: 100%; object-fit: cover; }
+
+/* Corner brackets. They are children of the scaled wrapper, so the JS
+   counter-scales them to hold a constant stroke weight. */
+.clh__bracket {
+  position: absolute;
+  width: 18.4%;
+  aspect-ratio: 1;
+  border: 0 solid var(--color-bg);
+  will-change: transform;
+}
+.clh__bracket--tl {
+  top: -9.9%; left: -6.2%;
+  border-top-width: 8px; border-left-width: 8px;
+  transform-origin: top left;
+}
+.clh__bracket--br {
+  bottom: -9.9%; right: -6.2%;
+  border-bottom-width: 8px; border-right-width: 8px;
+  transform-origin: bottom right;
+}
+
+/* --- Subline -------------------------------------------------- */
+.clh__sub {
+  position: absolute;
+  z-index: 3;
+  left: 55.4%;
+  top: 126%;
+  transform: translateX(-50%);
+  text-align: center;
+  font-size: clamp(13px, 1.05vw, 16px);
+  line-height: 1.55;
+  letter-spacing: 0.005em;
+  white-space: nowrap;
+  will-change: opacity;
+}
+
+/* ============================================================
+   TEAM
+   ============================================================ */
+.clt {
+  position: relative;
+  z-index: 2;
+  background: var(--color-accent);
+  /* The Figma leaves a deep band of orange between the hero subline and the
+     first portrait — ~290px at 1440. Without it the team butts straight up
+     against the hero. */
+  padding-top: clamp(90px, 20vw, 300px);
+}
+
+.clt__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  /* Stretch so the copy column can centre its text against the full height of
+     the portrait; the portrait itself opts out with `align-self: start` so it
+     keeps its own proportions instead of growing to the bio. */
+  align-items: stretch;
+  gap: 0;
+  /* Outer gutter per the Figma. No bottom gap at all: successive portraits
+     alternate sides and stack flush, so consecutive rows form a checkerboard
+     that meets at a single point on the centre line. */
+  padding: 0 clamp(14px, 2.4vw, 36px) 0;
+}
+.clt__row:last-child { padding-bottom: clamp(80px, 9vw, 150px); }
+
+/* Portraits bleed to the outer edge of the page, as in the Figma. */
+.clt__media {
+  position: relative;
+  overflow: hidden;
+  align-self: start;
+  /* The portraits' native ratio, which is also what the Figma uses. */
+  aspect-ratio: 2756 / 3236;
+}
+.clt__mask {
+  height: 100%;
+  overflow: hidden;
+  /* Wipe start state; JS animates to inset(0 0 0 0). */
+  clip-path: inset(0 0 0 100%);
+  will-change: clip-path;
+}
+.clt__row--img-right .clt__mask { clip-path: inset(0 100% 0 0); }
+.clt__mask img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  background: var(--color-bg);
+  transition: transform .7s cubic-bezier(.16,1,.3,1), filter .7s ease;
+  will-change: transform;
+}
+.clt__media:hover img { transform: scale(1.035); filter: contrast(1.12); }
+
+.clt__copy {
+  display: flex;
+  flex-direction: column;
+  /* Centred against the portrait's height, not hung from its top edge. */
+  justify-content: center;
+  /* The Figma gives the text ~605px of a 685px column — roughly 40px either
+     side. More than that and the longest name wraps. */
+  padding: clamp(20px, 3vw, 48px) clamp(18px, 2.8vw, 40px);
+  text-align: center;
+}
+
+/* Masked line reveals: the inner span is what moves. */
+.clt__name, .clt__role { overflow: hidden; }
+.clt__name {
+  font-size: clamp(26px, 3.9vw, 56px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+.clt__name span, .clt__role span { display: block; will-change: transform; }
+.clt__role {
+  margin-top: clamp(10px, 1vw, 18px);
+  font-size: clamp(15px, 2.1vw, 30px);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.clt__bio {
+  margin-top: clamp(26px, 3.2vw, 54px);
+  text-align: justify;
+  text-align-last: left;
+  hyphens: none;
+}
+.clt__bio p {
+  font-size: clamp(14px, 1.25vw, 19px);
+  line-height: 1.42;
+  will-change: transform, opacity;
+}
+.clt__bio p + p { margin-top: 1.1em; }
+
+/* ============================================================
+   OFFICE SERIES
+   Wordmark, then three reels — the chosen episode centre stage with the other
+   two either side — then the episode tabs and the copy. Proportions taken from
+   the redesign: side cards 25.1% of the deck, the centre one 34.3%.
+   ============================================================ */
+.clo {
+  position: relative;
+  padding: clamp(70px, 8vw, 130px) 0 clamp(80px, 9vw, 150px);
+  overflow: hidden;
+}
+.clo__stage {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 var(--pad);
+  text-align: center;
+}
+
+.clo__wordmark {
+  margin: 0 0 clamp(28px, 4vw, 60px);
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: clamp(30px, 4.6vw, 62px);
+  line-height: 1.09;
+  letter-spacing: -0.015em;
+}
+
+/* --- The reels ------------------------------------------------
+   Same geometry as Campaign Reels on the work pages @1440: the centre reel is
+   23.4vw wide at full 9:16 height, its neighbours 22.7vw cropped to 33.2vw,
+   ~18px gaps, sides blurred back. The strip is full-bleed and slides so the
+   chosen episode lands on the viewport centre, which lets the others run past
+   the edges. */
+.clo__deckwrap {
+  position: relative;
+  /* Full bleed out of the padded stage. */
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  overflow: hidden;
+  /* Tall enough for the centre reel. */
+  height: 41.6vw;
+  display: flex;
+  align-items: center;
+}
+.clo__deck {
+  position: absolute;
+  inset: 0;
+}
+.clo__slide {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 22.7vw;
+  height: 33.2vw;
+  overflow: hidden;
+  background: #000;
+  transition: width .55s ease, height .55s ease, box-shadow .55s ease;
+}
+.clo__slide--center {
+  width: 23.4vw;
+  height: 41.6vw;
+  z-index: 2;
+  box-shadow: 0 24px 60px rgba(17, 17, 17, .45);
+}
+/* Safari rasterises a blurred layer in tiles and leaves a hairline seam where
+   two tiles meet — the black line that showed across the side reels. Blurring
+   the video itself rather than its clipping container, on its own compositing
+   layer, avoids that; the slight scale keeps the blur's soft edge outside the
+   frame. Chromium never showed the seam, so this is invisible there. */
+.clo__video {
+  width: 100%; height: 100%;
+  /* Fill the card rather than letterboxing: the clips are 9:16, so this is
+     effectively no crop on the centre reel. */
+  object-fit: cover;
+  display: block;
+  background: #000;
+  pointer-events: none;
+  filter: blur(3px) brightness(0.85);
+  transform: translateZ(0) scale(1.04);
+  backface-visibility: hidden;
+  transition: filter .55s ease, transform .55s ease;
+}
+.clo__slide--center .clo__video {
+  filter: none;
+  transform: translateZ(0) scale(1);
+}
+
+/* --- Episode tabs + copy -------------------------------------- */
+.clo__eps {
+  display: flex;
+  justify-content: center;
+  margin-top: clamp(22px, 3vw, 40px);
+}
+.clo__ep {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(15px, 1.7vw, 24px);
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  padding: .3em .55em .24em;
+  border: 2px solid var(--color-bg);
+  background: var(--color-bg);
+  color: var(--color-accent);
+  cursor: pointer;
+  transition: background .28s ease, color .28s ease;
+}
+.clo__ep + .clo__ep { border-left-width: 1px; }
+.clo__ep[aria-pressed='false'] { background: transparent; color: var(--color-bg); }
+.clo__ep[aria-pressed='false']:hover { background: rgba(255, 255, 240, .16); }
+.clo__ep:focus-visible { outline: 2px solid var(--color-bg); outline-offset: 3px; }
+
+.clo__copy {
+  max-width: 62ch;
+  margin: clamp(22px, 3vw, 40px) auto 0;
+  font-size: clamp(13px, 1.15vw, 17px);
+  line-height: 1.5;
+  text-align: center;
+  will-change: opacity;
+}
+
+/* ============================================================
+   GALLERY — hover explode
+   ============================================================ */
+.clg {
+  position: relative;
+  padding: clamp(40px, 6vw, 90px) 0 clamp(70px, 9vw, 140px);
+  /* `clip` on one axis only — `hidden` would crop the resting pile, which is
+     taller than the scattered layout it's sized around. */
+  overflow-x: clip;
+  overflow-y: visible;
+}
+.clg__headline {
+  /* Inside the stage now, so it sits at a fixed point in the composition and
+     the photos scatter around it exactly as in the Figma. */
+  position: absolute;
+  left: 50%;
+  top: 45.1%;
+  transform: translate(-50%, -50%);
+  width: 106%;
+  margin: 0;
+  text-align: center;
+  font-size: clamp(66px, 14.4vw, 224px);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: .9;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 1;
+}
+.clg__stage {
+  position: relative;
+  z-index: 2;
+  /* The Figma's scatter spans 1158px at 1440 wide — 80vw. */
+  height: clamp(460px, 80vw, 1160px);
+}
+
+/* Hover/focus target, sized and placed on the resting pile. */
+.clg__hit {
+  position: absolute;
+  left: 50%;
+  top: 45.6%;
+  width: 29%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  z-index: 10;
+  cursor: pointer;
+  outline: none;
+}
+.clg__hit:focus-visible { outline: 2px solid var(--color-bg); outline-offset: 6px; }
+
+.clg__photo {
+  position: absolute;
+  left: 50%; top: 50%;
+  /* Width comes from the per-photo figure in GALLERY; this is only the
+     pre-script fallback. */
+  width: 25%;
+  margin: 0;
+  /* No frame, no shadow: the Figma shows the bare photograph, whose own white
+     studio backdrop runs to the edge of the rectangle. */
+  will-change: transform;
+  /* JS sets the resting transform; this keeps SSR-less first paint centred. */
+  transform: translate(-50%, -50%);
+}
+.clg__photo img { width: 100%; height: auto; display: block; }
+
+.clg__tagline {
+  position: relative;
+  z-index: 2;
+  margin-top: clamp(30px, 4vw, 70px);
+  text-align: center;
+  font-family: var(--font-display);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  font-size: clamp(20px, 2.3vw, 38px);
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 1024px) {
+  .collective-page { --pad: 40px; }
+
+  .clh__stage { --stage-w: min(46vw, 460px, 40vh); }
+
+  /* Same step-up the work pages use on a phone. */
+  .clo__deckwrap { height: 99.5vw; }
+  .clo__slide { width: 34vw; height: 50vw; }
+  .clo__slide--center { width: 56vw; height: 99.5vw; }
+  .clo__wordmark { font-size: clamp(26px, 5.4vw, 44px); }
+}
+
+@media (max-width: 760px) {
+  .collective-page { --pad: 20px; }
+
+  .clh__stage { --stage-w: min(64vw, 360px, 30vh); }
+  /* A narrow screen can't carry the desktop type ratio, and the side words
+     have to stay partly readable rather than bleeding off entirely. */
+  .clh__title { font-size: calc(var(--stage-w) * 0.30); }
+  .clh__word[data-w='kazi'] { right: 62%; }
+  .clh__word[data-w='team'] { left: 62%; }
+  .clh__word[data-w='meet'] { bottom: 128%; }
+  .clh__word[data-w='the']  { bottom: 112%; }
+  .clh__bracket { border-width: 0; }
+  .clh__bracket--tl { border-top-width: 5px; border-left-width: 5px; }
+  .clh__bracket--br { border-bottom-width: 5px; border-right-width: 5px; }
+  .clh__sub {
+    /* Anchored to the frame's box (its positioned ancestor), so it has to be
+       placed below the frame — a `bottom` offset would land inside it. */
+    white-space: normal;
+    width: min(86vw, 330px);
+    left: 50%;
+    top: 118%;
+  }
+
+  /* Team rows stack: portrait first, then copy, every row. */
+  .clt__row { grid-template-columns: 1fr; padding: 0 0 clamp(48px, 12vw, 80px); }
+  .clt__media { order: 1; }
+  .clt__copy { order: 2; padding: clamp(22px, 6vw, 40px) var(--pad) 0; }
+
+  .clt__bio { text-align: left; }
+
+  .clg__headline { font-size: clamp(40px, 15vw, 90px); }
+  .clg__stage { height: clamp(560px, 125vw, 900px); }
+}
+
+/* ============================================================
+   REDUCED MOTION — render every final state, animate nothing
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  /* The hero unpins and stacks: headline, then the framed photo, then the
+     subline. The stage loses its aspect-ratio, so the frame carries its own. */
+  .clh__pin { height: auto; padding: clamp(90px, 14vh, 160px) var(--pad) clamp(50px, 8vh, 90px); overflow: visible; }
+  .clh__stage {
+    --stage-w: min(70vw, 620px);
+    width: 100%;
+    aspect-ratio: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .clh__title {
+    position: static;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0 .16em;
+    font-size: min(13vw, 120px);
+  }
+  .clh__word[data-w] { position: static; transform: none; }
+  .clh__framewrap {
+    position: relative;
+    inset: auto;
+    width: var(--stage-w);
+    aspect-ratio: 370 / 233;
+    margin: clamp(24px, 4vw, 48px) auto 0;
+  }
+  .clh__sub {
+    position: static;
+    transform: none;
+    width: auto;
+    margin-top: clamp(24px, 4vw, 40px);
+    white-space: normal;
+  }
+
+  .clt__mask { clip-path: none; }
+  .clt__media:hover img { transform: none; filter: none; }
+  .clt__mask img, .clo__slide, .clo__ep, .clg__photo { transition: none; }
+}

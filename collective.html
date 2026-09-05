@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kazi Network — The Collective</title>
+  <meta name="description" content="Meet the Kazi Team. Faces on the front, stories on the back — the people behind Kazi Network, a Pan-India creative studio from Guwahati, Assam." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23D74E31'/%3E%3Ctext x='50%25' y='54%25' font-family='Arial Black,Arial' font-weight='900' font-size='20' fill='%23FFFFF0' text-anchor='middle' dominant-baseline='central'%3EK%3C/text%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@500;700;800;900&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/collective.css" />
+  <!-- Hero image is the only above-the-fold asset worth preloading. -->
+  <link rel="preload" as="image" href="assets/img/collective/hero-team.webp" fetchpriority="high" />
+</head>
+<body class="collective-page">
+
+  <!-- ============ NAVBAR (shared component) ============ -->
+  <header class="nav is-visible" id="nav">
+    <div class="nav__inner">
+      <a href="index.html" class="nav__brand" aria-label="Kazi"><img decoding="async" fetchpriority="high" src="assets/img/logo-mark.webp" alt="Kazi" /></a>
+      <button class="nav__burger" id="navBurger" aria-label="Open menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+      <div class="nav__menu" id="navMenu">
+        <nav class="nav__links">
+          <a href="index.html#top">Home</a>
+          <a href="collective.html" aria-current="page">The Collective</a>
+          <a href="work.html">Work</a>
+          <a href="contact.html">Contact</a>
+        </nav>
+        <a href="contact.html" class="btn btn--filled nav__cta">Grow Your Brand</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="cl" id="clRoot">
+
+    <!-- ============ HERO — scroll-driven zoom ============ -->
+    <section class="clh" id="clHero">
+      <div class="clh__pin" id="clHeroPin">
+        <!-- Everything is anchored to the frame's box, so the composition holds
+             its Figma proportions at any viewport width. -->
+        <div class="clh__stage">
+          <h1 class="clh__title">
+            <span class="clh__word" data-w="meet">Meet</span>
+            <span class="clh__word" data-w="the">The</span>
+            <span class="clh__word" data-w="kazi">Kazi.</span>
+            <span class="clh__word" data-w="team">Team</span>
+          </h1>
+
+          <div class="clh__framewrap" id="clFrameWrap">
+            <div class="clh__frame">
+              <img class="clh__img" src="assets/img/collective/hero-team.webp"
+                   alt="The Kazi Network team — five members photographed together in black tailoring against a white backdrop"
+                   fetchpriority="high" />
+            </div>
+            <span class="clh__bracket clh__bracket--tl" aria-hidden="true"></span>
+            <span class="clh__bracket clh__bracket--br" aria-hidden="true"></span>
+          </div>
+
+          <p class="clh__sub" id="clHeroSub">
+            Faces On The Front. Stories On The Back.<br />
+            Hover To Discover The People Behind KAZI.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ TEAM ============ -->
+    <section class="clt" id="clTeam" aria-labelledby="clTeamHeading">
+      <h2 class="sr-only" id="clTeamHeading">The Kazi Collective</h2>
+
+      <!-- Row 1 — image left, copy right -->
+      <article class="clt__row clt__row--img-left">
+        <div class="clt__media">
+          <div class="clt__mask">
+            <img src="assets/img/collective/vikram.webp" decoding="async" fetchpriority="low"
+                 alt="Vikram Aditya Saikia seated with a laptop, photographed in black and white" />
+          </div>
+        </div>
+        <div class="clt__copy">
+          <h3 class="clt__name"><span>Vikram Aditya Saikia</span></h3>
+          <p class="clt__role"><span>Founder | Creative Director</span></p>
+          <div class="clt__bio">
+            <p>Creative Direction Is Where Strategy Finds Its Voice. At KAZI, It Shapes Everything From Brand Identity And Storytelling To Campaigns, Digital Experiences And Creative Systems That Help Businesses Grow With Purpose.</p>
+            <p>Drawing From A Multidisciplinary Background In Writing, Film And Design, Vikram Leads The Studio's Creative Vision, Bringing Together People, Ideas And Execution Into Work That Is Thoughtful, Commercially Driven And Unmistakably Human.</p>
+          </div>
+        </div>
+      </article>
+
+      <!-- Row 2 — copy left, image right -->
+      <article class="clt__row clt__row--img-right">
+        <div class="clt__copy">
+          <h3 class="clt__name"><span>Ankita Saikia</span></h3>
+          <p class="clt__role"><span>Co-Founder | Marketing Director</span></p>
+          <div class="clt__bio">
+            <p>Marketing At KAZI Moves Well Beyond The Screen. The Department Brings Together Campaign Strategy, Performance Marketing, Client Servicing And Graphic Communication Across Digital And Physical Spaces—From Social Media And Campaign Creatives To Signages, Hoardings, Vehicle Wraps, Promotional Collateral, Outdoor Advertising And Other Brand-Facing Externals.</p>
+            <p>Ankita Leads This Space With Over A Decade Of Marketing Experience And A Strong Understanding Of How Brands Should Present Themselves Across Different Environments. Her Strength Lies In Taking Projects From Strategy To Rollout—Coordinating People, Media And Deliverables While Keeping The Brand Consistent Wherever It Appears. That Ability To Carry Ideas Through Execution Has Become An Important Part Of KAZI's Long-Standing Client Relationships</p>
+          </div>
+        </div>
+        <div class="clt__media">
+          <div class="clt__mask">
+            <img src="assets/img/collective/ankita.webp" decoding="async" fetchpriority="low"
+                 alt="Ankita Saikia in a tailored black coat, photographed in black and white" />
+          </div>
+        </div>
+      </article>
+
+      <!-- Row 3 — image left, copy right -->
+      <article class="clt__row clt__row--img-left">
+        <div class="clt__media">
+          <div class="clt__mask">
+            <img src="assets/img/collective/aratrika.webp" decoding="async" fetchpriority="low"
+                 alt="Aratrika Tarafdar holding a phone and a pen mid-call, photographed in black and white" />
+          </div>
+        </div>
+        <div class="clt__copy">
+          <h3 class="clt__name"><span>Aratrika Tarafdar</span></h3>
+          <p class="clt__role"><span>Communications &amp; Operations</span></p>
+          <div class="clt__bio">
+            <p>Operations Are The Foundation That Allows Creativity To Thrive. From Project Planning And Internal Coordination To Client Communication And Execution, This Department Ensures Every Moving Part Works Together Seamlessly. Aratrika Leads These Efforts With Clarity, Organisation And A People-First Approach, Providing The Structure That Keeps KAZI's Creative Momentum Moving Forward.</p>
+          </div>
+        </div>
+      </article>
+
+      <!-- Row 4 — copy left, image right -->
+      <article class="clt__row clt__row--img-right">
+        <div class="clt__copy">
+          <h3 class="clt__name"><span>Amrit Xess</span></h3>
+          <p class="clt__role"><span>D.O.P</span></p>
+          <div class="clt__bio">
+            <p>Production Is Where Ideas Become Reality. Every Frame, Every Composition And Every Moment Captured Contributes To Telling A Brand's Story With Authenticity And Precision. Amrit Leads KAZI's Production Efforts Across Commercial Campaigns, Documentaries And Live Productions, Bringing A Calm Presence, Technical Discipline And An Intuitive Eye For Cinematic Storytelling To Every Project.</p>
+          </div>
+        </div>
+        <div class="clt__media">
+          <div class="clt__mask">
+            <img src="assets/img/collective/amrit.webp" decoding="async" fetchpriority="low"
+                 alt="Amrit Xess seated beside a camera on a tripod, photographed in black and white" />
+          </div>
+        </div>
+      </article>
+
+      <!-- Row 5 — image left, copy right -->
+      <article class="clt__row clt__row--img-left">
+        <div class="clt__media">
+          <div class="clt__mask">
+            <img src="assets/img/collective/peaby.webp" decoding="async" fetchpriority="low"
+                 alt="Priyanshu Banerjee holding a camera and a copy of A Brief History of Time, photographed in black and white" />
+          </div>
+        </div>
+        <div class="clt__copy">
+          <h3 class="clt__name"><span>Priyanshu &ldquo;Peaby&rdquo; Banerjee</span></h3>
+          <p class="clt__role"><span>Digital Media Artist</span></p>
+          <div class="clt__bio">
+            <p>Motion Transforms Information Into Experience. Through Animation, Visual Effects And Digital Design, KAZI Creates Visual Stories That Are Dynamic, Memorable And Built For Modern Audiences. Peaby Brings These Ideas To Life With An Instinct For Movement, A Technical Mindset Shaped By His Background In Physics And An Ability To Visualise Concepts Long Before They Reach The Screen.</p>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <!-- ============ OFFICE SERIES ============ -->
+    <section class="clo" id="clOffice" aria-labelledby="clOfficeHeading">
+      <h2 class="sr-only" id="clOfficeHeading">The Fake Office — episode series</h2>
+
+      <div class="clo__stage">
+        <p class="clo__wordmark">&lt;the fake<br />office&gt;</p>
+
+        <!-- A full-bleed strip of reels, mirroring the Campaign Reels
+             carousel on the work pages: the chosen episode sits at the
+             viewport centre at full height, its neighbours are cropped shorter
+             and blurred back. The three loop round, so there is always one
+             either side. -->
+        <div class="clo__deckwrap">
+          <div class="clo__deck" id="clDeck">
+            <div class="clo__slide" data-ep="0">
+              <video class="clo__video" muted loop playsinline preload="none"
+                     data-poster="assets/img/collective/ep-1-poster.webp"
+                     aria-label="The Fake Office, Season 1 Episode 1"></video>
+            </div>
+            <div class="clo__slide" data-ep="1">
+              <video class="clo__video" muted loop playsinline preload="none"
+                     data-poster="assets/img/collective/ep-2-poster.webp"
+                     aria-label="The Fake Office, Season 1 Episode 2"></video>
+            </div>
+            <div class="clo__slide" data-ep="2">
+              <video class="clo__video" muted loop playsinline preload="none"
+                     data-poster="assets/img/collective/ep-3-poster.webp"
+                     aria-label="The Fake Office, Season 1 Episode 3"></video>
+            </div>
+          </div>
+        </div>
+
+        <div class="clo__eps" role="group" aria-label="Choose an episode">
+          <button type="button" class="clo__ep" data-ep="0" aria-pressed="true">EP.&nbsp;1</button>
+          <button type="button" class="clo__ep" data-ep="1" aria-pressed="false">EP.&nbsp;2</button>
+          <button type="button" class="clo__ep" data-ep="2" aria-pressed="false">EP.&nbsp;3</button>
+        </div>
+
+        <p class="clo__copy" id="clCopy"></p>
+      </div>
+    </section>
+
+    <!-- ============ GALLERY — hover explode ============ -->
+    <section class="clg" id="clGallery" aria-labelledby="clGalleryHeading">
+      <div class="clg__stage" id="clStage">
+        <h2 class="clg__headline" id="clGalleryHeading">Creative Team</h2>
+        <figure class="clg__photo" data-i="0"><img src="assets/img/collective/gallery-1.webp" loading="lazy" decoding="async" alt="Two Kazi team members holding a hand-lettered Kazi Network sign" /></figure>
+        <figure class="clg__photo" data-i="1"><img src="assets/img/collective/gallery-2.webp" loading="lazy" decoding="async" alt="The Kazi team grouped together in black tailoring, photographed in black and white" /></figure>
+        <figure class="clg__photo" data-i="2"><img src="assets/img/collective/gallery-3.webp" loading="lazy" decoding="async" alt="Two Kazi team members with a camera rig, photographed in black and white" /></figure>
+        <figure class="clg__photo" data-i="3"><img src="assets/img/collective/gallery-4.webp" loading="lazy" decoding="async" alt="A Kazi team member seated holding a hand-lettered name card" /></figure>
+        <figure class="clg__photo" data-i="4"><img src="assets/img/collective/gallery-5.webp" loading="lazy" decoding="async" alt="A Kazi team member slouched in a chair with a laptop resting over their face" /></figure>
+
+        <!-- The hover/focus target: the pile itself, not the whole block. -->
+        <div class="clg__hit" id="clHit" tabindex="0" role="button"
+             aria-describedby="clGalleryHint"></div>
+      </div>
+      <p class="sr-only" id="clGalleryHint">Hover or focus to scatter the photographs.</p>
+
+      <p class="clg__tagline">Small Team. Big Ideas.</p>
+    </section>
+
+  </main>
+
+  <!-- ============ FOOTER (shared component) ============ -->
+  <footer class="footer">
+    <div class="footer__bar container">
+      <nav class="footer__nav">
+        <a href="collective.html">The Collective</a>
+        <a href="work.html">Work</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+      <div class="footer__contact">
+        <a href="mailto:hello@kazinetwork.com">Email</a>
+        <a href="https://instagram.com" target="_blank" rel="noopener" class="footer__ig" aria-label="Instagram">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+        </a>
+      </div>
+    </div>
+    <div class="footer__wordmark">
+      <img loading="lazy" decoding="async" src="assets/img/kazi-wordmark.webp" alt="Kazi" />
+    </div>
+    <div class="footer__fine container">
+      <span>&copy; 2026 Ryu Kazi Network Pvt. Ltd. &mdash; Guwahati, Assam.</span>
+      <span>Fresh creative from Assam. No filter.</span>
+    </div>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script src="js/collective.js"></script>
+</body>
+</html>

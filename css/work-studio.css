@@ -1,0 +1,194 @@
+/* ============================================================
+   KAZI — STUDIO ARTITECTING CASE STUDY
+   Accent canvas, cream text. Shares the case-study language of
+   the RAB/Orient pages (hero, reels, services, gallery, outro)
+   plus Studio's framed feature video. Geometry from the Figma.
+   ============================================================ */
+.case-page { background: var(--color-accent); color: var(--color-bg); overflow-x: clip; }
+
+/* ---------------- Hero (shared element with the work-page card) ---------------- */
+.cs__hero { position: relative; height: min(27vw, 56vh); min-height: 240px; overflow: hidden; background: var(--color-dark); }
+.cs__hero img { width: 100%; height: 100%; object-fit: cover; }
+.cs__hero-title {
+  position: absolute; right: clamp(20px, 2.8vw, 44px); bottom: clamp(16px, 2.2vw, 34px);
+  text-align: right; color: var(--color-bg);
+}
+.cs__hero-title h1 {
+  font-family: var(--font-body); font-weight: 700; letter-spacing: 0.01em;
+  text-transform: uppercase; line-height: 1;
+  font-size: clamp(18px, 2.1vw, 32px);
+}
+.cs__hero-title p { font-size: clamp(12px, 0.95vw, 15px); margin-top: 6px; opacity: 0.9; }
+
+/* ---------------- Intro ---------------- */
+.cs__intro {
+  position: relative; text-align: center;
+  padding: clamp(44px, 5.5vw, 88px) clamp(28px, 5.5vw, 80px) clamp(24px, 3vw, 48px);
+}
+.cs__logo {
+  position: absolute; left: clamp(28px, 5.5vw, 80px); top: clamp(36px, 4.5vw, 72px);
+  width: clamp(56px, 6.5vw, 94px); aspect-ratio: 1; overflow: hidden;
+}
+.cs__logo img { width: 100%; height: 100%; object-fit: cover; }
+.cs__intro-h {
+  font-family: var(--font-display); font-weight: 800; text-transform: uppercase;
+  letter-spacing: -0.01em; line-height: 1;
+  font-size: clamp(20px, 2.35vw, 36px); color: var(--color-dark);
+}
+.cs__intro-p {
+  margin: clamp(18px, 2.2vw, 34px) auto 0; max-width: 52ch;
+  font-size: clamp(15px, 1.55vw, 23px); line-height: 1.2;
+}
+
+/* ---------------- Feature video (muted) ----------------
+   Figma: centred landscape video in a warm grey-brown frame with
+   softly rounded corners. */
+.cs__feature { padding: clamp(28px, 3.6vw, 60px) 0 0; }
+.cs__feature-frame {
+  width: min(72vw, 1040px); margin: 0 auto;
+  background: #655548; border-radius: clamp(10px, 1.1vw, 18px);
+  padding: clamp(10px, 1.4vw, 22px); overflow: hidden;
+}
+.cs__feature-frame video {
+  display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover;
+  border-radius: clamp(5px, 0.55vw, 9px);
+}
+
+/* ---------------- Statement ---------------- */
+.cs__statement { padding: clamp(56px, 7.5vw, 130px) var(--pad) clamp(40px, 5vw, 80px); text-align: center; }
+.cs__statement p {
+  margin: 0 auto; max-width: 52ch;
+  font-size: clamp(15px, 1.55vw, 23px); line-height: 1.25;
+}
+
+/* ---------------- Campaign reels (slideable strip) ---------------- */
+.cs__reels { padding: clamp(40px, 5vw, 80px) 0 clamp(46px, 6vw, 96px); }
+.cs__reels-label {
+  text-align: center; font-size: 13px; font-weight: 500;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  margin-bottom: clamp(24px, 3.2vw, 52px);
+}
+.cs__reels-row {
+  display: flex; align-items: center; width: max-content;
+  gap: clamp(10px, 1.25vw, 18px);
+  will-change: transform; cursor: grab; touch-action: pan-y;
+}
+.cs__reels-row.is-grabbing { cursor: grabbing; }
+.cs__reel {
+  flex: 0 0 auto; width: 22.7vw; height: 33.2vw; overflow: hidden; position: relative;
+  transition: width 0.55s ease, height 0.55s ease, box-shadow 0.55s ease;
+}
+.cs__reel video {
+  width: 100%; height: 100%; object-fit: cover; pointer-events: none;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  transition: filter 0.55s ease, transform 0.55s ease;
+}
+/* Safari rasterises a blurred layer in tiles and leaves a hairline seam where
+   two tiles meet — the black line that showed across the side reels. Blurring
+   the video itself rather than its clipping container, on its own compositing
+   layer, avoids that; the slight scale keeps the blur's soft edge outside the
+   frame. Chromium never showed the seam, so this is invisible there. */
+.cs__reel--near video { filter: blur(3px) brightness(0.85); transform: translateZ(0) scale(1.04); }
+.cs__reel--far video  { filter: blur(6px) brightness(0.72); transform: translateZ(0) scale(1.07); }
+.cs__reel--center {
+  width: 23.4vw; height: 41.6vw; z-index: 2;
+  box-shadow: 0 24px 60px rgba(17, 17, 17, 0.45);
+}
+
+/* Pause / play indicator on the active reel */
+.cs__reel-state {
+  position: absolute; left: 50%; top: 50%; width: 56px; height: 56px;
+  transform: translate(-50%, -50%); border-radius: 50%;
+  background: var(--color-bg); color: var(--color-accent);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; line-height: 1; letter-spacing: 0.08em;
+  opacity: 0; transition: opacity 0.25s ease; pointer-events: none;
+}
+.cs__reel-state::after { content: '\275A\275A'; /* ❚❚ */ }
+.cs__reel--center.is-paused .cs__reel-state::after { content: '\25B6'; padding-left: 4px; /* ▶ */ }
+.cs__reel--center:hover .cs__reel-state, .cs__reel--center.is-paused .cs__reel-state { opacity: 1; }
+
+/* ---------------- Services / Impact ---------------- */
+.cs__services { padding-top: clamp(40px, 5vw, 80px); }
+.cs__shead, .cs__srow {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: clamp(18px, 2.4vw, 40px) clamp(28px, 5.5vw, 80px);
+}
+.cs__shead h2 {
+  font-family: var(--font-display); font-weight: 800; text-transform: uppercase;
+  letter-spacing: -0.03em; line-height: 0.85;
+  font-size: clamp(28px, 3.6vw, 54px); color: var(--color-dark);
+}
+.cs__srow + .cs__srow { border-top: 1px solid rgba(255, 255, 240, 0.55); }
+.cs__srow h3 {
+  font-family: var(--font-display); font-weight: 800; text-transform: uppercase;
+  letter-spacing: -0.03em; line-height: 0.9;
+  font-size: clamp(26px, 3.6vw, 54px); color: var(--color-bg);
+}
+.cs__snum { text-align: right; }
+.cs__snum span {
+  display: block; font-family: var(--font-display); font-weight: 700;
+  font-size: clamp(24px, 3.2vw, 48px); line-height: 1; color: var(--color-bg);
+}
+.cs__snum small {
+  display: block; font-family: var(--font-display); font-weight: 500;
+  font-size: clamp(11px, 0.95vw, 15px); margin-top: 6px; opacity: 0.9;
+}
+
+/* ---------------- Gallery ---------------- */
+.cs__gallery { padding: clamp(40px, 5vw, 80px) 0 0; display: grid; gap: clamp(24px, 2.8vw, 42px); }
+.cs__pair {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: clamp(24px, 2.8vw, 42px); padding: 0 clamp(16px, 1.7vw, 24px);
+}
+.cs__pair img { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; }
+.cs__pair:last-of-type img { aspect-ratio: 6 / 7; }
+.cs__full { padding: 0 clamp(16px, 1.7vw, 24px); }
+.cs__full img { width: 100%; aspect-ratio: 7 / 4; object-fit: cover; }
+
+/* ---------------- Outro ---------------- */
+.cs__outro { text-align: center; padding: clamp(90px, 13vw, 210px) var(--pad) clamp(56px, 7vw, 120px); }
+.cs__outro p {
+  font-family: var(--font-display); font-weight: 700; text-transform: uppercase;
+  font-size: clamp(17px, 2.36vw, 36px); line-height: 1.25; letter-spacing: -0.01em;
+  color: var(--color-bg);
+}
+.cs__end-nav {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-top: clamp(64px, 9vw, 150px);
+  margin-left: calc(-1 * var(--pad) + clamp(20px, 3vw, 44px));
+  margin-right: calc(-1 * var(--pad) + clamp(20px, 3vw, 44px));
+}
+.cs__end-link {
+  font-size: clamp(12px, 0.95vw, 15px); letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--color-bg); transition: opacity 0.2s ease;
+}
+.cs__end-link:hover { opacity: 0.7; }
+
+/* Entry: content below the hero fades up once (hero itself stays put so
+   the card-to-hero transition reads as one continuous move) */
+.cs--enter .cs__intro, .cs--enter .cs__feature, .cs--enter .cs__statement,
+.cs--enter .cs__reels, .cs--enter .cs__services, .cs--enter .cs__gallery, .cs--enter .cs__outro {
+  opacity: 0; transform: translateY(22px);
+}
+.cs--enter-play .cs__intro, .cs--enter-play .cs__feature, .cs--enter-play .cs__statement,
+.cs--enter-play .cs__reels, .cs--enter-play .cs__services, .cs--enter-play .cs__gallery, .cs--enter-play .cs__outro {
+  opacity: 1; transform: translateY(0);
+  transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+}
+
+/* ---------------- Responsive ---------------- */
+@media (max-width: 768px) {
+  .cs__hero { height: min(72vw, 60vh); }
+  .cs__intro { text-align: left; padding-top: 32px; }
+  .cs__logo { position: static; margin-bottom: 24px; }
+  .cs__intro-p { max-width: none; margin-left: 0; }
+  .cs__feature-frame { width: calc(100% - 32px); }
+  .cs__reel { width: 34vw; height: 50vw; }
+  .cs__reel--center { width: 56vw; height: 99.5vw; }
+  .cs__reel-state { width: 46px; height: 46px; font-size: 13px; }
+  .cs__srow h3, .cs__shead h2 { font-size: clamp(22px, 6.4vw, 30px); }
+  .cs__snum span { font-size: clamp(20px, 5.6vw, 28px); }
+  .cs__pair { grid-template-columns: 1fr; }
+}

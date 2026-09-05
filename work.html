@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kazi Network — Work</title>
+  <meta name="description" content="Selected work from Kazi Network — films, brand identity and campaigns. Built in Northeast India. Made for everywhere." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23D74E31'/%3E%3Ctext x='50%25' y='54%25' font-family='Arial Black,Arial' font-weight='900' font-size='20' fill='%23FFFFF0' text-anchor='middle' dominant-baseline='central'%3EK%3C/text%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@500;700;800;900&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/work.css" />
+</head>
+<body class="work-page">
+
+  <!-- ============ NAVBAR (shared component — landing only) ============ -->
+  <header class="nav is-visible" id="nav">
+    <div class="nav__inner">
+      <a href="index.html" class="nav__brand" aria-label="Kazi"><img decoding="async" fetchpriority="high" src="assets/img/logo-mark.webp" alt="Kazi" /></a>
+      <button class="nav__burger" id="navBurger" aria-label="Open menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+      <div class="nav__menu" id="navMenu">
+        <nav class="nav__links">
+          <a href="index.html#top">Home</a>
+          <a href="collective.html">The Collective</a>
+          <a href="work.html" aria-current="page">Work</a>
+          <a href="contact.html">Contact</a>
+        </nav>
+        <a href="contact.html" class="btn btn--filled nav__cta">Grow Your Brand</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============ LANDING ============ -->
+  <main class="wl" id="wl">
+
+    <section class="wl__hero">
+      <h1 class="wl__title">KAZI&rsquo;s <span>Work</span></h1>
+      <div class="wl__stage" id="wlStage">
+        <!-- stack cards injected by work.js -->
+        <button class="wl__explore" id="wlExplore" type="button"><i></i>Click to Unveil</button>
+      </div>
+    </section>
+
+    <section class="wl__story">
+      <h2 class="wl__story-h">Every<br />project has<br />a story</h2>
+      <p class="wl__story-p">A growing collection of brands, films, campaigns, and digital experiences&mdash;each shaped by curiosity, collaboration, and craft.</p>
+    </section>
+
+    <section class="wp__stats">
+      <div class="wp__stats-row">
+        <div class="wp__stat"><span class="wp__stat-num">150+</span><span class="wp__stat-label">Projects</span></div>
+        <div class="wp__stat"><span class="wp__stat-num">40+</span><span class="wp__stat-label">Brands</span></div>
+        <div class="wp__stat"><span class="wp__stat-num">12+</span><span class="wp__stat-label">Industries</span></div>
+        <div class="wp__stat"><span class="wp__stat-num">4+</span><span class="wp__stat-label">Years</span></div>
+      </div>
+      <p class="wp__tagline">Built in Northeast India. Made for Everywhere.</p>
+    </section>
+  </main>
+
+  <!-- ============ FOOTER (shared component) ============ -->
+  <footer class="footer" id="wlFooter">
+    <div class="footer__bar container">
+      <nav class="footer__nav">
+        <a href="collective.html">The Collective</a>
+        <a href="work.html">Work</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+      <div class="footer__contact">
+        <a href="mailto:hello@kazinetwork.com">Email</a>
+        <a href="https://instagram.com" target="_blank" rel="noopener" class="footer__ig" aria-label="Instagram">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+        </a>
+      </div>
+    </div>
+    <div class="footer__wordmark">
+      <img loading="lazy" decoding="async" src="assets/img/kazi-wordmark.webp" alt="Kazi" />
+    </div>
+    <div class="footer__fine container">
+      <span>&copy; 2026 Ryu Kazi Network Pvt. Ltd. &mdash; Guwahati, Assam.</span>
+      <span>Fresh creative from Assam. No filter.</span>
+    </div>
+  </footer>
+
+  <!-- ============ EXPLORER OVERLAY ============ -->
+  <div class="ex" id="ex" aria-hidden="true">
+    <div class="ex__canvas" id="exCanvas"><!-- items injected by work.js --></div>
+
+    <div class="ex__dim" id="exDim"></div>
+
+    <div class="ex__label" id="exLabel" aria-hidden="true">
+      <span class="ex__label-name" id="exLabelName"></span>
+      <span class="ex__label-num" id="exLabelNum"></span>
+    </div>
+
+    <!-- list view: filtered index of every brand and snippet -->
+    <div class="ex__list" id="exList" aria-hidden="true">
+      <div class="ex__list-inner">
+        <section class="ex__list-sec" id="exListBrands">
+          <h2 class="ex__list-h">Featured Brands <span id="exBrandCount"></span></h2>
+          <div class="ex__rows" id="exBrandRows"></div>
+        </section>
+        <section class="ex__list-sec" id="exListReels">
+          <h2 class="ex__list-h">Snippets <span id="exReelCount"></span></h2>
+          <div class="ex__strip" id="exReelGrid"></div>
+        </section>
+        <p class="ex__list-empty" id="exListEmpty" hidden>No work tagged to this industry yet.</p>
+      </div>
+    </div>
+
+    <div class="ex__top" id="exTop">
+      <nav class="ex__nav" id="exNav">
+        <div class="ex__links">
+          <button type="button" data-view="all" class="is-active">All Projects</button>
+          <button type="button" data-view="featured">Featured Brands</button>
+          <button type="button" data-view="snippets">Snippets</button>
+        </div>
+        <div class="ex__right">
+          <button type="button" class="ex__mode" id="exMode" aria-label="Toggle arranged / scattered">
+            <span></span><span></span><span></span><span></span>
+          </button>
+          <div class="ex__filterwrap">
+            <button type="button" class="ex__filterbtn" id="exFilterBtn" aria-expanded="false" aria-controls="exFilterMenu">
+              <svg viewBox="0 0 18 14" aria-hidden="true" focusable="false">
+                <path d="M1 3h16M1 7h16M1 11h16" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                <circle cx="6" cy="3" r="2.4" fill="currentColor"/>
+                <circle cx="12" cy="7" r="2.4" fill="currentColor"/>
+                <circle cx="5" cy="11" r="2.4" fill="currentColor"/>
+              </svg>
+              <span id="exFilterLabel">Filter</span>
+            </button>
+            <div class="ex__filtermenu" id="exFilterMenu" hidden>
+              <p class="ex__filtermenu-h">Filter by industry</p>
+              <div id="exFilterOpts"><!-- options injected by work.js --></div>
+            </div>
+          </div>
+          <button type="button" class="ex__layout" id="exLayout" aria-pressed="false">List View</button>
+          <button type="button" class="ex__closebtn" id="exClose">Close</button>
+        </div>
+      </nav>
+    </div>
+
+    <div class="ex__pill" id="exPill" aria-hidden="true"><i></i><span id="exPillText">Click &amp; Drag</span></div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="js/work.js"></script>
+</body>
+</html>

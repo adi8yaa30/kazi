@@ -1,0 +1,923 @@
+/* ============================================================
+   KAZI NETWORK — Design System
+   ============================================================ */
+:root {
+  --color-bg:      #FFFFF0;
+  --color-surface: #F0EBE0;
+  --color-border:  #E0D8D0;
+  --color-accent:  #D74E31;
+  --color-dark:    #111111;
+  --color-muted:   #999080;
+  --color-dim:     #555555;
+
+  /* Fallbacks matched to the real fonts' proportions so the swap-in causes
+     no visible reflow (League Spartan is condensed -> Arial Narrow). */
+  --font-display: 'League Spartan', 'Arial Narrow', 'Helvetica Neue', sans-serif;
+  --font-body:    'DM Sans', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
+
+  --space-xs: 8px;  --space-sm: 16px; --space-md: 24px;
+  --space-lg: 40px; --space-xl: 80px; --space-2xl: 120px; --space-3xl: 160px;
+
+  --maxw: 1440px;
+  --pad: 80px;
+  --radius: 0px;
+  --nav-h: 72px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; overflow-x: clip; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--color-bg);
+  color: var(--color-dark);
+  overflow-x: clip;
+}
+body.is-locked { overflow: hidden; height: 100vh; }
+
+img, video { display: block; max-width: 100%; }
+a { color: inherit; text-decoration: none; }
+ul { list-style: none; }
+
+.container { width: 100%; max-width: var(--maxw); margin: 0 auto; padding: 0 var(--pad); }
+
+/* Headings */
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  line-height: 0.82;
+  letter-spacing: -0.04em;
+  text-transform: uppercase;
+}
+
+/* Visually hidden, still read out. */
+.sr-only {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0;
+}
+
+.eyebrow {
+  font-family: var(--font-body);
+  font-size: 13px; font-weight: 500;
+  letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--color-accent);
+  display: inline-block;
+}
+.eyebrow--light { color: var(--color-bg); opacity: 0.85; }
+.accent { color: var(--color-accent); }
+
+/* Buttons */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  font-family: var(--font-body); font-size: 14px; font-weight: 500;
+  letter-spacing: 0.02em;
+  padding: 14px 30px; border: 1px solid transparent; border-radius: 7px; cursor: pointer;
+  transition: transform .25s ease, background .25s ease, color .25s ease, opacity .25s ease;
+}
+.btn--filled { background: var(--color-accent); color: var(--color-bg); }
+.btn--filled:hover { opacity: .88; transform: translateY(-2px); }
+.btn--ghost { background: transparent; color: var(--color-dark); border-color: var(--color-accent); }
+.btn--ghost:hover { background: var(--color-accent); color: var(--color-bg); }
+.btn--ghost-light { background: var(--color-bg); color: var(--color-accent); }
+.btn--ghost-light:hover { background: var(--color-dark); color: var(--color-bg); }
+
+/* ============================================================
+   PRELOADER
+   ============================================================ */
+.preloader {
+  position: fixed; inset: 0; z-index: 9999;
+  background: var(--color-accent);
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+}
+.preloader__logo {
+  position: relative; z-index: 2;
+  width: min(46vw, 560px);
+  transform: scale(.86);
+  opacity: 0;
+}
+.preloader__logo img { width: 100%; height: auto; }
+.preloader__blinds {
+  position: absolute; inset: 0; z-index: 3; display: flex;
+  pointer-events: none;
+}
+.preloader__blinds span {
+  flex: 1; height: 100%; background: var(--color-bg);
+  transform: scaleY(0); transform-origin: top;
+}
+.preloader.is-done { pointer-events: none; }
+
+/* ============================================================
+   NAVBAR
+   ============================================================ */
+/* Floating, rounded, frosted-glass pill — inset from the edges (not full width) */
+.nav {
+  position: fixed; top: 0; left: 50%;
+  width: min(calc(100% - 2 * clamp(16px, 2.5vw, 32px)), var(--maxw));
+  height: var(--nav-h);
+  z-index: 1000;
+  background: rgba(20, 18, 16, 0.34);
+  backdrop-filter: blur(18px) saturate(1.3); -webkit-backdrop-filter: blur(18px) saturate(1.3);
+  border: 1px solid rgba(255, 255, 240, 0.14);
+  border-radius: 16px;
+  overflow: hidden;
+  opacity: 0;
+  transform: translate(-50%, -135%);
+  transition: transform .45s cubic-bezier(.16,1,.3,1), opacity .45s ease;
+  will-change: transform;
+}
+/* Once revealed, the nav stays in place — no auto-hide on scroll. */
+.nav.is-visible { transform: translate(-50%, 0); opacity: 1; }
+/* grainy texture over the frosted glass */
+.nav::after {
+  content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  border-radius: inherit; opacity: .14; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.nav__inner {
+  position: relative; z-index: 2;
+  height: 100%; padding: 0 clamp(20px, 2.6vw, 36px);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.nav__brand {
+  display: block; flex: 0 0 auto;
+  height: 34px; border-radius: 6px; overflow: hidden;
+}
+.nav__brand img {
+  display: block; height: 100%; width: auto; object-fit: contain;
+}
+.nav__links { display: flex; gap: 36px; }
+.nav__links a {
+  font-family: var(--font-body); font-size: 14px; color: var(--color-bg);
+  position: relative; transition: color .2s ease;
+}
+.nav__links a::after {
+  content: ''; position: absolute; left: 0; bottom: -6px; width: 0; height: 1px;
+  background: var(--color-accent); transition: width .25s ease;
+}
+.nav__links a:hover { color: var(--color-accent); }
+.nav__links a:hover::after { width: 100%; }
+.nav__cta { padding: 10px 22px; }
+
+/* ---- Hamburger button (hidden on desktop) ---- */
+.nav__burger {
+  display: none;
+  flex-direction: column; justify-content: center; align-items: center;
+  gap: 5px; width: 42px; height: 42px;
+  background: none; border: none; cursor: pointer;
+  padding: 0; z-index: 2; flex-shrink: 0;
+}
+.nav__burger span {
+  display: block; width: 22px; height: 2px;
+  background: var(--color-bg);
+  border-radius: 2px;
+  transition: transform 0.35s cubic-bezier(.16,1,.3,1),
+              opacity 0.2s ease,
+              width 0.3s ease;
+  transform-origin: center;
+}
+/* X animation when open */
+.nav__burger.is-open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.nav__burger.is-open span:nth-child(2) { opacity: 0; width: 0; }
+.nav__burger.is-open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+/* ---- Desktop nav__menu: transparent passthrough ---- */
+.nav__menu { display: contents; }
+
+/* ============================================================
+   HERO
+   ============================================================ */
+.hero {
+  position: relative; height: 100vh; width: 100%;
+  background: var(--color-dark); overflow: hidden;
+}
+.hero__media { position: absolute; inset: 0; transform: scale(1.18); opacity: 0; }
+.hero__video, .hero__img { width: 100%; height: 100%; object-fit: cover; }
+.hero__scroll {
+  position: absolute; left: 50%; bottom: clamp(20px, 4vh, 44px); transform: translateX(-50%);
+  z-index: 3; display: flex; flex-direction: column; align-items: center; gap: 8px;
+  color: var(--color-bg); font-family: var(--font-body);
+  font-size: 12px; font-weight: 500; letter-spacing: 0.22em; text-transform: uppercase;
+}
+.hero__scroll-arrow { font-size: 18px; line-height: 1; animation: hero-bounce 1.6s ease-in-out infinite; }
+@keyframes hero-bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(7px); } }
+
+/* ============================================================
+   SUB-HERO
+   ============================================================ */
+.subhero { padding: var(--space-3xl) 0 var(--space-2xl); }
+.subhero__grid {
+  display: grid; grid-template-columns: 1fr; gap: var(--space-xl);
+  margin-bottom: var(--space-xl);
+}
+.subhero__title {
+  font-size: clamp(48px, 8vw, 120px); line-height: 0.82;
+}
+/* body sits below the title, aligned to the right */
+.subhero__lead { justify-self: end; }
+.subhero__lead p {
+  font-size: 20px; line-height: 1.5; color: var(--color-dim); max-width: 46ch;
+}
+/* Logo marquee — a full-bleed accent band of client marks. Several of the
+   files carry their own background (Relax and Orient are white, RAB and Rini
+   dark), which is how the Figma shows them, so they are left as they come. */
+.logos {
+  width: 100%;
+  background: var(--color-accent);
+  overflow: hidden;
+  padding: clamp(26px, 3.6vw, 54px) 0;
+}
+.logos__track { display: flex; width: max-content; will-change: transform; }
+.logos__set { display: flex; align-items: center; }
+.logos__set img {
+  flex: 0 0 auto;
+  height: clamp(44px, 5.2vw, 76px);
+  width: auto;
+  object-fit: contain;
+  margin: 0 clamp(24px, 3.2vw, 60px);
+}
+.subhero__actions {
+  display: flex; gap: var(--space-md); justify-content: center;
+  padding: clamp(32px, 4.4vw, 64px) var(--pad) 0;
+}
+
+/* ============================================================
+   SERVICES — WHAT KAZI DOES (interactive columns + slider)
+   Full-bleed cream panel. Hovering a column expands that service:
+   the SAME image and name morph larger (no crossfade), while the
+   other columns collapse into accent number rails.
+   ============================================================ */
+.ks { --ks-ease: cubic-bezier(0.66, 0, 0.15, 1); --ks-dur: 1.15s; background: var(--color-bg); }
+.ks__frame {
+  display: flex; flex-direction: column;
+  height: 100svh; min-height: 620px;
+}
+.ks__head {
+  text-align: center;
+  border-bottom: 1px solid var(--color-accent);
+  padding: clamp(18px, 2.4vw, 34px) 16px;
+}
+.ks__head h2 {
+  font-family: var(--font-display); font-weight: 800; text-transform: uppercase;
+  letter-spacing: -0.02em; line-height: 1;
+  font-size: clamp(26px, 3.2vw, 52px); color: var(--color-accent);
+}
+.ks__viewport { position: relative; flex: 1 1 auto; min-height: 0; overflow: hidden; }
+.ks__track { display: flex; width: 300%; height: 100%; will-change: transform; }
+.ks__slide { width: 33.3333%; height: 100%; display: flex; min-width: 0; }
+
+/* ---- columns ---- */
+.ks__col {
+  position: relative; overflow: hidden; min-width: 0;
+  flex: 1 1 0%;
+  transition: flex-grow var(--ks-dur) var(--ks-ease),
+              flex-basis var(--ks-dur) var(--ks-ease),
+              background-color var(--ks-dur) var(--ks-ease);
+  background: var(--color-bg);
+}
+.ks__col + .ks__col { border-left: 1px solid var(--color-accent); }
+.ks__slide.has-active .ks__col { flex-grow: 0; flex-basis: clamp(44px, 4.2vw, 68px); background: var(--color-accent); }
+.ks__slide.has-active .ks__col.is-active { flex-grow: 1; flex-basis: 60%; background: var(--color-bg); }
+
+/* ---- single morphing layer ---- */
+.ks__inner {
+  position: absolute; inset: 0 auto 0 0;
+  width: var(--ks-colw, 100%);
+  display: flex; flex-direction: column;
+  padding: clamp(16px, 1.8vw, 30px) clamp(18px, 2vw, 34px);
+  transition: width var(--ks-dur) var(--ks-ease), opacity 0.55s ease;
+}
+.ks__col.is-active .ks__inner { width: var(--ks-expw, 100%); }
+.ks__slide.has-active .ks__col:not(.is-active) .ks__inner { opacity: 0; }
+
+/* image wrapper: contains both static and hovered images stacked */
+.ks__imgwrap {
+  position: relative;
+  width: 82%; height: 36%;
+  overflow: hidden;
+  will-change: width, height;
+  transition: width var(--ks-dur) var(--ks-ease),
+              height var(--ks-dur) var(--ks-ease);
+}
+.ks__col.is-active .ks__imgwrap { width: 100%; height: 56%; }
+/* middle column keeps its image wrapper low & centred when idle */
+.ks__col--b .ks__imgwrap { align-self: center; width: 62%; height: 44%; order: 3; margin-top: auto; }
+.ks__col--b.is-active .ks__imgwrap { width: 100%; height: 54%; }
+
+/* both images fill the wrapper — Figma exports are the source of truth */
+.ks__img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  transition: opacity 200ms ease;
+}
+/* static image visible by default; hovered image hidden */
+.ks__img--hover { opacity: 0; }
+/* Brand Identity carries a clip instead of the two stills; it fills the same
+   wrapper and re-crops as the column expands, exactly as the images do. */
+.ks__vid { opacity: 1; }
+/* on active: the hovered image fades in ON TOP of the static one, which stays
+   fully opaque — a true crossfade would dip both below 1 and let the cream
+   panel wash through as a whitish flash mid-transition */
+.ks__col.is-active .ks__img--hover  { opacity: 1; }
+
+/* kicker + description: revealed by the expansion */
+.ks__info {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  gap: clamp(20px, 4vw, 80px); overflow: hidden;
+  max-height: 0; opacity: 0;
+  margin-top: 0;
+  transition: max-height var(--ks-dur) var(--ks-ease), opacity 0.6s ease,
+              margin-top var(--ks-dur) var(--ks-ease);
+}
+.ks__col.is-active .ks__info {
+  max-height: 180px; opacity: 1; margin-top: clamp(12px, 1.4vw, 22px);
+  transition: max-height var(--ks-dur) var(--ks-ease), opacity 0.7s ease 0.25s,
+              margin-top var(--ks-dur) var(--ks-ease);
+}
+.ks__kicker {
+  font-family: var(--font-display); font-weight: 800; text-transform: uppercase;
+  font-size: clamp(15px, 1.5vw, 24px); letter-spacing: -0.01em;
+  color: var(--color-accent); white-space: nowrap;
+}
+.ks__desc {
+  max-width: 30ch; text-align: right;
+  font-size: clamp(13px, 1.15vw, 18px); line-height: 1.3;
+  color: var(--color-dark);
+}
+
+/* name line: the type itself scales up with the column */
+.ks__nameline {
+  display: flex; justify-content: space-between; align-items: flex-end;
+  gap: 24px; margin-top: auto;
+}
+.ks__name {
+  font-family: var(--font-display); font-weight: 800; text-transform: uppercase;
+  letter-spacing: -0.02em; line-height: 0.92;
+  font-size: clamp(22px, 2.6vw, 44px); color: var(--color-accent);
+  transition: font-size var(--ks-dur) var(--ks-ease);
+}
+.ks__col.is-active .ks__name { font-size: clamp(30px, 4vw, 66px); }
+.ks__num {
+  font-family: var(--font-display); font-weight: 800;
+  font-size: clamp(28px, 3.4vw, 56px); line-height: 0.9; color: var(--color-accent);
+  opacity: 0; transform: translateY(8px);
+  transition: opacity 0.6s ease, transform 0.6s var(--ks-ease);
+}
+.ks__col.is-active .ks__num { opacity: 1; transform: translateY(0); transition-delay: 0.3s; }
+
+/* middle column: name row on top (as in the Figma) */
+.ks__col--b .ks__nameline { order: 1; margin-top: 0; align-items: flex-start; }
+.ks__col--b .ks__info { order: 2; }
+.ks__col--b .ks__imgwrap { order: 3; }
+
+/* ---- collapsed rail ---- */
+.ks__rail {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity 0.5s ease;
+  pointer-events: none;
+}
+.ks__slide.has-active .ks__col:not(.is-active) .ks__rail { opacity: 1; transition-delay: 0.35s; }
+.ks__rail span {
+  font-family: var(--font-display); font-weight: 800;
+  font-size: clamp(22px, 2.6vw, 44px); color: var(--color-bg); line-height: 1;
+}
+
+/* ---- footer / slider ---- */
+.ks__foot {
+  display: flex; align-items: center; gap: clamp(16px, 2vw, 32px);
+  border-top: 1px solid var(--color-accent);
+  padding: clamp(12px, 1.4vw, 20px) clamp(16px, 2vw, 32px);
+}
+.ks__hint {
+  font-family: var(--font-body); font-weight: 500; font-size: 12px;
+  letter-spacing: 0.16em; text-transform: uppercase; color: var(--color-accent);
+  white-space: nowrap;
+}
+.ks__segs { display: flex; gap: 8px; flex: 1 1 auto; max-width: 340px; }
+.ks__segs button {
+  flex: 1 1 0%; height: 4px; border: none; padding: 0; cursor: pointer;
+  background: rgba(215, 78, 49, 0.25); transition: background 0.3s ease;
+}
+.ks__segs button.is-active { background: var(--color-accent); }
+.ks__arrow {
+  margin-left: auto; background: none; border: none; cursor: pointer;
+  font-size: clamp(28px, 2.8vw, 44px); line-height: 1; color: var(--color-accent);
+  transition: transform 0.25s ease;
+}
+.ks__arrow:hover { transform: translateX(5px); }
+
+/* ============================================================
+   PORTFOLIO
+   ============================================================ */
+.work { padding: var(--space-3xl) 0; background: var(--color-bg); }
+.work__head { margin-bottom: var(--space-xl); }
+.work__head .eyebrow { margin-bottom: var(--space-md); }
+.work__title { font-size: clamp(48px, 8vw, 110px); }
+.work__cta { display: flex; justify-content: center; margin-top: var(--space-2xl); }
+/* Masonry grid — fixed asymmetric layout matching the Figma. A 20-row track
+   grid lets the left and right columns split at different points (the masonry
+   look) while both still bottom-align. aspect-ratio gives the grid its height
+   so the 1fr rows have something to divide. */
+.work__grid {
+  display: grid;
+  grid-template-columns: 27fr 27fr 44fr;
+  grid-template-rows: repeat(20, 1fr);
+  gap: clamp(12px, 1.2vw, 20px);
+  aspect-ratio: 1090 / 908;
+}
+.card--rab    { grid-column: 1 / 3; grid-row: 1 / 11; }
+.card--rini   { grid-column: 1 / 2; grid-row: 11 / 21; }
+.card--eye    { grid-column: 2 / 3; grid-row: 11 / 21; }
+.card--orient { grid-column: 3 / 4; grid-row: 1 / 7; }
+.card--studio { grid-column: 3 / 4; grid-row: 7 / 21; }
+
+.card {
+  position: relative; overflow: hidden; height: 100%;
+  background: var(--color-dark); cursor: pointer;
+}
+.card__video {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+  transition: transform .6s ease;
+}
+.card:hover .card__video { transform: scale(1.05); }
+/* Hover-only wash: blurs + dims the video behind the text for legibility.
+   Hidden by default so the resting card is just the playing clip. */
+.card::after {
+  content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background: rgba(17,17,17,.42);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  opacity: 0; transition: opacity .45s ease;
+}
+.card:hover::after { opacity: 1; }
+.card__meta {
+  position: absolute; top: 0; left: 0; z-index: 3;
+  padding: clamp(16px, 1.8vw, 30px);
+  display: flex; flex-direction: column; gap: 6px;
+}
+.card__name { font-size: clamp(24px, 2.9vw, 54px); line-height: .88; color: var(--color-bg); }
+.card__tag {
+  font-family: var(--font-body); font-size: clamp(11px, .9vw, 14px);
+  letter-spacing: .03em; text-transform: none; color: rgba(255,255,240,.9);
+}
+.card__line {
+  position: absolute; bottom: 0; right: 0; z-index: 3;
+  max-width: 16ch; padding: clamp(16px, 1.8vw, 30px); text-align: right;
+  font-family: var(--font-display); font-weight: 700; text-transform: uppercase;
+  font-size: clamp(17px, 1.85vw, 30px); line-height: .98; letter-spacing: -.02em;
+  color: var(--color-bg);
+}
+/* arrows removed on all breakpoints */
+.card__arrow { display: none; }
+
+/* Text + arrow are hidden until the card is hovered */
+.card__meta, .card__line, .card__arrow {
+  opacity: 0; transition: opacity .4s ease, transform .3s ease;
+}
+.card:hover .card__meta,
+.card:hover .card__line,
+.card:hover .card__arrow { opacity: 1; }
+
+/* per-card text + arrow placement to match the Figma */
+.card--rini .card__line,
+.card--eye  .card__line  { right: auto; left: 0; text-align: left; }
+.card--rini .card__arrow,
+.card--eye  .card__arrow { left: auto; right: clamp(16px, 1.8vw, 30px); }
+
+/* ============================================================
+   LEMON REVEAL
+   ============================================================ */
+.lemon { background: var(--color-bg); padding: var(--space-3xl) 0 0; }
+.lemon__text {
+  font-size: clamp(40px, 6.5vw, 96px); line-height: 0.92; text-align: center;
+  max-width: 16ch; margin: 0 auto;
+}
+.lemon__text .word { display: inline-block; opacity: .12; transition: opacity .2s ease; }
+.lemon__text .accent.word { color: var(--color-accent); }
+.lemon__strip {
+  margin-top: var(--space-3xl); background: var(--color-accent); color: var(--color-bg);
+  padding: var(--space-lg) 0; overflow: hidden;
+}
+.lemon__track { display: flex; width: max-content; animation: lemon-marquee 22s linear infinite; }
+.lemon__seq {
+  flex: 0 0 auto; white-space: nowrap;
+  font-family: var(--font-display); font-weight: 800; text-transform: uppercase;
+  font-size: clamp(22px, 3vw, 40px); letter-spacing: -0.02em;
+}
+.lemon__seq i { font-style: normal; opacity: .6; padding: 0 0.15em; }
+@keyframes lemon-marquee { to { transform: translateX(-50%); } }
+
+/* ============================================================
+   TESTIMONIALS
+   Ivory full-width section, centred heading. Wide content row:
+   left image-card slider + a wider orange panel, both exactly the
+   same height. Active card centred (full colour, 5px accent border);
+   neighbours grayscale & peeking.
+   ============================================================ */
+.ts { background: var(--color-bg); color: var(--color-dark); padding: clamp(56px, 8vw, 120px) 0; overflow: hidden; }
+
+.ts__head { text-align: center; max-width: 900px; margin: 0 auto clamp(56px, 8vw, 120px); padding: 0 var(--pad); }
+.ts__title { font-size: clamp(44px, 6vw, 92px); color: var(--color-dark); }
+.ts__sub {
+  margin: clamp(12px, 1.4vw, 20px) auto 0; max-width: 60ch;
+  color: var(--color-accent); font-size: clamp(15px, 1.2vw, 19px); font-weight: 500; letter-spacing: 0.01em;
+}
+
+.ts__grid {
+  --ts-h: clamp(500px, 62vh, 600px);
+  width: 100%; max-width: 1520px; margin: 0 auto; padding: 0 clamp(20px, 3vw, 44px);
+  display: grid; grid-template-columns: min(480px, 40%) 1fr; column-gap: clamp(28px, 3vw, 44px);
+  height: var(--ts-h);
+}
+
+/* ---- left: card slider ---- */
+.ts__cards { position: relative; height: 100%; overflow: hidden; touch-action: pan-y; }
+.ts__strip { position: absolute; left: 0; right: 0; top: 0; will-change: transform; }
+.ts__card {
+  position: absolute; left: 0; right: 0; overflow: hidden;
+  border: 5px solid var(--color-accent); background: var(--color-bg);
+  cursor: pointer;
+}
+.ts__card img {
+  display: block; width: 100%; height: 100%; object-fit: cover;
+  filter: grayscale(1) brightness(0.7);
+  transition: filter 0.6s ease, transform 0.6s ease;
+}
+.ts__card.is-active img { filter: grayscale(0) brightness(1); }
+.ts__card:not(.is-active):hover img { filter: grayscale(1) brightness(0.85); }
+
+/* ---- right: orange panel ---- */
+.ts__panel {
+  position: relative; height: 100%; background: var(--color-accent); color: var(--color-bg);
+  display: flex; flex-direction: column; justify-content: center;
+  padding: clamp(30px, 3.4vw, 60px) clamp(32px, 3.8vw, 66px) clamp(26px, 2.8vw, 46px);
+}
+.ts__quote {
+  font-family: Georgia, 'Times New Roman', serif; font-weight: 700;
+  font-size: clamp(70px, 8vw, 130px); line-height: 0.7; height: 0.45em;
+  color: var(--color-bg); user-select: none;
+}
+.ts__text {
+  margin: clamp(18px, 2vw, 34px) 0 auto; max-width: 30ch;
+  font-family: var(--font-body); font-weight: 400;
+  font-size: clamp(20px, 1.9vw, 32px); line-height: 1.3; color: var(--color-bg);
+}
+.ts__text, .ts__name, .ts__role { will-change: transform, opacity; }
+.ts__foot {
+  display: flex; justify-content: space-between; align-items: flex-end;
+  gap: 24px; margin-top: clamp(28px, 3.4vw, 56px);
+}
+.ts__name {
+  font-family: var(--font-display); font-weight: 800; text-transform: uppercase;
+  letter-spacing: -0.02em; line-height: 0.95;
+  font-size: clamp(24px, 2.4vw, 38px); color: var(--color-bg);
+}
+.ts__role { margin-top: 6px; font-size: clamp(12px, 1vw, 15px); opacity: 0.9; }
+/* Slider controls. Three 3px dashes were the only thing offering to move the
+   slider, which read as a progress indicator rather than a control — the
+   arrows say plainly that there is a next one, and the counter says how many. */
+.ts__nav {
+  display: flex; align-items: center; gap: clamp(8px, 0.9vw, 14px);
+  margin-top: clamp(14px, 1.6vw, 22px); flex-wrap: wrap;
+}
+.ts__arrow {
+  flex: 0 0 auto; width: 38px; height: 38px; border-radius: 50%;
+  display: grid; place-items: center; cursor: pointer;
+  background: none; color: var(--color-bg);
+  border: 1px solid rgba(255, 255, 240, 0.45);
+  transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+}
+.ts__arrow svg { width: 18px; height: 18px; display: block; }
+.ts__arrow:hover, .ts__arrow:focus-visible {
+  background: var(--color-bg); color: var(--color-accent); border-color: var(--color-bg);
+}
+.ts__dots { display: flex; align-items: center; gap: 10px; margin-left: 4px; }
+.ts__dots button {
+  width: 26px; height: 3px; border: none; cursor: pointer;
+  /* a 3px-tall target is unusable; the padding grows the hit area to 21px
+     while background-clip keeps the dash itself thin. content-box is required
+     — under the page's border-box default the padding would swallow the 3px
+     height and leave nothing to paint. */
+  box-sizing: content-box; padding: 9px 0; background-clip: content-box;
+  background-color: rgba(255, 255, 240, 0.4);
+  transition: background-color 0.3s ease, width 0.3s ease;
+}
+.ts__dots button:hover { background-color: rgba(255, 255, 240, 0.75); }
+.ts__dots button.is-active { background-color: var(--color-bg); width: 34px; }
+.ts__count {
+  margin-left: auto; font-family: var(--font-body); font-weight: 500;
+  font-size: clamp(11px, 0.85vw, 13px); letter-spacing: 0.1em;
+  color: var(--color-bg); opacity: 0.75; white-space: nowrap;
+}
+/* the strip is draggable — say so */
+.ts__cards { cursor: grab; }
+.ts__cards:active { cursor: grabbing; }
+.ts__stars { font-size: clamp(14px, 1.2vw, 19px); letter-spacing: 4px; color: var(--color-bg); white-space: nowrap; }
+
+@media (max-width: 920px) {
+  .ts__grid { grid-template-columns: 1fr; height: auto; padding: 0 clamp(16px, 4vw, 32px); }
+  .ts__cards { height: clamp(300px, 48vh, 420px); }
+  .ts__panel { min-height: clamp(380px, 55vh, 500px); }
+  .ts__text { max-width: none; }
+  .ts__quote { font-size: clamp(50px, 10vw, 90px); }
+  /* the stars would squeeze the controls on a narrow panel */
+  .ts__foot { flex-direction: column; align-items: flex-start; gap: 14px; }
+}
+
+/* ============================================================
+   CTA + MARQUEE
+   ============================================================ */
+.cta { background: var(--color-bg); padding: var(--space-3xl) 0 0; text-align: center; overflow: hidden; }
+.cta__title { font-size: clamp(44px, 7vw, 96px); color: var(--color-accent); }
+.cta__actions { margin-top: var(--space-xl); display: flex; gap: var(--space-md); justify-content: center; }
+
+.marquee { margin-top: var(--space-3xl); width: 100%; overflow: hidden; }
+.marquee__track { display: flex; width: max-content; will-change: transform; }
+/* bottom-align so the staggered heights sit flush on the footer */
+.marquee__set { display: flex; align-items: flex-end; gap: 0; }
+.marquee__set img {
+  width: clamp(190px, 23vw, 340px); object-fit: cover; flex: 0 0 auto;
+}
+/* staggered card heights — matches the Figma */
+.marquee__set img:nth-child(1) { height: clamp(200px, 26vw, 320px); }
+.marquee__set img:nth-child(2) { height: clamp(255px, 34vw, 420px); }
+.marquee__set img:nth-child(3) { height: clamp(235px, 31vw, 380px); }
+.marquee__set img:nth-child(4) { height: clamp(190px, 24vw, 300px); }
+.marquee__set img:nth-child(5) { height: clamp(270px, 36vw, 440px); }
+.marquee__set img:nth-child(6) { height: clamp(210px, 27vw, 330px); }
+.marquee__set img:nth-child(7) { height: clamp(250px, 33vw, 400px); }
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+.footer { background: var(--color-accent); color: var(--color-bg); padding-top: var(--space-lg); overflow: hidden; }
+.footer__bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding-top: var(--space-md); padding-bottom: var(--space-md);
+  border-bottom: 1px solid rgba(255,255,240,.3);
+}
+.footer__nav { display: flex; gap: var(--space-lg); }
+.footer__nav a, .footer__contact a { font-size: 14px; transition: opacity .2s ease; }
+.footer__nav a:hover, .footer__contact a:hover { opacity: .7; }
+.footer__contact { display: flex; align-items: center; gap: var(--space-md); }
+.footer__ig { display: inline-flex; }
+.footer__wordmark { padding: var(--space-lg) var(--pad) 0; }
+.footer__wordmark img { width: 100%; height: auto; }
+.footer__fine {
+  display: flex; justify-content: space-between; gap: var(--space-md);
+  padding-top: var(--space-md); padding-bottom: var(--space-lg);
+  font-size: 12px; opacity: .8;
+}
+
+/* ============================================================
+   SCROLL REVEAL
+   ============================================================ */
+.reveal { opacity: 0; transform: translateY(22px); transition: opacity .5s ease, transform .55s cubic-bezier(.16,1,.3,1); }
+.reveal.visible { opacity: 1; transform: translateY(0); }
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+/* ---- 1024px ---- */
+@media (max-width: 1024px) {
+  :root { --pad: 40px; }
+  .subhero__grid { grid-template-columns: 1fr; gap: var(--space-lg); }
+}
+
+/* ---- 768px: Mobile ---- */
+@media (max-width: 768px) {
+  :root { --pad: 20px; --nav-h: 60px; }
+
+  /* --- Hamburger visible, desktop links hidden --- */
+  .nav__burger { display: flex; }
+
+  /* The pill must not clip the dropdown (it is the fixed/abs containing
+     block because of its transform + backdrop-filter) */
+  .nav { overflow: visible; }
+  .nav::after { overflow: hidden; }
+
+  /* Mobile menu: dropdown card under the pill */
+  .nav__menu {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    position: absolute;
+    left: 0; right: 0; top: calc(100% + 10px);
+    background: rgba(20, 18, 16, 0.96);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 240, 0.14);
+    border-radius: 16px;
+    padding: 18px;
+    opacity: 0; visibility: hidden; transform: translateY(-10px);
+    transition: opacity 0.3s ease, transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), visibility 0.3s;
+  }
+  .nav__menu.is-open { opacity: 1; visibility: visible; transform: translateY(0); }
+
+  .nav__links { flex-direction: column; align-items: flex-start; gap: 4px; }
+  .nav__links a {
+    display: block; width: 100%;
+    padding: 10px 6px;
+    font-size: 17px; color: var(--color-bg);
+  }
+  .nav__cta { margin-top: 8px; width: 100%; text-align: center; padding: 14px 24px; font-size: 15px; }
+
+  /* --- Hero --- */
+  .hero { height: 100svh; }
+  .hero__scroll { font-size: 10px; letter-spacing: 0.16em; }
+
+  /* --- Sub-hero --- */
+  .subhero { padding-top: var(--space-2xl); padding-bottom: var(--space-xl); }
+  .subhero__title { font-size: clamp(34px, 11vw, 54px); }
+  .subhero__lead { justify-self: start; }
+  .subhero__lead p { max-width: none; font-size: 16px; }
+  .subhero__actions {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+  .subhero__actions .btn {
+    width: 100%; max-width: 220px; justify-content: center;
+    padding: 12px 18px; font-size: 13px;
+  }
+
+  /* --- Portfolio grid --- */
+  .work { padding: var(--space-2xl) 0; }
+  .work__head { margin-bottom: var(--space-xl); }
+  .work__title { font-size: clamp(36px, 11vw, 60px); }
+  .work__grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: none;
+    aspect-ratio: auto;
+    gap: 12px;
+  }
+  .work__grid .card { grid-column: 1 / -1; grid-row: auto; aspect-ratio: 16 / 10; }
+  .work__cta { margin-top: var(--space-xl); }
+
+  /* Portfolio on touch: text variant hidden until the card is tapped */
+  .card::after, .card__meta, .card__line { opacity: 0; }
+  .card.is-open::after { opacity: 1; }
+  .card.is-open .card__meta, .card.is-open .card__line { opacity: 1; }
+
+  /* --- Lemon --- */
+  .lemon { padding-top: var(--space-2xl); }
+  .lemon__text { font-size: clamp(28px, 8vw, 52px); }
+  .lemon__strip { margin-top: var(--space-2xl); }
+
+  /* --- Testimonials --- */
+  .ts { padding: clamp(40px, 8vw, 80px) 0; }
+  .ts__title { font-size: clamp(32px, 9vw, 56px); }
+  .ts__sub { font-size: clamp(14px, 4vw, 17px); }
+  .ts__text { font-size: clamp(16px, 4.5vw, 22px); }
+
+  /* --- CTA --- */
+  .cta { padding-top: var(--space-2xl); }
+  .cta__title { font-size: clamp(34px, 10vw, 60px); }
+  .cta__actions {
+    margin-top: var(--space-lg);
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-sm);
+  }
+  .cta__actions .btn { width: 100%; max-width: 300px; justify-content: center; }
+
+  /* --- Marquee --- */
+  .marquee__set img { width: clamp(130px, 36vw, 220px); }
+  .marquee__set img:nth-child(1) { height: clamp(130px, 18vw, 200px); }
+  .marquee__set img:nth-child(2) { height: clamp(160px, 22vw, 260px); }
+  .marquee__set img:nth-child(3) { height: clamp(150px, 20vw, 240px); }
+  .marquee__set img:nth-child(4) { height: clamp(120px, 16vw, 180px); }
+  .marquee__set img:nth-child(5) { height: clamp(170px, 24vw, 280px); }
+  .marquee__set img:nth-child(6) { height: clamp(135px, 18vw, 210px); }
+  .marquee__set img:nth-child(7) { height: clamp(155px, 21vw, 250px); }
+
+  /* --- Footer --- */
+  .footer__bar { flex-direction: column; align-items: flex-start; gap: var(--space-md); }
+  .footer__nav { gap: var(--space-md); flex-wrap: wrap; }
+  .footer__fine { flex-direction: column; gap: var(--space-xs); text-align: left; }
+  .footer__wordmark { padding: var(--space-md) var(--pad) 0; }
+}
+
+/* ---- 480px: Very small phones ---- */
+@media (max-width: 480px) {
+  :root { --pad: 16px; }
+  .subhero__title { font-size: clamp(30px, 12vw, 46px); }
+  .work__title { font-size: clamp(30px, 12vw, 46px); }
+  .cta__title { font-size: clamp(28px, 11vw, 48px); }
+  .lemon__text { font-size: clamp(24px, 9vw, 38px); }
+  .ts__title { font-size: clamp(28px, 10vw, 44px); }
+  .ts__text { font-size: clamp(15px, 4.5vw, 20px); }
+  .btn { padding: 12px 20px; font-size: 13px; }
+  .nav__links a { font-size: clamp(24px, 9vw, 36px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+  .reveal { opacity: 1; transform: none; }
+  .lemon__text .word { opacity: 1; }
+}
+
+/* ============================================================
+   CASE STUDY — floating back button (replaces the nav on
+   case-study pages; frosted circle works over the dark hero
+   and the accent canvas alike)
+   ============================================================ */
+.cs__back {
+  position: fixed; top: clamp(16px, 2vw, 28px); left: clamp(16px, 2vw, 28px);
+  z-index: 1000;
+  width: 46px; height: 46px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(20, 18, 16, 0.34);
+  backdrop-filter: blur(18px) saturate(1.3); -webkit-backdrop-filter: blur(18px) saturate(1.3);
+  border: 1px solid rgba(255, 255, 240, 0.22);
+  color: var(--color-bg);
+  transition: background .25s ease, transform .25s ease;
+}
+.cs__back:hover { background: var(--color-dark); transform: translateX(-3px); }
+.cs__back svg { width: 20px; height: 20px; display: block; }
+
+/* services — small screens: stack the three services vertically */
+@media (max-width: 768px) {
+  .ks__frame { height: auto; }
+  .ks__head { padding: 16px; }
+  /* auto-height chain: the desktop 100% heights would squeeze the
+     expanded card and clip its image */
+  .ks__viewport { flex: none; }
+  .ks__track { height: auto; align-items: flex-start; }
+  .ks__slide { flex-direction: column; height: auto; width: 33.3333%; }
+  /* Accordion on a phone. The three services stack as tappable headers and one
+     is open at a time (the script guarantees one via ensureMobileActive), so
+     the whole set stays reachable without scrolling past three full cards.
+     The desktop model expands sideways off a flex-basis; here the column is
+     always full width and the *contents* open instead, so every rule below
+     neutralises the horizontal geometry and drives height off .is-active. */
+  .ks__col,
+  .ks__slide.has-active .ks__col,
+  .ks__slide.has-active .ks__col.is-active {
+    flex: 0 0 auto; flex-basis: auto; min-height: 0;
+    background: var(--color-bg);
+  }
+  .ks__col + .ks__col { border-left: none; border-top: 1px solid var(--color-accent); }
+  .ks__rail { display: none; }
+  /* the header is the tap target for the whole card */
+  .ks__col { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+
+  .ks__inner,
+  .ks__slide.has-active .ks__col:not(.is-active) .ks__inner {
+    width: 100% !important; position: relative; inset: auto;
+    display: flex; flex-direction: column;
+    padding: 16px 16px 18px;
+    opacity: 1;
+  }
+  /* header first, then the artwork and copy that open beneath it */
+  .ks__col .ks__nameline,
+  .ks__col--b .ks__nameline {
+    order: 1; margin-top: 0; align-items: center;
+  }
+  .ks__col .ks__imgwrap,
+  .ks__col--b .ks__imgwrap,
+  .ks__slide.has-active .ks__col:not(.is-active) .ks__imgwrap {
+    order: 2; align-self: stretch; margin: 0; display: block;
+    width: 100% !important;
+    /* closed: collapsed to nothing but still in flow, so the open/close is a
+       height transition rather than a reflow jump */
+    height: 0 !important; opacity: 0;
+    transition: height 0.45s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s ease, margin 0.45s ease;
+  }
+  .ks__slide .ks__col.is-active .ks__imgwrap {
+    height: 56vw !important; opacity: 1; margin-top: 14px;
+  }
+  /* show the expanded artwork, not the idle crop */
+  .ks__img--hover { opacity: 1; }
+  .ks__info,
+  .ks__col.is-active .ks__info {
+    display: block; order: 3;
+    position: static; opacity: 0; transform: none;
+    max-height: 0; overflow: hidden; padding: 0;
+    transition: max-height 0.45s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s ease, margin 0.45s ease;
+  }
+  .ks__col.is-active .ks__info { max-height: 60vh; opacity: 1; margin-top: 14px; }
+  /* desktop sets these side by side with the copy flush right; stacked on a
+     phone they both read from the left edge */
+  .ks__desc { text-align: left; max-width: none; margin-top: 6px; }
+  .ks__name,
+  .ks__slide.has-active .ks__col:not(.is-active) .ks__name {
+    color: var(--color-accent); opacity: 1; transform: none;
+  }
+  .ks__name { font-size: clamp(20px, 5.8vw, 28px); }
+  /* the number doubles as the open/closed affordance */
+  .ks__num,
+  .ks__col.is-active .ks__num {
+    display: block; opacity: 0.5; transform: none; transition: opacity 0.3s ease;
+    font-size: clamp(13px, 3.6vw, 16px);
+  }
+  .ks__col.is-active .ks__num { opacity: 1; }
+  .ks__foot { flex-wrap: wrap; row-gap: 10px; }
+  /* phone-range vw so the arrow scales between small and large phones */
+  .ks__arrow { font-size: clamp(26px, 7vw, 40px); }
+}

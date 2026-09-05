@@ -1,0 +1,174 @@
+/* ============================================================
+   KAZI — RAB AUTOMOTORS CASE STUDY
+   Geometry follows the 1440px Figma frame (values measured from
+   the export). Accent canvas, cream text, hairline dividers.
+   ============================================================ */
+.case-page { background: var(--color-accent); color: var(--color-bg); overflow-x: clip; }
+.case-page .nav { opacity: 1; }
+
+/* ---------------- Hero (shared element with the work-page card) ---------------- */
+.cs__hero { position: relative; height: min(27vw, 56vh); min-height: 240px; overflow: hidden; background: var(--color-dark); }
+.cs__hero img { width: 100%; height: 100%; object-fit: cover; }
+.cs__hero-title {
+  position: absolute; right: clamp(20px, 2.8vw, 44px); bottom: clamp(16px, 2.2vw, 34px);
+  text-align: right; color: var(--color-bg);
+}
+.cs__hero-title h1 {
+  font-family: var(--font-body); font-weight: 700; letter-spacing: 0.01em;
+  text-transform: uppercase; line-height: 1;
+  font-size: clamp(18px, 2.1vw, 32px);
+}
+.cs__hero-title p { font-size: clamp(12px, 0.95vw, 15px); margin-top: 6px; opacity: 0.9; }
+
+/* ---------------- Intro ---------------- */
+.cs__intro {
+  display: grid; grid-template-columns: 1fr 1.05fr 1fr;
+  gap: clamp(28px, 5vw, 80px); align-items: start;
+  padding: clamp(48px, 6.5vw, 100px) clamp(28px, 3.9vw, 56px) clamp(32px, 4vw, 64px);
+}
+.cs__logo { width: clamp(92px, 9.4vw, 136px); height: auto; }
+.cs__challenge { margin-top: clamp(64px, 11vw, 168px); max-width: 30ch; }
+.cs__h {
+  font-family: var(--font-display); font-weight: 800; text-transform: capitalize;
+  font-size: clamp(17px, 1.45vw, 21px); line-height: 1.15; letter-spacing: -0.01em;
+  color: var(--color-dark);
+}
+.cs__intro p { font-size: clamp(14px, 1.05vw, 16px); line-height: 1.5; margin-top: 12px; }
+.cs__intro-img img { width: 74%; margin: 0 auto; }
+.cs__intro-right { text-align: right; max-width: 34ch; justify-self: end; }
+
+/* ---------------- Campaign reels ----------------
+   Figma @1440: centre reel 23.4vw wide (full 9:16), neighbours 22.7vw
+   cropped to 33.2vw tall, ~18px gaps; the outermost pair bleeds past
+   the viewport. Sides get a progressive fade blur, centre is elevated. */
+.cs__reels { padding: clamp(40px, 5vw, 80px) 0 clamp(56px, 7vw, 110px); }
+.cs__reels-label {
+  text-align: center; font-size: 13px; font-weight: 500;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  margin-bottom: clamp(24px, 3.2vw, 52px);
+}
+/* Slideable strip: JS positions it via transform so the active reel sits
+   at the viewport centre (geometry mirrored in work-rab.js xFor()). */
+.cs__reels-row {
+  display: flex; align-items: center; width: max-content;
+  gap: clamp(10px, 1.25vw, 18px);
+  will-change: transform; cursor: grab; touch-action: pan-y;
+}
+.cs__reels-row.is-grabbing { cursor: grabbing; }
+.cs__reel {
+  flex: 0 0 auto; width: 22.7vw; height: 33.2vw; overflow: hidden; position: relative;
+  transition: width 0.55s ease, height 0.55s ease, box-shadow 0.55s ease;
+}
+.cs__reel video {
+  width: 100%; height: 100%; object-fit: cover; pointer-events: none;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  transition: filter 0.55s ease, transform 0.55s ease;
+}
+/* Safari rasterises a blurred layer in tiles and leaves a hairline seam where
+   two tiles meet — the black line that showed across the side reels. Blurring
+   the video itself rather than its clipping container, on its own compositing
+   layer, avoids that; the slight scale keeps the blur's soft edge outside the
+   frame. Chromium never showed the seam, so this is invisible there. */
+.cs__reel--near video { filter: blur(3px) brightness(0.85); transform: translateZ(0) scale(1.04); }
+.cs__reel--far video  { filter: blur(6px) brightness(0.72); transform: translateZ(0) scale(1.07); }
+.cs__reel--center {
+  width: 23.4vw; height: 41.6vw; z-index: 2;
+  box-shadow: 0 24px 60px rgba(17, 17, 17, 0.45);
+}
+
+/* Pause / play indicator on the active reel */
+.cs__reel-state {
+  position: absolute; left: 50%; top: 50%; width: 56px; height: 56px;
+  transform: translate(-50%, -50%); border-radius: 50%;
+  background: var(--color-bg); color: var(--color-accent);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; line-height: 1; letter-spacing: 0.08em;
+  opacity: 0; transition: opacity 0.25s ease; pointer-events: none;
+}
+.cs__reel-state::after { content: '\275A\275A'; /* ❚❚ */ }
+.cs__reel--center.is-paused .cs__reel-state::after { content: '\25B6'; padding-left: 4px; /* ▶ */ }
+.cs__reel--center:hover .cs__reel-state, .cs__reel--center.is-paused .cs__reel-state { opacity: 1; }
+
+/* ---------------- Services / Impact ---------------- */
+.cs__services { padding-top: clamp(40px, 5vw, 80px); }
+.cs__shead, .cs__srow {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: clamp(18px, 2.4vw, 40px) clamp(28px, 5.5vw, 80px);
+}
+.cs__shead h2 {
+  font-family: var(--font-display); font-weight: 800; text-transform: uppercase;
+  letter-spacing: -0.03em; line-height: 0.85;
+  font-size: clamp(28px, 3.6vw, 54px); color: var(--color-dark);
+}
+.cs__srow + .cs__srow { border-top: 1px solid rgba(255, 255, 240, 0.55); }
+.cs__srow h3 {
+  font-family: var(--font-display); font-weight: 800; text-transform: uppercase;
+  letter-spacing: -0.03em; line-height: 0.9;
+  font-size: clamp(26px, 3.6vw, 54px); color: var(--color-bg);
+}
+.cs__snum { text-align: right; }
+.cs__snum span {
+  display: block; font-family: var(--font-display); font-weight: 700;
+  font-size: clamp(24px, 3.2vw, 48px); line-height: 1; color: var(--color-bg);
+}
+.cs__snum small {
+  display: block; font-family: var(--font-display); font-weight: 500;
+  font-size: clamp(11px, 0.95vw, 15px); margin-top: 6px; opacity: 0.9;
+}
+
+/* ---------------- Gallery ---------------- */
+.cs__gallery { padding: clamp(40px, 5vw, 80px) 0 0; display: grid; gap: clamp(24px, 2.8vw, 42px); }
+.cs__pair {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: clamp(24px, 2.8vw, 42px); padding: 0 clamp(16px, 1.7vw, 24px);
+}
+.cs__pair img { width: 100%; aspect-ratio: 3 / 2; object-fit: cover; }
+.cs__full img { width: 100%; height: auto; }
+
+/* ---------------- Outro ---------------- */
+.cs__outro { text-align: center; padding: clamp(90px, 13vw, 210px) var(--pad) clamp(56px, 7vw, 120px); }
+.cs__outro p {
+  font-family: var(--font-display); font-weight: 700; text-transform: uppercase;
+  font-size: clamp(17px, 2.36vw, 36px); line-height: 1.25; letter-spacing: -0.01em;
+  color: var(--color-bg);
+}
+.cs__end-nav {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-top: clamp(64px, 9vw, 150px);
+  /* cancel the outro's var(--pad) so the links sit near the screen edges */
+  margin-left: calc(-1 * var(--pad) + clamp(20px, 3vw, 44px));
+  margin-right: calc(-1 * var(--pad) + clamp(20px, 3vw, 44px));
+}
+.cs__end-link {
+  font-size: clamp(12px, 0.95vw, 15px); letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--color-bg); transition: opacity 0.2s ease;
+}
+.cs__end-link:hover { opacity: 0.7; }
+
+/* Entry: content below the hero fades up once (hero itself stays put so
+   the card-to-hero transition reads as one continuous move) */
+.cs--enter .cs__intro, .cs--enter .cs__reels, .cs--enter .cs__services,
+.cs--enter .cs__gallery, .cs--enter .cs__outro {
+  opacity: 0; transform: translateY(22px);
+}
+.cs--enter-play .cs__intro, .cs--enter-play .cs__reels, .cs--enter-play .cs__services,
+.cs--enter-play .cs__gallery, .cs--enter-play .cs__outro {
+  opacity: 1; transform: translateY(0);
+  transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+}
+
+/* ---------------- Responsive ---------------- */
+@media (max-width: 768px) {
+  .cs__hero { height: min(72vw, 60vh); }
+  .cs__intro { grid-template-columns: 1fr; gap: 32px; }
+  .cs__challenge { margin-top: 28px; max-width: none; }
+  .cs__intro-img img { width: 100%; }
+  .cs__intro-right { text-align: left; max-width: none; justify-self: start; }
+  .cs__reel { width: 34vw; height: 50vw; }
+  .cs__reel--center { width: 56vw; height: 99.5vw; }
+  .cs__reel-state { width: 46px; height: 46px; font-size: 13px; }
+  .cs__srow h3, .cs__shead h2 { font-size: clamp(22px, 6.4vw, 30px); }
+  .cs__snum span { font-size: clamp(20px, 5.6vw, 28px); }
+  .cs__pair { grid-template-columns: 1fr; }
+}

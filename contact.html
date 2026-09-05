@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contact — Kazi Network</title>
+  <meta name="description" content="Make your next move. Discover, strategize, create, connect — start a conversation with Kazi Network." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23D74E31'/%3E%3Ctext x='50%25' y='54%25' font-family='Arial Black,Arial' font-weight='900' font-size='20' fill='%23FFFFF0' text-anchor='middle' dominant-baseline='central'%3EK%3C/text%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@500;700;800;900&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/contact.css" />
+</head>
+<body class="contact-page">
+
+  <!-- ============ NAVBAR (shared component) ============ -->
+  <header class="nav is-visible" id="nav">
+    <div class="nav__inner">
+      <a href="index.html" class="nav__brand" aria-label="Kazi"><img decoding="async" fetchpriority="high" src="assets/img/logo-mark.webp" alt="Kazi" /></a>
+      <button class="nav__burger" id="navBurger" aria-label="Open menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+      <div class="nav__menu" id="navMenu">
+        <nav class="nav__links">
+          <a href="index.html#top">Home</a>
+          <a href="collective.html">The Collective</a>
+          <a href="work.html">Work</a>
+          <a href="contact.html" aria-current="page">Contact</a>
+        </nav>
+        <a href="contact.html" class="btn btn--filled nav__cta">Grow Your Brand</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="ct">
+
+    <!-- ============ HEADLINE: CONTACT ⟷ montage ⟷ KAZI ============ -->
+    <section class="ct__hero">
+      <div class="ct__headline" id="ctHeadline">
+        <div class="ct__mask"><h1 class="ct__word ct__word--contact" id="ctContact">Contact</h1></div>
+        <div class="ct__montage" id="ctMontage" aria-hidden="true">
+          <img loading="lazy" decoding="async" src="assets/img/contact/image-1.webp" alt="" />
+          <img loading="lazy" decoding="async" src="assets/img/contact/image-8.webp" alt="" />
+          <img loading="lazy" decoding="async" src="assets/img/contact/image-9.webp" alt="" />
+          <img loading="lazy" decoding="async" src="assets/img/contact/image-3.webp" alt="" />
+        </div>
+        <div class="ct__mask"><h1 class="ct__word ct__word--kazi" id="ctKazi">Kazi</h1></div>
+      </div>
+    </section>
+
+    <!-- ============ GRID: pillars + MAKE YOUR NEXT MOVE ============ -->
+    <section class="ct__grid ct__reveal">
+      <div class="ct__cells">
+        <div class="ct__cell"><h2>Discover</h2></div>
+        <div class="ct__cell"><h2>Strategize</h2></div>
+        <div class="ct__cell"><h2>Create</h2></div>
+        <div class="ct__cell">
+          <h2>Connect</h2>
+          <ul class="ct__contacts">
+            <li><a href="mailto:hello@kazinetwork.in">hello@kazinetwork.in</a></li>
+            <li><a href="tel:+91">+91-XXXXX-XXXXX</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="ct__move">
+        <h2>Make<br />your next<br />move.</h2>
+      </div>
+    </section>
+
+    <!-- ============ STATEMENT ============ -->
+    <section class="ct__statement ct__reveal">
+      <p>Brands aren&rsquo;t built overnight, but every great one begins with a conversation. If you have the ambition, we&rsquo;ll bring the strategy, creativity, and execution.</p>
+    </section>
+
+    <!-- ============ CONTACT FORM ============ -->
+    <section class="ct__form-section ct__reveal">
+      <h2 class="ct__form-heading">Reach Out To Us</h2>
+      <form class="ct__form" id="ctForm" action="#" method="POST" novalidate>
+
+        <!-- Row 1: Name + Email -->
+        <div class="ct__field">
+          <label class="ct__label" for="ctName">Name*</label>
+          <input class="ct__input" type="text" id="ctName" name="name" required autocomplete="name" />
+        </div>
+        <div class="ct__field">
+          <label class="ct__label" for="ctEmail">Email*</label>
+          <input class="ct__input" type="email" id="ctEmail" name="email" required autocomplete="email" />
+        </div>
+
+        <!-- Row 2: Company + Service -->
+        <div class="ct__field">
+          <label class="ct__label" for="ctCompany">Company</label>
+          <input class="ct__input" type="text" id="ctCompany" name="company" autocomplete="organization" />
+        </div>
+        <div class="ct__field">
+          <label class="ct__label" for="ctService">Service*</label>
+          <select class="ct__input ct__select" id="ctService" name="service" required>
+            <option value="" disabled selected>Select a Service</option>
+            <option value="video-production">Video Production</option>
+            <option value="cgi-motion">CGI &amp; Motion Graphics</option>
+            <option value="brand-identity">Brand Identity</option>
+            <option value="branded-content">Branded Content</option>
+            <option value="social-media">Social Media Management</option>
+            <option value="event-coverage">Event Coverage</option>
+            <option value="performance-leadgen">Performance &amp; Lead Gen</option>
+            <option value="original-ip">Original IP &amp; Series</option>
+            <option value="photography">Photography</option>
+          </select>
+        </div>
+
+        <!-- Row 3: Phone + Website / Instagram -->
+        <div class="ct__field">
+          <label class="ct__label" for="ctPhone">Phone*</label>
+          <input class="ct__input" type="tel" id="ctPhone" name="phone" required autocomplete="tel" />
+        </div>
+        <div class="ct__field">
+          <label class="ct__label" for="ctWebsite">Website or Instagram*</label>
+          <input class="ct__input" type="url" id="ctWebsite" name="website" required />
+        </div>
+
+        <!-- Row 4: Project Details (full-width) -->
+        <div class="ct__field ct__field--full">
+          <label class="ct__label" for="ctDetails">Project Details*</label>
+          <textarea class="ct__input ct__textarea" id="ctDetails" name="details" rows="4" required></textarea>
+        </div>
+
+        <!-- Submit -->
+        <div class="ct__field ct__field--full ct__submit-row">
+          <button type="submit" class="ct__submit">[LET'S TALK]</button>
+        </div>
+
+      </form>
+    </section>
+
+  </main>
+
+  <!-- ============ FOOTER (shared component) ============ -->
+  <footer class="footer ct__reveal">
+    <div class="footer__bar container">
+      <nav class="footer__nav">
+        <a href="collective.html">The Collective</a>
+        <a href="work.html">Work</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+      <div class="footer__contact">
+        <a href="mailto:hello@kazinetwork.com">Email</a>
+        <a href="https://instagram.com" target="_blank" rel="noopener" class="footer__ig" aria-label="Instagram">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+        </a>
+      </div>
+    </div>
+    <div class="footer__wordmark">
+      <img loading="lazy" decoding="async" src="assets/img/kazi-wordmark.webp" alt="Kazi" />
+    </div>
+    <div class="footer__fine container">
+      <span>&copy; 2026 Ryu Kazi Network Pvt. Ltd. &mdash; Guwahati, Assam.</span>
+      <span>Fresh creative from Assam. No filter.</span>
+    </div>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="js/contact.js"></script>
+</body>
+</html>

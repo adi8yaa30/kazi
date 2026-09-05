@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kazi Network — Fresh creative from Assam. No filter.</title>
+  <meta name="description" content="Kazi Network is a Pan-India creative studio from Guwahati, Assam. We make films, build brands, and turn businesses into cultural forces." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23D74E31'/%3E%3Ctext x='50%25' y='54%25' font-family='Arial Black,Arial' font-weight='900' font-size='20' fill='%23FFFFF0' text-anchor='middle' dominant-baseline='central'%3EK%3C/text%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@500;700;800;900&family=DM+Sans:wght@400;500&display=swap" />
+  <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@500;700;800;900&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- ============ PRELOADER ============ -->
+  <div class="preloader" id="preloader">
+    <div class="preloader__blinds" aria-hidden="true">
+      <span></span><span></span><span></span><span></span><span></span>
+    </div>
+    <div class="preloader__logo">
+      <img loading="lazy" decoding="async" src="assets/img/kazi-wordmark.webp" alt="Kazi Network" />
+    </div>
+  </div>
+
+  <!-- ============ NAVBAR ============ -->
+  <header class="nav" id="nav">
+    <div class="nav__inner">
+      <a href="#top" class="nav__brand" aria-label="Kazi"><img decoding="async" fetchpriority="high" src="assets/img/logo-mark.webp" alt="Kazi" /></a>
+      <button class="nav__burger" id="navBurger" aria-label="Open menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+      <div class="nav__menu" id="navMenu">
+        <nav class="nav__links">
+          <a href="#top">Home</a>
+          <a href="collective.html">The Collective</a>
+          <a href="work.html">Work</a>
+          <a href="contact.html">Contact</a>
+        </nav>
+        <a href="contact.html" class="btn btn--filled nav__cta">Grow Your Brand</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="top">
+
+    <!-- ============ HERO ============ -->
+    <section class="hero" id="hero">
+      <div class="hero__media">
+        <img decoding="async" fetchpriority="high" class="hero__img" src="assets/img/new-hero-image.webp" alt="" />
+      </div>
+      <a href="#about" class="hero__scroll" aria-label="Scroll down">
+        <span>Scroll Down</span>
+        <span class="hero__scroll-arrow" aria-hidden="true">↓</span>
+      </a>
+    </section>
+
+    <!-- ============ SUB-HERO ============ -->
+    <section class="subhero" id="about">
+      <div class="container subhero__grid">
+        <div class="subhero__copy">
+          <h2 class="subhero__title reveal">We don't build<br><span class="accent">Campaigns.</span> We build<br><span class="accent">Identities.</span></h2>
+        </div>
+        <div class="subhero__lead">
+          <p class="reveal">Kazi Network is a Pan-India creative studio from Guwahati, Assam. We make films, build brands, and turn businesses into cultural forces.</p>
+        </div>
+      </div>
+      <div class="logos reveal">
+        <h2 class="sr-only">Brands we work with</h2>
+        <div class="logos__track" id="logosTrack">
+          <div class="logos__set">
+            <img loading="lazy" decoding="async" src="assets/img/logos/arizona.webp" alt="Arizona Sports Arena" />
+            <img loading="lazy" decoding="async" src="assets/img/logos/relax.webp" alt="Relax" />
+            <img loading="lazy" decoding="async" src="assets/img/logos/jorhat-stallions.webp" alt="Jorhat Stallions" />
+            <img loading="lazy" decoding="async" src="assets/img/logos/rab.webp" alt="RAB Automotors" />
+            <img loading="lazy" decoding="async" src="assets/img/logos/orfab.webp" alt="Orfab by Orient" />
+            <img loading="lazy" decoding="async" src="assets/img/logos/lynchpin.webp" alt="Lynchpin" />
+            <img loading="lazy" decoding="async" src="assets/img/logos/hatk.webp" alt="Hatk" />
+            <img loading="lazy" decoding="async" src="assets/img/logos/orient.webp" alt="Orient" />
+            <img loading="lazy" decoding="async" src="assets/img/logos/relentless-strength.webp" alt="Relentless Strength" />
+            <img loading="lazy" decoding="async" src="assets/img/logos/rini.webp" alt="Rini" />
+          </div>
+        </div>
+      </div>
+
+      <div class="subhero__actions">
+        <a href="work.html" class="btn btn--filled">See Portfolio</a>
+        <a href="contact.html" class="btn btn--ghost">Grow Your Brand</a>
+      </div>
+    </section>
+
+    <!-- ============ SERVICES — WHAT KAZI DOES (interactive columns) ============ -->
+    <section class="ks" id="services">
+      <div class="ks__frame">
+        <header class="ks__head"><h2>What Kazi Does?</h2></header>
+        <div class="ks__viewport" id="ksViewport">
+          <div class="ks__track" id="ksTrack"><!-- slides injected by main.js --></div>
+        </div>
+        <footer class="ks__foot">
+          <span class="ks__hint">Slide to view more</span>
+          <div class="ks__segs" id="ksSegs">
+            <button type="button" aria-label="Slide 1"></button>
+            <button type="button" aria-label="Slide 2"></button>
+            <button type="button" aria-label="Slide 3"></button>
+          </div>
+          <button type="button" class="ks__arrow" id="ksArrow" aria-label="Next slide">&#8594;</button>
+        </footer>
+      </div>
+    </section>
+
+    <!-- ============ PORTFOLIO ============ -->
+    <section class="work" id="work">
+      <div class="container work__head">
+        <span class="eyebrow">Selected work</span>
+        <h2 class="work__title">Kazi's work</h2>
+      </div>
+      <div class="container work__grid">
+
+        <article class="card card--rab" data-cat="Automotive">
+          <video class="card__video" muted loop playsinline preload="none" poster="assets/video/posters/rab.webp" data-autoplay="inview">
+            <source src="assets/video/rab.webm" type="video/webm" />
+            <source src="assets/video/rab.mp4" type="video/mp4" />
+          </video>
+          <div class="card__meta">
+            <h3 class="card__name">RAB.</h3>
+            <span class="card__tag">Super-Car Upgrades &amp; Custom Cars</span>
+          </div>
+          <p class="card__line">When the machine is this fast, the content has to keep up.</p>
+          <span class="card__arrow" aria-hidden="true">→</span>
+        </article>
+
+        <article class="card card--orient" data-cat="Commerce">
+          <video class="card__video" muted loop playsinline preload="none" poster="assets/video/posters/craft-6.webp" data-autoplay="inview">
+            <source src="assets/video/craft-6.mp4" type="video/mp4" />
+          </video>
+          <div class="card__meta">
+            <h3 class="card__name">Orient.</h3>
+          </div>
+          <p class="card__line">Where craft meets global commerce.</p>
+          <span class="card__arrow" aria-hidden="true">→</span>
+        </article>
+
+        <article class="card card--studio" data-cat="Architecture">
+          <video class="card__video" muted loop playsinline preload="none" poster="assets/video/posters/artitecting.webp" data-autoplay="inview">
+            <source src="assets/video/jorhat-stallions.mp4" type="video/mp4"/>
+          </video>
+          <div class="card__meta">
+            <h3 class="card__name">Jorhat Stallions</h3>
+          </div>
+          <p class="card__line">End-to-End Sports Marketing Management</p>
+          <span class="card__arrow" aria-hidden="true">→</span>
+        </article>
+
+        <article class="card card--rini" data-cat="Fashion">
+          <video class="card__video" muted loop playsinline preload="none" poster="assets/video/posters/rini.webp" data-autoplay="inview">
+            <source src="assets/video/rini.mp4" type="video/mp4" />
+          </video>
+          <div class="card__meta">
+            <h3 class="card__name">Rini</h3>
+          </div>
+          <p class="card__line">Where tradition meets a modern wardrobe.</p>
+          <span class="card__arrow" aria-hidden="true">→</span>
+        </article>
+
+        <article class="card card--eye" data-cat="Healthcare">
+          <video class="card__video" muted loop playsinline preload="none" poster="assets/video/posters/eye-centre.webp" data-autoplay="inview">
+            <source src="assets/video/eye-centre.webm" type="video/webm" />
+            <source src="assets/video/eye-centre.mp4" type="video/mp4" />
+          </video>
+          <div class="card__meta">
+            <h3 class="card__name">Eye Care Centre</h3>
+          </div>
+          <p class="card__line">Trust is the hardest thing to build in healthcare.</p>
+          <span class="card__arrow" aria-hidden="true">→</span>
+        </article>
+
+      </div>
+      <div class="container work__cta">
+        <a href="work.html" class="btn btn--filled">See Portfolio</a>
+      </div>
+    </section>
+
+    <!-- ============ LEMON REVEAL ============ -->
+    <section class="lemon" id="lemon">
+      <div class="container">
+        <h2 class="lemon__text" id="lemonText">
+          Kazi is the name of a <span class="accent">lemon</span> native only to <span class="accent">Assam</span>. You've been looking at one this whole <span class="accent">time</span>.
+        </h2>
+      </div>
+      <div class="lemon__strip" aria-hidden="true">
+        <div class="lemon__track">
+          <span class="lemon__seq">Fresh <i>•</i> Juicy <i>•</i> Content <i>•</i> Fresh <i>•</i> Juicy <i>•</i> Content <i>•</i> Fresh <i>•</i> Juicy <i>•</i> Content <i>•</i> Fresh <i>•</i> Juicy <i>•</i> Content <i>•</i> Fresh <i>•</i> Juicy <i>•</i> Content <i>•</i> </span>
+          <span class="lemon__seq">Fresh <i>•</i> Juicy <i>•</i> Content <i>•</i> Fresh <i>•</i> Juicy <i>•</i> Content <i>•</i> Fresh <i>•</i> Juicy <i>•</i> Content <i>•</i> Fresh <i>•</i> Juicy <i>•</i> Content <i>•</i> Fresh <i>•</i> Juicy <i>•</i> Content <i>•</i> </span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ TESTIMONIALS ============ -->
+    <section class="ts" id="testimonials">
+      <div class="ts__head container">
+        <h2 class="ts__title">Testimonials</h2>
+        <p class="ts__sub">Trusted by founders, brands, and creatives who value thoughtful storytelling.</p>
+      </div>
+
+      <div class="ts__grid container">
+        <!-- Left: vertical image-card slider -->
+        <div class="ts__cards" id="tsCards" aria-hidden="true">
+          <div class="ts__strip" id="tsStrip"><!-- cards injected by main.js --></div>
+        </div>
+
+        <!-- Right: orange content container -->
+        <div class="ts__panel">
+          <span class="ts__quote" aria-hidden="true">&ldquo;</span>
+          <blockquote class="ts__text" id="tsText"></blockquote>
+          <div class="ts__foot">
+            <div class="ts__who">
+              <h3 class="ts__name" id="tsName"></h3>
+              <p class="ts__role" id="tsRole"></p>
+              <div class="ts__nav">
+              <button type="button" class="ts__arrow" id="tsPrev" aria-label="Previous testimonial">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </button>
+              <button type="button" class="ts__arrow" id="tsNext" aria-label="Next testimonial">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </button>
+              <div class="ts__dots" id="tsDots"><!-- dashes injected --></div>
+              <span class="ts__count" id="tsCount"></span>
+            </div>
+            </div>
+            <div class="ts__stars" aria-label="Five star rating">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ CTA + MARQUEE ============ -->
+    <section class="cta" id="contact">
+      <div class="container cta__head">
+        <h2 class="cta__title">Ready to build<br>something fresh?</h2>
+        <div class="cta__actions">
+          <a href="work.html" class="btn btn--ghost">See Portfolio</a>
+          <a href="contact.html" class="btn btn--filled">Grow Your Brand</a>
+        </div>
+      </div>
+      <div class="marquee" aria-hidden="true">
+        <div class="marquee__track" id="marqueeTrack">
+          <!-- duplicated in JS for seamless loop -->
+          <div class="marquee__set">
+            <img loading="lazy" decoding="async" src="assets/img/marquee-1.webp" alt="" />
+            <img loading="lazy" decoding="async" src="assets/img/marquee-2.webp" alt="" />
+            <img loading="lazy" decoding="async" src="assets/img/marquee-3.webp" alt="" />
+            <img loading="lazy" decoding="async" src="assets/img/marquee-4.webp" alt="" />
+            <img loading="lazy" decoding="async" src="assets/img/marquee-5.webp" alt="" />
+            <img loading="lazy" decoding="async" src="assets/img/marquee-6.webp" alt="" />
+            <img loading="lazy" decoding="async" src="assets/img/marquee-7.webp" alt="" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="footer">
+    <div class="footer__bar container">
+      <nav class="footer__nav">
+        <a href="collective.html">The Collective</a>
+        <a href="work.html">Work</a>
+        <a href="#contact">Contact</a>
+      </nav>
+      <div class="footer__contact">
+        <a href="mailto:hello@kazinetwork.com">Email</a>
+        <a href="https://instagram.com" target="_blank" rel="noopener" class="footer__ig" aria-label="Instagram">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+        </a>
+      </div>
+    </div>
+    <div class="footer__wordmark">
+      <img loading="lazy" decoding="async" src="assets/img/kazi-wordmark.webp" alt="Kazi" />
+    </div>
+    <div class="footer__fine container">
+      <span>© 2026 Ryu Kazi Network Pvt. Ltd. — Guwahati, Assam.</span>
+      <span>Fresh creative from Assam. No filter.</span>
+    </div>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
