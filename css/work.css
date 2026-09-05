@@ -465,9 +465,14 @@
   .ex__pill { display: none; }
 }
 
-/* Leaving for a case study: fade everything but the expanding ghost */
+/* Leaving for a case study: fade everything but the expanding ghost.
+   .ex__list has to be in here too — a case study opened from the list view
+   left the rows and the snippet strip sitting there at full opacity while the
+   ghost grew over them, so the old page was still on screen, colliding with
+   the one arriving. */
 body.is-leaving .ex__top, body.is-leaving .ex__label,
-body.is-leaving .ex__canvas, body.is-leaving .ex__pill { opacity: 0 !important; transition: opacity 0.4s ease; }
+body.is-leaving .ex__canvas, body.is-leaving .ex__pill,
+body.is-leaving .ex__list { opacity: 0 !important; transition: opacity 0.4s ease; }
 
 /* ---------------- Responsive ---------------- */
 @media (max-width: 768px) {
