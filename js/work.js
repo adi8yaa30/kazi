@@ -738,6 +738,8 @@
     listEmpty.hidden = brands + snips > 0;
     listEl.scrollTop = 0;
     reelGrid.scrollLeft = 0;
+    measureStrip();          /* hiding tiles moves every one after them */
+    centreEl = null;
     syncCentre();
     playCentre();
   }
@@ -791,14 +793,15 @@
   /* Which card holds the centre is whatever the strip is scrolled to, so it
      is read back from geometry rather than tracked as an index — dragging,
      snapping, clicking a neighbour and filtering all land in the same place. */
+  let centreEl = null;
   function syncCentre() {
-    const mid = reelGrid.scrollLeft + reelGrid.clientWidth / 2;
-    let best = null, bestD = Infinity;
-    [...reelGrid.children].forEach((el) => {
-      if (el.hidden) return;
-      const d = Math.abs(el.offsetLeft + el.offsetWidth / 2 - mid);
-      if (d < bestD) { bestD = d; best = el; }
-    });
+    const best = nearestTile();
+    /* The centre changes once per card, not once per frame. Skipping the DOM
+       writes when it has not moved keeps a scroll from restyling 25 tiles
+       sixty times a second — each toggle also drives the tile's scale
+       transition, so this was the expensive half. */
+    if (best === centreEl) return best;
+    centreEl = best;
     [...reelGrid.children].forEach((el) => {
       const on = el === best;
       el.classList.toggle('is-centre', on);
@@ -845,15 +848,31 @@
     };
     glideFrame = requestAnimationFrame(step);
   }
+  /* Tile positions only move when the strip is rebuilt, filtered or resized —
+     never while it scrolls. Reading offsetLeft per tile per frame (25 of them)
+     forced a synchronous layout on every frame of a drag or a glide, and the
+     class writes below then invalidated it again: the read/write thrash that
+     made this strip feel heavy. Measure once, reuse until something changes. */
+  let tileMetrics = null;
+  let stripWidth = 0;
+  function measureStrip() {
+    stripWidth = reelGrid.clientWidth;
+    tileMetrics = [...reelGrid.children]
+      .filter((el) => !el.hidden)
+      .map((el) => ({ el, mid: el.offsetLeft + el.offsetWidth / 2 }));
+  }
+  const stripMetrics = () => (tileMetrics || (measureStrip(), tileMetrics));
+
   const leftFor = (el) => el.offsetLeft + el.offsetWidth / 2 - reelGrid.clientWidth / 2;
   function nearestTile() {
-    const mid = reelGrid.scrollLeft + reelGrid.clientWidth / 2;
+    const list = stripMetrics();
+    if (!list.length) return null;
+    const mid = reelGrid.scrollLeft + stripWidth / 2;
     let best = null, bestD = Infinity;
-    [...reelGrid.children].forEach((el) => {
-      if (el.hidden) return;
-      const d = Math.abs(el.offsetLeft + el.offsetWidth / 2 - mid);
-      if (d < bestD) { bestD = d; best = el; }
-    });
+    for (const t of list) {
+      const d = Math.abs(t.mid - mid);
+      if (d < bestD) { bestD = d; best = t.el; }
+    }
     return best;
   }
   function settleStrip() {
@@ -893,6 +912,11 @@
   /* drag anywhere on the strip, matching the canvas views */
   reelGrid.addEventListener('pointerdown', (e) => {
     cancelAnimationFrame(glideFrame); glideFrame = 0; gliding = false;
+    /* A finger gets the browser's own panning, with the inertia that comes
+       with it. Driving scrollLeft by hand instead gave a drag that stopped
+       dead on release — the strip felt sluggish on a phone for want of a
+       flick. The scroll listener below picks it up and snaps. */
+    if (e.pointerType === 'touch') return;
     stripDown = true; stripMoved = 0;
     stripX = e.clientX; stripScroll = reelGrid.scrollLeft;
   });
@@ -902,6 +926,23 @@
     if (Math.abs(d) > 3) stripMoved = Math.abs(d);
     reelGrid.scrollLeft = stripScroll - d;
   });
+  /* Any scrolling the browser does on its own — a finger's momentum, a
+     trackpad's — lands here: follow the centre as it passes, then settle. */
+  let scrollIdle = 0;
+  reelGrid.addEventListener('scroll', () => {
+    if (gliding || stripDown) return;
+    syncCentre();
+    clearTimeout(scrollIdle);
+    scrollIdle = setTimeout(settleStrip, 120);
+  }, { passive: true });
+
+  reelGrid.addEventListener('wheel', (e) => {
+    if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;   /* vertical: page scroll */
+    /* only to drop an in-flight snap so the gesture takes over cleanly; the
+       scroll listener above does the following and the settling */
+    cancelAnimationFrame(glideFrame); glideFrame = 0; gliding = false;
+  }, { passive: true });
+
   const endStrip = () => { if (!stripDown) return; stripDown = false; settleStrip(); };
   reelGrid.addEventListener('pointerup', endStrip);
   reelGrid.addEventListener('pointercancel', endStrip);
@@ -969,6 +1010,8 @@
     applyFilter();
     listEl.classList.add('is-open');
     listEl.setAttribute('aria-hidden', 'false');
+    /* the strip has a real width only once the list is displayed */
+    requestAnimationFrame(() => { measureStrip(); centreEl = null; syncCentre(); });
   }
   function closeList(keepFilter) {
     if (!listOpen) return;
@@ -1098,14 +1141,19 @@
       el: ex, step: slideArranged,
       enabled: () => quiet() && !listOpen && view === 'snippets' && snippetMode === 'arranged',
     });
+    /* The snippet strip is a real overflow-x container, so a two-finger swipe
+       is better left to the browser: native momentum beats stepping it a card
+       at a time behind a lockout, which is what made it feel slow. It snaps
+       itself once the gesture stops (see the wheel listener above). Arrows
+       still come through here. */
     window.KaziKeyNav.register({
-      el: ex, step: stepStrip,
+      el: ex, step: stepStrip, wheel: false,
       enabled: () => quiet() && listOpen,
     });
   }
   window.addEventListener('resize', () => {
     if (view === 'landing') return;
-    if (listOpen) { layoutBases(); sizeItems(); syncListOffset(); return; }
+    if (listOpen) { layoutBases(); sizeItems(); syncListOffset(); measureStrip(); return; }
     layoutBases(); sizeItems();
     if (view === 'all' || (view === 'snippets' && snippetMode === 'scattered')) render();
     else if (view === 'featured') layoutFeatured(false);

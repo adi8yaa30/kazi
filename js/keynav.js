@@ -125,12 +125,14 @@
        step     called with +1 / -1; return false to decline the input
        vertical also answer Up/Down (for sliders that move that way)
        toggle   optional; Space calls it (pause / resume the active reel)
-       enabled  optional guard, e.g. while an overlay owns the input */
+       enabled  optional guard, e.g. while an overlay owns the input
+       wheel    pass false for a slider that is a real scroll container: the
+                browser's own momentum beats anything stepped by hand */
   window.KaziKeyNav = {
     register(item) {
       if (!item || !item.el || typeof item.step !== 'function') return;
       items.push(item);
-      bindWheel(item);
+      if (item.wheel !== false) bindWheel(item);
     },
   };
 })();
