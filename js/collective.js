@@ -248,20 +248,39 @@ function officeSeries() {
 
   /* The centre reel is the only one that plays; the others rest on their poster.
 
+     These episodes are dialogue — they are worth nothing silent — so the
+     centre one plays WITH sound, the same as the reel rows on the case-study
+     pages. Every browser refuses unattended audio until the visitor has
+     interacted with the page, so the first attempt falls back to muted and
+     the sound is switched on at the first pointer or key event.
+
      Safari is stricter about unattended playback than Chromium. It decides
-     whether a clip may autoplay when play() is called, so `muted` has to be
-     true on the element before the source is attached — and with
+     whether a clip may autoplay when play() is called, and with
      preload="none" there is nothing buffered yet, so calling play()
      immediately after setting src is refused. Loading first and waiting for
      the clip to be playable is what makes it start without a click. */
+  let soundOK = true;                  // flips to false if audio is blocked
+
   const startReel = (v, n) => {
-    v.muted = true;
-    v.setAttribute('muted', '');        // some Safari builds read the attribute
+    const wantSound = soundOK;
+    v.muted = !wantSound;
+    if (wantSound) v.removeAttribute('muted');
+    else v.setAttribute('muted', '');  // some Safari builds read the attribute
     if (v.getAttribute('src') !== EPISODES[n].src) {
       v.src = EPISODES[n].src;
       v.load();
     }
-    const go = () => { v.play().catch(() => {}); };
+    const go = () => v.play().catch(() => {
+      /* refused — if it was the audio the browser objected to, drop to muted
+         so the episode still runs, and wait for an interaction to bring the
+         sound back */
+      if (!v.muted) {
+        soundOK = false;
+        v.muted = true;
+        v.setAttribute('muted', '');
+        v.play().catch(() => {});
+      }
+    });
     if (v.readyState >= 2) { go(); return; }   // HAVE_CURRENT_DATA or better
     v.preload = 'auto';                        // preload="none" buffers nothing
     v.addEventListener('canplay', go, { once: true });
@@ -271,16 +290,21 @@ function officeSeries() {
 
   function playCentre() {
     vids.forEach((v, n) => {
-      if (n === current && inView) startReel(v, n);
-      else v.pause();
+      if (n === current && inView) { startReel(v, n); return; }
+      v.pause();
+      v.muted = true;          /* only the centre one ever carries sound */
     });
   }
 
-  /* Low Power Mode refuses muted autoplay outright, and Safari can still baulk
-     for its own reasons. The first interaction of any kind releases it, so
-     retry then — the same fallback main.js uses for the portfolio clips. */
+  /* The first interaction of any kind is what lets audio through — and it also
+     releases Low Power Mode, which refuses even muted autoplay. Retry then,
+     with the sound restored: the same fallback the case-study reels use. */
+  const releaseSound = () => {
+    soundOK = true;
+    playCentre();
+  };
   ['pointerdown', 'touchstart', 'keydown'].forEach((ev) =>
-    window.addEventListener(ev, playCentre, { once: true, passive: true })
+    window.addEventListener(ev, releaseSound, { once: true, passive: true })
   );
 
   // --- initial paint --------------------------------------------------
