@@ -371,28 +371,25 @@
    wash, and the row is dragged or scrolled sideways. Built as a flex row in
    its own horizontal scroller rather than absolute positioning, so it stays
    inside the list's scroll and needs no layout maths on resize. */
+/* The frame the carousel slides inside. The strip itself is wider than this
+   and is moved by a transform, exactly as the case-study reel rows are. */
+.ex__stripwrap { overflow: hidden; padding: 4px 0 6px; }
 .ex__strip {
-  /* positioned so the tiles' offsetLeft is measured against the strip itself —
-     the centring maths compares it directly with scrollLeft */
   position: relative;
   /* 9:16 means height is 1.78x this, so the width is capped against the
      viewport height too — otherwise the centred card outgrows the fold on a
      short laptop screen */
   --tile-w: min(clamp(240px, 26vw, 430px), 40vh);
-  display: flex; align-items: center; gap: clamp(2px, 0.4vw, 8px);
-  overflow-x: auto; overscroll-behavior-x: contain;
-  /* No CSS scroll-snap: it clamps programmatic scrollLeft to a snap point
-     immediately, so the pointer drag below jumped card to card instead of
-     tracking the finger. Snapping is done in JS (glideTo) instead, which also
-     lets the landing be eased rather than instant. */
-  padding: 4px max(0px, calc(50% - var(--tile-w) / 2)) 6px;
-  scrollbar-width: none;
+  display: flex; align-items: center; width: max-content;
+  gap: clamp(2px, 0.4vw, 8px);
+  /* vertical panning still belongs to the page; sideways is the carousel's */
+  touch-action: pan-y;
+  will-change: transform;
 }
-.ex__strip::-webkit-scrollbar { display: none; }
 /* Every slot is the same width and the size difference is a transform, so
    promoting a card to the centre moves nothing in the layout. Animating the
-   width instead would shift the whole row mid-scroll and leave the snap
-   landing off-centre. */
+   width instead would shift every slot after it and leave the carousel's
+   arithmetic — which assumes one fixed pitch — landing off-centre. */
 .ex__tile {
   flex: 0 0 var(--tile-w); width: var(--tile-w);
   padding: 0; text-align: left; background: none; border: none;
@@ -401,10 +398,9 @@
 .ex__tile[hidden] { display: none; }
 .ex__tile-in {
   display: block; transform: scale(0.7); transform-origin: center center;
-  /* short and near-linear: the promotion now resolves every frame of the
-     scroll, so this rides along with the drag — a long eased curve would
-     read as the card lagging behind the finger */
-  transition: transform 0.26s cubic-bezier(0.33, 0, 0.2, 1);
+  /* paced to the slide it accompanies, so the card finishes growing as it
+     arrives in the middle rather than a beat after */
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
   will-change: transform;
 }
 .ex__tile.is-centre .ex__tile-in { transform: scale(1); }

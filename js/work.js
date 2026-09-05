@@ -119,6 +119,7 @@
   const reelSec = document.getElementById('exListReels');
   const brandRows = document.getElementById('exBrandRows');
   const reelGrid = document.getElementById('exReelGrid');
+  const stripWrap = document.getElementById('exReelWrap');
   const brandCount = document.getElementById('exBrandCount');
   const reelCount = document.getElementById('exReelCount');
   const listEmpty = document.getElementById('exListEmpty');
@@ -737,10 +738,7 @@
     reelSec.hidden = snips === 0;
     listEmpty.hidden = brands + snips > 0;
     listEl.scrollTop = 0;
-    reelGrid.scrollLeft = 0;
-    measureStrip();          /* hiding tiles moves every one after them */
-    centreEl = null;
-    syncCentre();
+    setStrip(0, false);      /* a filter changes which tiles exist: start over */
     playCentre();
   }
 
@@ -790,162 +788,98 @@
     });
   }
 
-  /* Which card holds the centre is whatever the strip is scrolled to, so it
-     is read back from geometry rather than tracked as an index — dragging,
-     snapping, clicking a neighbour and filtering all land in the same place. */
-  let centreEl = null;
-  function syncCentre() {
-    const best = nearestTile();
-    /* The centre changes once per card, not once per frame. Skipping the DOM
-       writes when it has not moved keeps a scroll from restyling 25 tiles
-       sixty times a second — each toggle also drives the tile's scale
-       transition, so this was the expensive half. */
-    if (best === centreEl) return best;
-    centreEl = best;
-    [...reelGrid.children].forEach((el) => {
-      const on = el === best;
-      el.classList.toggle('is-centre', on);
-      /* a card that slides off the centre stops playing, so audio always
+  /* The strip is the same carousel as the case-study reel rows: an index, a
+     transform, and one step per gesture. It used to be a scroll container,
+     which meant the browser's momentum could carry it several cards past the
+     one you aimed at — a second flick while it was still settling moved it
+     again. Here a drag tracks the finger and then lands on exactly one card. */
+  let stripIdx = 0;
+  let stripDown = false, stripFrom = 0, stripStartX = 0, stripDX = 0, stripMoved = 0;
+
+  const visTiles = () => [...reelGrid.children].filter((el) => !el.hidden);
+  /* one card's pitch: width + gap, read off the first two tiles */
+  function stripPitch() {
+    const vis = visTiles();
+    if (vis.length > 1) return vis[1].offsetLeft - vis[0].offsetLeft;
+    return vis.length ? vis[0].offsetWidth : 1;
+  }
+  /* where the strip has to sit for tile k to be in the middle of the frame */
+  function xForTile(el) {
+    return stripWrap.clientWidth / 2 - (el.offsetLeft + el.offsetWidth / 2);
+  }
+
+  function setStrip(k, animate) {
+    const vis = visTiles();
+    if (!vis.length) return;
+    stripIdx = Math.max(0, Math.min(vis.length - 1, k));
+    const el = vis[stripIdx];
+    [...reelGrid.children].forEach((t) => {
+      const on = t === el;
+      t.classList.toggle('is-centre', on);
+      /* a card that leaves the centre stops playing, so the sound always
          belongs to the card being looked at */
-      if (!on && el.dataset.id) {
-        const it = ITEMS.find((i) => i.id === el.dataset.id);
+      if (!on && t.dataset.id) {
+        const it = ITEMS.find((i) => i.id === t.dataset.id);
         if (it && it.listVideo && !it.listVideo.paused) stopListVideo(it);
       }
     });
-    return best;
+    gsap.to(reelGrid, {
+      x: xForTile(el),
+      duration: reduce || animate === false ? 0.01 : 0.6,
+      ease: 'power3.out',
+      onComplete: playCentre,
+    });
   }
   /* Whatever holds the centre plays by itself — the strip is for watching, and
-     a still poster in the centre reads as broken. Kept out of syncCentre so a
-     card being passed over mid-drag never starts loading a video. */
+     a still poster in the centre reads as broken. Left to the end of the slide
+     so a card passed over mid-drag never starts loading a video. */
   function playCentre() {
     if (!listOpen) return;
     const el = reelGrid.querySelector('.ex__tile.is-centre');
     if (el && el.dataset.id) playListVideo(ITEMS.find((i) => i.id === el.dataset.id));
   }
-  let stripDown = false, stripX = 0, stripScroll = 0, stripMoved = 0;
-  /* Eased glide to a scroll position. Snapping is done here rather than with
-     CSS scroll-snap so the landing can be animated and so a drag can move the
-     strip freely — mandatory snap clamps any scrollLeft write to a snap point
-     the instant it happens, which made dragging jump card to card. */
-  let glideFrame = 0, gliding = false;
-  function glideTo(left, done) {
-    cancelAnimationFrame(glideFrame);
-    const start = reelGrid.scrollLeft;
-    const delta = Math.max(0, Math.min(reelGrid.scrollWidth - reelGrid.clientWidth, left)) - start;
-    if (reduce || Math.abs(delta) < 1) {
-      reelGrid.scrollLeft = start + delta;
-      gliding = false; syncCentre(); done && done();
-      return;
-    }
-    gliding = true;
-    const t0 = performance.now(), dur = 340;
-    const step = (now) => {
-      const p = Math.min(1, (now - t0) / dur);
-      reelGrid.scrollLeft = start + delta * (1 - Math.pow(1 - p, 3)); /* easeOutCubic */
-      syncCentre();
-      if (p < 1) { glideFrame = requestAnimationFrame(step); }
-      else { glideFrame = 0; gliding = false; done && done(); }
-    };
-    glideFrame = requestAnimationFrame(step);
+  function centreTile(el) {
+    const i = visTiles().indexOf(el);
+    if (i >= 0) setStrip(i, true);
   }
-  /* Tile positions only move when the strip is rebuilt, filtered or resized —
-     never while it scrolls. Reading offsetLeft per tile per frame (25 of them)
-     forced a synchronous layout on every frame of a drag or a glide, and the
-     class writes below then invalidated it again: the read/write thrash that
-     made this strip feel heavy. Measure once, reuse until something changes. */
-  let tileMetrics = null;
-  let stripWidth = 0;
-  function measureStrip() {
-    stripWidth = reelGrid.clientWidth;
-    tileMetrics = [...reelGrid.children]
-      .filter((el) => !el.hidden)
-      .map((el) => ({ el, mid: el.offsetLeft + el.offsetWidth / 2 }));
-  }
-  const stripMetrics = () => (tileMetrics || (measureStrip(), tileMetrics));
-
-  const leftFor = (el) => el.offsetLeft + el.offsetWidth / 2 - reelGrid.clientWidth / 2;
-  function nearestTile() {
-    const list = stripMetrics();
-    if (!list.length) return null;
-    const mid = reelGrid.scrollLeft + stripWidth / 2;
-    let best = null, bestD = Infinity;
-    for (const t of list) {
-      const d = Math.abs(t.mid - mid);
-      if (d < bestD) { bestD = d; best = t.el; }
-    }
-    return best;
-  }
-  function settleStrip() {
-    const el = nearestTile();
-    if (el) glideTo(leftFor(el), playCentre);
-  }
-  function centreTile(el) { glideTo(leftFor(el), playCentre); }
-  /* keyboard stepping — one card per press, clamped at both ends */
+  /* keyboard and trackpad stepping — one card at a time, clamped at both ends */
   function stepStrip(dir) {
-    const vis = [...reelGrid.children].filter((el) => !el.hidden);
-    if (!vis.length) return;
-    const cur = vis.findIndex((el) => el.classList.contains('is-centre'));
-    const from = cur < 0 ? 0 : cur;
-    const next = Math.max(0, Math.min(vis.length - 1, from + dir));
+    const vis = visTiles();
+    if (!vis.length) return false;
+    const next = stripIdx + dir;
+    if (next < 0 || next > vis.length - 1) return false;   /* let the page scroll */
     /* if the strip is off screen the move would be invisible, so bring it
        into view first — a key press should always show its effect */
     const box = reelGrid.getBoundingClientRect();
     if (box.bottom < 80 || box.top > window.innerHeight - 80) {
       reelSec.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' });
     }
-    if (next !== cur) centreTile(vis[next]);
+    setStrip(next, true);
   }
 
-  /* The promotion is resolved on every frame of the scroll rather than once it
-     settles: the card grows as it reaches the middle, so the size follows the
-     drag instead of arriving a beat late. Only playback waits for rest. */
-  let centreFrame = 0, settleTimer = 0;
-  reelGrid.addEventListener('scroll', () => {
-    if (!centreFrame) {
-      centreFrame = requestAnimationFrame(() => { centreFrame = 0; syncCentre(); });
-    }
-    if (gliding || stripDown) return;
-    clearTimeout(settleTimer);
-    settleTimer = setTimeout(settleStrip, 110); /* wheel / trackpad came to rest */
-  });
-
-  /* drag anywhere on the strip, matching the canvas views */
+  /* Drag: the strip follows the finger, then lands on whichever card the
+     distance travelled asked for — the reel rows' arithmetic exactly. */
   reelGrid.addEventListener('pointerdown', (e) => {
-    cancelAnimationFrame(glideFrame); glideFrame = 0; gliding = false;
-    /* A finger gets the browser's own panning, with the inertia that comes
-       with it. Driving scrollLeft by hand instead gave a drag that stopped
-       dead on release — the strip felt sluggish on a phone for want of a
-       flick. The scroll listener below picks it up and snaps. */
-    if (e.pointerType === 'touch') return;
-    stripDown = true; stripMoved = 0;
-    stripX = e.clientX; stripScroll = reelGrid.scrollLeft;
+    gsap.killTweensOf(reelGrid);
+    stripDown = true; stripMoved = 0; stripDX = 0;
+    stripFrom = e.clientX;
+    stripStartX = Number(gsap.getProperty(reelGrid, 'x')) || 0;
   });
   reelGrid.addEventListener('pointermove', (e) => {
     if (!stripDown) return;
-    const d = e.clientX - stripX;
-    if (Math.abs(d) > 3) stripMoved = Math.abs(d);
-    reelGrid.scrollLeft = stripScroll - d;
+    stripDX = e.clientX - stripFrom;
+    if (Math.abs(stripDX) > 3) stripMoved = Math.abs(stripDX);
+    gsap.set(reelGrid, { x: stripStartX + stripDX });
   });
-  /* Any scrolling the browser does on its own — a finger's momentum, a
-     trackpad's — lands here: follow the centre as it passes, then settle. */
-  let scrollIdle = 0;
-  reelGrid.addEventListener('scroll', () => {
-    if (gliding || stripDown) return;
-    syncCentre();
-    clearTimeout(scrollIdle);
-    scrollIdle = setTimeout(settleStrip, 120);
-  }, { passive: true });
-
-  reelGrid.addEventListener('wheel', (e) => {
-    if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;   /* vertical: page scroll */
-    /* only to drop an in-flight snap so the gesture takes over cleanly; the
-       scroll listener above does the following and the settling */
-    cancelAnimationFrame(glideFrame); glideFrame = 0; gliding = false;
-  }, { passive: true });
-
-  const endStrip = () => { if (!stripDown) return; stripDown = false; settleStrip(); };
+  const endStrip = () => {
+    if (!stripDown) return;
+    stripDown = false;
+    if (Math.abs(stripDX) <= 6) { setStrip(stripIdx, true); return; }  /* a tap: settle back */
+    setStrip(stripIdx + Math.round(-stripDX / stripPitch()), true);
+  };
   reelGrid.addEventListener('pointerup', endStrip);
   reelGrid.addEventListener('pointercancel', endStrip);
+  reelGrid.addEventListener('pointerleave', endStrip);
   /* swallow the click that ends a drag, so dragging past a card never plays it */
   reelGrid.addEventListener('click', (e) => {
     if (stripMoved > 4) { e.stopPropagation(); e.preventDefault(); stripMoved = 0; }
@@ -1011,7 +945,7 @@
     listEl.classList.add('is-open');
     listEl.setAttribute('aria-hidden', 'false');
     /* the strip has a real width only once the list is displayed */
-    requestAnimationFrame(() => { measureStrip(); centreEl = null; syncCentre(); });
+    requestAnimationFrame(() => setStrip(stripIdx, false));
   }
   function closeList(keepFilter) {
     if (!listOpen) return;
@@ -1141,19 +1075,14 @@
       el: ex, step: slideArranged,
       enabled: () => quiet() && !listOpen && view === 'snippets' && snippetMode === 'arranged',
     });
-    /* The snippet strip is a real overflow-x container, so a two-finger swipe
-       is better left to the browser: native momentum beats stepping it a card
-       at a time behind a lockout, which is what made it feel slow. It snaps
-       itself once the gesture stops (see the wheel listener above). Arrows
-       still come through here. */
     window.KaziKeyNav.register({
-      el: ex, step: stepStrip, wheel: false,
+      el: ex, step: stepStrip,
       enabled: () => quiet() && listOpen,
     });
   }
   window.addEventListener('resize', () => {
     if (view === 'landing') return;
-    if (listOpen) { layoutBases(); sizeItems(); syncListOffset(); measureStrip(); return; }
+    if (listOpen) { layoutBases(); sizeItems(); syncListOffset(); setStrip(stripIdx, false); return; }
     layoutBases(); sizeItems();
     if (view === 'all' || (view === 'snippets' && snippetMode === 'scattered')) render();
     else if (view === 'featured') layoutFeatured(false);
