@@ -429,10 +429,12 @@
   content: ''; border-style: solid; border-width: 6px 0 6px 10px;
   border-color: transparent transparent transparent var(--color-bg); margin-left: 3px;
 }
-/* only the centred card offers play — clicking a neighbour centres it instead */
-.ex__tile.is-centre .ex__tile-play { opacity: 1; }
-.ex__tile.is-centre:hover .ex__tile-play { transform: translate(-50%, -50%) scale(1.12); }
-.ex__tile.is-playing .ex__tile-play { opacity: 0; }
+/* The badge means "this is paused, tap to resume" — not "this has not started
+   yet". Shown whenever the centre card is merely the centre card, it flashed
+   orange on every swipe for the whole slide, and stayed put for as long as the
+   clip took to buffer. Only a real pause, or a refused autoplay, raises it. */
+.ex__tile.is-centre.is-paused .ex__tile-play { opacity: 1; }
+.ex__tile.is-centre.is-paused:hover .ex__tile-play { transform: translate(-50%, -50%) scale(1.12); }
 .ex__tile-name {
   display: block; margin-top: 12px;
   font-family: var(--font-body); font-weight: 500; font-size: 15px;

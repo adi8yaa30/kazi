@@ -777,8 +777,12 @@
         + '<span class="ex__tile-name">' + it.name + '</span>'
         + '<span class="ex__tile-tag">' + industryLabel(it.industry) + '</span>'
         + '</span>';
+      /* Pointer taps are resolved in endStrip, which has to hit-test because
+         the drag captures the pointer. This is the keyboard's path in: an
+         Enter or Space on a focused tile arrives as a click with detail 0. */
       tile.addEventListener('click', (e) => {
         dropPointerFocus(e, tile);
+        if (e.detail > 0) return;
         if (tile.classList.contains('is-centre')) toggleListVideo(it);
         else centreTile(tile);
       });
@@ -823,6 +827,23 @@
         if (it && it.listVideo && !it.listVideo.paused) stopListVideo(it);
       }
     });
+    /* Start fetching the incoming clip now rather than when the slide lands:
+       on a phone the wait for the first frame was the whole reason a card sat
+       there as a still. The 0.6s of travel is free buffering time.
+
+       Swiping through several cards would otherwise leave a download running
+       for every one passed, all competing for the same connection — so the
+       one before is abandoned unless it got far enough to be worth keeping. */
+    if (el.dataset.id) {
+      const it = ITEMS.find((i) => i.id === el.dataset.id);
+      if (pendingLoad && pendingLoad !== it) abortPreload(pendingLoad);
+      pendingLoad = it || null;
+      if (it) {
+        const v = ensureListVideo(it);
+        v.preload = 'auto';
+        if (v.networkState === HTMLMediaElement.NETWORK_EMPTY) v.load();
+      }
+    }
     gsap.to(reelGrid, {
       x: xForTile(el),
       duration: reduce || animate === false ? 0.01 : 0.6,
@@ -864,6 +885,11 @@
     stripDown = true; stripMoved = 0; stripDX = 0;
     stripFrom = e.clientX;
     stripStartX = Number(gsap.getProperty(reelGrid, 'x')) || 0;
+    /* Without capture the drag dies the moment the finger leaves the strip's
+       box — pointerleave fires and ends it — which on a phone is most of the
+       way through any real swipe. The reel rows capture for exactly this
+       reason. */
+    try { reelGrid.setPointerCapture && reelGrid.setPointerCapture(e.pointerId); } catch (err) {}
   });
   reelGrid.addEventListener('pointermove', (e) => {
     if (!stripDown) return;
@@ -871,10 +897,24 @@
     if (Math.abs(stripDX) > 3) stripMoved = Math.abs(stripDX);
     gsap.set(reelGrid, { x: stripStartX + stripDX });
   });
-  const endStrip = () => {
+  const endStrip = (e) => {
     if (!stripDown) return;
     stripDown = false;
-    if (Math.abs(stripDX) <= 6) { setStrip(stripIdx, true); return; }  /* a tap: settle back */
+    try { reelGrid.releasePointerCapture && e && e.pointerId != null && reelGrid.releasePointerCapture(e.pointerId); } catch (err) {}
+    /* Capture sends the click to the strip rather than the tile under the
+       finger, so the tap is resolved here by hit-test — again as the reel
+       rows do. The tiles' own click handlers still serve the keyboard. */
+    if (Math.abs(stripDX) <= 6 && e && e.type === 'pointerup') {
+      const vis = visTiles();
+      const hit = vis.findIndex((el) => {
+        const b = el.getBoundingClientRect();
+        return e.clientX >= b.left && e.clientX <= b.right;
+      });
+      if (hit === -1) setStrip(stripIdx, true);
+      else if (hit === stripIdx) toggleListVideo(ITEMS.find((i) => i.id === vis[hit].dataset.id));
+      else setStrip(hit, true);
+      return;
+    }
     setStrip(stripIdx + Math.round(-stripDX / stripPitch()), true);
   };
   reelGrid.addEventListener('pointerup', endStrip);
@@ -889,6 +929,17 @@
      25 muted loops competing for the decoder. The <video> is created on first
      play so the grid itself stays poster-only. */
   let listPlaying = null;
+  let pendingLoad = null;
+  /* Drop a fetch that is still only warming up. A clip that already has data
+     is left alone — it is nearly ready, and re-fetching it later would cost
+     more than keeping it. */
+  function abortPreload(it) {
+    const v = it && it.listVideo;
+    if (!v || it === listPlaying || v.readyState >= 2) return;
+    v.removeAttribute('src');
+    v.load();
+    v.preload = 'metadata';
+  }
   function stopListVideo(it) {
     if (!it.listVideo) return;
     it.listVideo.pause();
@@ -896,10 +947,16 @@
     if (listPlaying === it) listPlaying = null;
   }
   function ensureListVideo(it) {
-    if (it.listVideo) return it.listVideo;
+    if (it.listVideo) {
+      /* a preload that was abandoned left the element without a source —
+         put it back, or the clip could never start again */
+      if (!it.listVideo.getAttribute('src')) it.listVideo.src = it.src;
+      return it.listVideo;
+    }
     const v = document.createElement('video');
     v.src = it.src; v.poster = it.poster;
-    v.loop = true; v.playsInline = true; v.preload = 'metadata';
+    v.loop = true; v.playsInline = true; v.muted = true; v.preload = 'metadata';
+    v.setAttribute('playsinline', '');   /* iOS reads the attribute, not the property */
     v.addEventListener('click', (e) => e.stopPropagation());
     it.listVideo = v;
     it.listEl.querySelector('.ex__tile-media').appendChild(v);
@@ -911,17 +968,26 @@
     const v = ensureListVideo(it);
     if (!v.paused) return;              /* already running — don't restart it */
     v.muted = false;
+    it.listEl.classList.remove('is-paused');
     v.play().catch(() => {
       /* autoplay policy can still refuse an unmuted start — fall back rather
          than leaving the viewer with a dead tile */
       v.muted = true;
-      v.play().catch(() => {});
+      v.play().catch(() => {
+        /* genuinely refused: show the badge so there is something to tap */
+        it.listEl.classList.add('is-paused');
+      });
     });
     it.listEl.classList.add('is-playing');
     listPlaying = it;
   }
   function toggleListVideo(it) {
-    if (it.listVideo && !it.listVideo.paused) { stopListVideo(it); return; }
+    if (!it) return;
+    if (it.listVideo && !it.listVideo.paused) {
+      stopListVideo(it);
+      it.listEl.classList.add('is-paused');   /* the badge is the way back in */
+      return;
+    }
     if (it.listVideo) it.listVideo.currentTime = 0;
     playListVideo(it);
   }
