@@ -282,8 +282,13 @@ function servicesInteractive() {
         ? '<video class="ks__img ks__vid" muted loop playsinline preload="none"'
           + ' poster="' + svc.poster + '" aria-label="' + svc.name + '">'
           + '<source src="' + svc.video + '" type="video/mp4" /></video>'
-        : '<img class="ks__img ks__img--static" src="' + svc.imgStatic + '" alt="' + svc.name + '" loading="lazy" />'
-          + '<img class="ks__img ks__img--hover" src="' + svc.imgHover + '" alt="' + svc.name + ' expanded" loading="lazy" />';
+        /* Carried as data-src and attached when the section is approached.
+           loading="lazy" was not enough: these sixteen images sit inside a
+           track three viewports wide, and the browser fetched every one of
+           them at load — 1.4MB, on a phone, for a section far below the fold.
+           The collective page's posters use the same trick. */
+        : '<img class="ks__img ks__img--static" data-src="' + svc.imgStatic + '" alt="' + svc.name + '" />'
+          + '<img class="ks__img ks__img--hover" data-src="' + svc.imgHover + '" alt="' + svc.name + ' expanded" />';
       col.innerHTML =
         '<div class="ks__inner">'
         + '<div class="ks__imgwrap">'
@@ -326,6 +331,26 @@ function servicesInteractive() {
     }
     track.appendChild(slide);
     slides.push(slide);
+  }
+
+  /* Attach the artwork once the section is within a screen of the viewport,
+     so nothing is fetched for a section the visitor may never reach. */
+  let artOn = false;
+  function loadServiceArt() {
+    if (artOn) return;
+    artOn = true;
+    track.querySelectorAll('img[data-src]').forEach((img) => {
+      img.src = img.dataset.src;
+      img.removeAttribute('data-src');
+    });
+  }
+  if (typeof IntersectionObserver !== 'undefined') {
+    const artWatch = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) { loadServiceArt(); artWatch.disconnect(); }
+    }, { rootMargin: '100% 0px' });
+    artWatch.observe(viewport);
+  } else {
+    loadServiceArt();
   }
 
   /* fixed layer widths so the text doesn't reflow while columns animate */

@@ -99,10 +99,30 @@
       }
       active = k;
       applyClasses();
-      gsap.to(row, { x: xFor(k), duration: animate ? 0.6 : 0.01, ease: 'power3.out' });
+      gsap.to(row, { x: xFor(k), duration: animate ? 0.6 : 0.01, ease: 'power3.out',
+        onComplete: syncStripPlayback });
       if (changed) restart(vids[k]);
       syncAudio();
+      syncStripPlayback();
     }
+    /* Only the reels actually on screen play. A strip can hold ten of them and
+       shows three, so starting them all meant ten clips downloading at once —
+       seven megabytes on a phone to watch one. The rest hold their posters. */
+    const REEL_MARGIN = 40;
+    function reelVisible(el) {
+      const r = el.getBoundingClientRect();
+      return r.right > -REEL_MARGIN && r.left < window.innerWidth + REEL_MARGIN;
+    }
+    function syncStripPlayback() {
+      if (!inView) return;
+      reels.forEach((el, i) => {
+        const v = vids[i];
+        if (!reelVisible(el)) { if (!v.paused) v.pause(); return; }
+        if (i === active) { if (!paused) { v.muted = !soundOK; safePlay(v); } }
+        else { v.muted = true; safePlay(v); }
+      });
+    }
+
     function togglePause() {
       paused = !paused;
       const v = vids[active];
@@ -135,6 +155,7 @@
        attempting the active reel WITH sound. If the browser blocks
        autoplay-with-sound, fall back to muted + unmute on first interaction. */
     let started = false;
+    let inView = false;
     function firstStart() {
       const first = vids[active];
       first.muted = false;
@@ -154,22 +175,20 @@
         window.addEventListener('keydown', unmute);
         window.addEventListener('touchstart', unmute, { passive: true });
       });
-      vids.forEach((v, i) => { if (i !== active) { v.muted = true; safePlay(v); } });
+      reels.forEach((el, i) => {
+        if (i === active) return;
+        if (reelVisible(el)) { vids[i].muted = true; safePlay(vids[i]); }
+      });
     }
 
     /* Play only while the section is on screen — so audio never runs before
        the user has seen (and scrolled to) the reels, and stops if they
        scroll away. Respects a manual pause on the active reel. */
     const io = new IntersectionObserver((entries) => {
-      const inView = entries[0].isIntersecting;
+      inView = entries[0].isIntersecting;
       if (inView) {
         if (!started) { started = true; firstStart(); }
-        else {
-          vids.forEach((v, i) => {
-            if (i === active) { if (!paused) { v.muted = !soundOK; safePlay(v); } }
-            else { v.muted = true; safePlay(v); }
-          });
-        }
+        else syncStripPlayback();
       } else {
         vids.forEach((v) => v.pause());
       }

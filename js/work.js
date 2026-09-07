@@ -183,6 +183,9 @@
      the sizes below interpolate rather than jumping at a breakpoint, so an
      820px iPad is not handed the geometry of a 1440px monitor. */
   const PHONE = 480, DESK = 1100;
+  /* a hard line for decisions that are not about size but about the device:
+     what a phone should be asked to download, for one */
+  const onPhone = () => vw() <= 768;
   const t = () => Math.max(0, Math.min(1, (vw() - PHONE) / (DESK - PHONE)));
   const lerp = (phone, desk) => phone + (desk - phone) * t();
 
@@ -220,6 +223,7 @@
 
   /* pan offsets */
   let ox = 0, oy = 0;
+  let playbackTick = 0;
   function render() {
     ITEMS.forEach((it) => {
       if (it.hidden) return;
@@ -228,6 +232,12 @@
       it.x = sx; it.y = sy;
       it.el.style.transform = `translate3d(${sx}px, ${sy}px, 0)`;
     });
+    /* what is on screen changes as the field is dragged, but not every frame
+       and not urgently — a quarter second behind the pan is imperceptible and
+       keeps this off the drag's critical path */
+    if (canvasPlaying && !playbackTick) {
+      playbackTick = setTimeout(() => { playbackTick = 0; syncCanvasPlayback(); }, 250);
+    }
   }
   function sizeItems() {
     ITEMS.forEach((it) => {
@@ -266,8 +276,37 @@
     if (!v) refreshPill();
   }
 
-  const playAll = () => reels.forEach((r) => { r.video.muted = true; r.video.play().catch(() => {}); });
-  const pauseAll = () => reels.forEach((r) => r.video.pause());
+  /* Only what is actually on screen plays. The canvas wraps, so at any moment
+     most of the field is off to one side — starting all 25 reels meant 25
+     decoders running and, worse, 25 clips downloading: opening the explorer
+     on a phone pulled 33MB and buffered thirteen minutes of video for eight
+     visible cards. The geometry is already known from render(), so deciding
+     this costs arithmetic rather than layout. */
+  const CANVAS_MARGIN = 60;           // start just before it scrolls in
+  function reelOnScreen(r) {
+    if (r.hidden) return false;
+    return r.x + r.w > -CANVAS_MARGIN && r.x < vw() + CANVAS_MARGIN
+        && r.y + r.h > -CANVAS_MARGIN && r.y < vh() + CANVAS_MARGIN;
+  }
+  let canvasPlaying = false;
+  function syncCanvasPlayback() {
+    if (!canvasPlaying) return;
+    reels.forEach((r) => {
+      if (r === focused) return;      /* the one being watched is not ambient */
+      /* Phones keep their posters. Even cut to what is on screen this is eight
+         clips downloading at once over whatever signal the visitor has, for
+         motion on cards a couple of hundred pixels wide; the posters carry the
+         same work. Tapping a reel still plays it. */
+      const want = !onPhone() && reelOnScreen(r);
+      if (want && r.video.paused) { r.video.muted = true; r.video.play().catch(() => {}); }
+      else if (!want && !r.video.paused) r.video.pause();
+    });
+  }
+  const playAll = () => { canvasPlaying = true; syncCanvasPlayback(); };
+  const pauseAll = () => {
+    canvasPlaying = false;
+    reels.forEach((r) => r.video.pause());
+  };
 
   /* ------------------------------------------------------------
      Cursor pill
@@ -631,7 +670,11 @@
     gsap.to(it.el, {
       x: f.x, y: f.y, width: f.w, height: f.h,
       duration: instant || reduce ? 0.01 : 0.7, ease: 'power3.inOut',
-      onComplete: () => { it.el.style.zIndex = ''; panEnabled = (view === 'all' || (view === 'snippets' && snippetMode === 'scattered')); },
+      onComplete: () => {
+        it.el.style.zIndex = '';
+        panEnabled = (view === 'all' || (view === 'snippets' && snippetMode === 'scattered'));
+        syncCanvasPlayback();     /* on a phone this puts the poster back */
+      },
     });
   }
   dim.addEventListener('pointerup', () => unfocusReel(false));
