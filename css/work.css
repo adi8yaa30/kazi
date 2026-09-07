@@ -243,10 +243,13 @@
    one opens the list view: the infinite canvas is a showcase, the list is the
    way to actually find a video, so a filter always lands somewhere readable. */
 .ex__filterwrap { position: relative; }
-.ex__filterbtn {
-  display: inline-flex; align-items: center; gap: 8px;
+/* Scoped to .ex__nav so it outweighs `.ex__nav button { padding: 0 }` above —
+   a plain class loses to that on specificity, which is why these pills were
+   drawn with their border against the text. */
+.ex__nav .ex__filterbtn {
+  display: inline-flex; align-items: center; gap: 9px;
   border: 1px solid rgba(255, 255, 240, 0.34); border-radius: 3px;
-  padding: 7px 13px; background: none; color: var(--color-bg);
+  padding: 8px 17px; background: none; color: var(--color-bg);
   transition: border-color 0.25s ease, background 0.25s ease, color 0.25s ease;
 }
 .ex__filterbtn svg { width: 15px; height: 12px; flex: 0 0 auto; }
@@ -284,9 +287,9 @@
 .ex__filtermenu .ex__opt b { font-weight: 500; opacity: 0.55; }
 
 /* canvas / list toggle */
-.ex__layout {
+.ex__nav .ex__layout {
   border: 1px solid rgba(255, 255, 240, 0.34); border-radius: 3px;
-  padding: 7px 13px; background: none;
+  padding: 8px 17px; background: none;
   transition: border-color 0.25s ease, background 0.25s ease, color 0.25s ease;
 }
 .ex__layout:hover { border-color: var(--color-bg); }
@@ -499,15 +502,28 @@ body.is-leaving .ex__list { opacity: 0 !important; transition: opacity 0.4s ease
   .ex__nav button { font-size: 12px; letter-spacing: 0.08em; }
   .ex__links { width: 100%; gap: clamp(14px, 4.5vw, 28px); }
   .ex__links button { white-space: nowrap; }
-  .ex__right { width: 100%; justify-content: space-between; gap: 8px; }
+  .ex__right { width: 100%; justify-content: space-between; gap: 4px; }
+  /* An industry name can be long ("Textile & Manufacturing"), and the row has
+     no width to spare on a phone: let the filter pill be the thing that gives,
+     shrinking and clipping its label, so Close is never pushed off the edge. */
+  /* the wrapper is the flex child here, so it is the one that has to be
+     allowed to shrink — the button inside it can only follow */
+  .ex__nav .ex__filterwrap { flex: 0 1 auto; min-width: 0; }
+  .ex__nav .ex__filterbtn { flex: 0 1 auto; min-width: 0; max-width: 100%; }
+  /* block, not inline: text-overflow needs a block box, and an inline one
+     reports its full text as a minimum width, so the pill would not shrink */
+  .ex__nav .ex__filterbtn span { display: block; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .ex__nav .ex__layout, .ex__nav .ex__closebtn { flex: 0 0 auto; }
   /* The filter was an unlabelled icon here, so nothing said it was a filter.
      The word is short and the row now has space for it. */
-  .ex__filterbtn span { display: inline; }
-  .ex__filterbtn, .ex__layout, .ex__closebtn {
-    padding: 9px 11px;            /* a comfortable tap target, not a hairline */
+
+  .ex__nav .ex__filterbtn, .ex__nav .ex__layout, .ex__nav .ex__closebtn {
+    /* these read as filled pills once they are on, so the label needs room to
+       sit inside one rather than against its edges */
+    padding: 9px 12px;
     white-space: nowrap;
   }
-  .ex__closebtn { padding-right: 0; }
+  .ex__nav .ex__closebtn { padding-right: 0; }
   .ex__filterbtn svg { width: 13px; height: 11px; }
   /* dropping the wrapper's positioning re-anchors the menu to .ex__top — the
      whole nav width — so it can never hang off the side of a phone */
