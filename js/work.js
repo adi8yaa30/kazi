@@ -865,9 +865,15 @@
   }
   /* Whatever holds the centre plays by itself — the strip is for watching, and
      a still poster in the centre reads as broken. Left to the end of the slide
-     so a card passed over mid-drag never starts loading a video. */
+     so a card passed over mid-drag never starts loading a video.
+
+     It also waits until the strip is actually on screen. Opening the list
+     lands on Featured Brands, with Snippets below the fold, and a reel would
+     start talking from somewhere the visitor could not see. The observer's
+     root is the list, since that is what scrolls. */
+  let stripSeen = false;
   function playCentre() {
-    if (!listOpen) return;
+    if (!listOpen || !stripSeen) return;
     const el = reelGrid.querySelector('.ex__tile.is-centre');
     if (el && el.dataset.id) playListVideo(ITEMS.find((i) => i.id === el.dataset.id));
   }
@@ -1003,6 +1009,15 @@
     if (it.listVideo) it.listVideo.currentTime = 0;
     playListVideo(it);
   }
+
+  /* Declared down here so it sits with the playback helpers it drives. The
+     callback is async, so it never runs before they exist. */
+  const stripWatch = new IntersectionObserver((entries) => {
+    stripSeen = entries[0].isIntersecting;
+    if (stripSeen) playCentre();
+    else if (listPlaying) stopListVideo(listPlaying);
+  }, { root: listEl, threshold: 0.35 });
+  stripWatch.observe(reelSec);
 
   /* ---- open / close ---- */
   /* The top block's height moves with the viewport, so measure it instead of

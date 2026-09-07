@@ -332,7 +332,9 @@
    devices get the drag cursor and the pill instead, so it stays hidden. */
 .ex__strip-hint {
   display: none;
-  margin: -4px 0 10px; font-size: 11px; letter-spacing: 0.14em;
+  /* centred over the strip it describes, which is itself centred */
+  margin: -4px 0 10px; text-align: center;
+  font-size: 11px; letter-spacing: 0.14em;
   text-transform: uppercase; opacity: 0.62;
 }
 .ex__strip-hint span { opacity: 0.8; }
