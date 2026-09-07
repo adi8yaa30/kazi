@@ -869,11 +869,35 @@
 
      It also waits until the strip is actually on screen. Opening the list
      lands on Featured Brands, with Snippets below the fold, and a reel would
-     start talking from somewhere the visitor could not see. The observer's
-     root is the list, since that is what scrolls. */
-  let stripSeen = false;
+     start talking from somewhere the visitor could not see.
+
+     Measured here rather than read off a flag the observer set earlier: the
+     observer reports once as soon as it starts watching, while the list is
+     still closed, and that answer was being trusted later when the list
+     opened. Geometry at the moment of asking cannot go stale. The strip
+     itself is the thing measured, not the whole Snippets section — that
+     section's heading and hint are tall enough to satisfy a threshold on
+     their own, with every video still below the fold. */
+  function stripInView() {
+    if (!listOpen) return false;
+    const r = stripWrap.getBoundingClientRect();
+    const box = listEl.getBoundingClientRect();
+    if (!r.height) return false;
+    const shown = Math.min(r.bottom, box.bottom) - Math.max(r.top, box.top);
+    return shown >= Math.min(r.height, box.height) * 0.5;
+  }
+  /* Being on screen is not on its own a reason to start talking. Open the list
+     with a filter that leaves two brands and the strip sits near the top,
+     visible and unasked for. Nothing plays until the visitor has moved toward
+     it — a scroll of the list, or a touch of the strip itself. */
+  let stripArmed = false;
+  function armStrip() {
+    if (stripArmed) return;
+    stripArmed = true;
+    playCentre();
+  }
   function playCentre() {
-    if (!listOpen || !stripSeen) return;
+    if (!stripArmed || !stripInView()) return;
     const el = reelGrid.querySelector('.ex__tile.is-centre');
     if (el && el.dataset.id) playListVideo(ITEMS.find((i) => i.id === el.dataset.id));
   }
@@ -883,6 +907,7 @@
   }
   /* keyboard and trackpad stepping — one card at a time, clamped at both ends */
   function stepStrip(dir) {
+    armStrip();
     const vis = visTiles();
     if (!vis.length) return false;
     const next = stripIdx + dir;
@@ -899,6 +924,7 @@
   /* Drag: the strip follows the finger, then lands on whichever card the
      distance travelled asked for — the reel rows' arithmetic exactly. */
   reelGrid.addEventListener('pointerdown', (e) => {
+    armStrip();
     gsap.killTweensOf(reelGrid);
     stripDown = true; stripMoved = 0; stripDX = 0;
     stripFrom = e.clientX;
@@ -1010,14 +1036,27 @@
     playListVideo(it);
   }
 
-  /* Declared down here so it sits with the playback helpers it drives. The
-     callback is async, so it never runs before they exist. */
-  const stripWatch = new IntersectionObserver((entries) => {
-    stripSeen = entries[0].isIntersecting;
-    if (stripSeen) playCentre();
+  /* Scrolling the list is the visitor going to look for something: from then
+     on the strip may play once it is on screen. */
+  let scrollTick = 0;
+  listEl.addEventListener('scroll', () => {
+    if (scrollTick) return;
+    scrollTick = requestAnimationFrame(() => {
+      scrollTick = 0;
+      if (listEl.scrollTop > 4) armStrip();
+      if (!stripInView() && listPlaying) stopListVideo(listPlaying);
+    });
+  }, { passive: true });
+
+  /* Watches the strip, not the section around it, and only decides to act —
+     stripInView() above is what actually rules on visibility. Declared down
+     here so it sits with the playback helpers it drives; the callback is
+     async, so it never runs before they exist. */
+  const stripWatch = new IntersectionObserver(() => {
+    if (stripInView()) playCentre();
     else if (listPlaying) stopListVideo(listPlaying);
-  }, { root: listEl, threshold: 0.35 });
-  stripWatch.observe(reelSec);
+  }, { root: listEl, threshold: [0, 0.25, 0.5, 0.75] });
+  stripWatch.observe(stripWrap);
 
   /* ---- open / close ---- */
   /* The top block's height moves with the viewport, so measure it instead of
@@ -1035,6 +1074,7 @@
     unfocusReel(true);
     pauseAll();
     applyFilter();
+    stripArmed = false;          /* a fresh visit never starts talking by itself */
     listEl.classList.add('is-open');
     listEl.setAttribute('aria-hidden', 'false');
     /* the strip has a real width only once the list is displayed */
