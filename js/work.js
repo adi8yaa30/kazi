@@ -460,7 +460,13 @@
     const cw = Math.min(vw() * lerp(0.80, 0.44), 900), ch = cw * (2 / 3);
     const sw = vw() * lerp(0.42, 0.30), sh = sw * (2 / 3);
     const cy = vh() * 0.47;
-    const peek = vw() * lerp(0.12, 0.205); /* larger peek → side cards sit closer, smaller gap */
+    /* How far a side card sticks in from the edge. Capped so it can never
+       reach the centre card: on a phone that card is 80% of the width, and
+       the tuned fraction had the neighbours overlapping it by 8px a side.
+       The cap only ever binds on narrow screens — a desktop keeps its
+       authored peek untouched. */
+    const gap = vw() * lerp(0.032, 0.016);
+    const peek = Math.min(vw() * lerp(0.12, 0.205), vw() / 2 - cw / 2 - gap);
     const n = covers.length;
     const rects = {};
     covers.forEach((c, i) => {
@@ -506,7 +512,13 @@
   function arrangedRects(idx) {
     const cw = vw() * lerp(0.58, 0.225), chh = cw * (16 / 9);
     const sw = vw() * lerp(0.40, 0.19), sh = sw * (16 / 9);
-    const pitch = vw() * lerp(0.52, 0.205);
+    /* The pitch used to be its own tuned fraction, which meant it drifted out
+       of step with the card widths: at some sizes the centre card and its
+       neighbours met edge to edge, and on a wide screen they overlapped by a
+       few pixels. Deriving it from the two widths plus a gap keeps a real one
+       at every breakpoint, whatever the widths do. */
+    const gap = vw() * lerp(0.035, 0.016);
+    const pitch = (cw + sw) / 2 + gap;
     const cy = vh() * 0.52;
     return reels.map((r, i) => {
       const d = i - idx;
