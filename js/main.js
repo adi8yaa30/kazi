@@ -420,16 +420,6 @@ const TESTIMONIALS = [
 ];
 
 /* ---------- Portfolio cards: tap-to-reveal on touch devices ---------- */
-function workCardsTouch() {
-  if (window.matchMedia('(hover: hover)').matches) return;
-  const cards = [...document.querySelectorAll('.work__grid .card')];
-  cards.forEach((c) => c.addEventListener('click', () => {
-    const wasOpen = c.classList.contains('is-open');
-    cards.forEach((o) => o.classList.remove('is-open'));
-    if (!wasOpen) c.classList.add('is-open');
-  }));
-}
-
 function testimonials() {
   const section = document.getElementById('testimonials');
   const cards = document.getElementById('tsCards');
@@ -720,7 +710,6 @@ function init() {
   initNavScroll();
   mobileNav();
   servicesInteractive();
-  workCardsTouch();
   testimonials();
   lemonReveal();
   marquee();
