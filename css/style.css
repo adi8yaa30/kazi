@@ -462,16 +462,13 @@ h1, h2, h3, h4 {
   position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
   transition: transform .6s ease;
 }
-/* The wash blurs and dims the clip so the text over it stays legible. It and
-   the text are on by default: a phone or a tablet has no hover to reveal them
-   with, and gating them behind a tap left every card unlabelled until you
-   guessed to press one. A pointer gets them on hover instead — see the block
-   at the end of this section. */
+/* Hover wash: blurs + dims the video behind the text for legibility. Hidden
+   by default so the resting card is just the playing clip. */
 .card::after {
   content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
   background: rgba(17,17,17,.42);
   backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
-  opacity: 1; transition: opacity .45s ease;
+  opacity: 0; transition: opacity .45s ease;
 }
 .card__meta {
   position: absolute; top: 0; left: 0; z-index: 3;
@@ -493,16 +490,15 @@ h1, h2, h3, h4 {
 /* arrows removed on all breakpoints */
 .card__arrow { display: none; }
 
+/* Text is hidden until the card is hovered */
 .card__meta, .card__line, .card__arrow {
-  opacity: 1; transition: opacity .4s ease, transform .3s ease;
+  opacity: 0; transition: opacity .4s ease, transform .3s ease;
 }
 
-/* Hover behaviour, for a pointer on a screen wide enough for the collage:
-   the card rests as just the clip and gives up its name when pointed at.
-   Below 1025px, or without a hover-capable pointer, the rules above stand and
-   everything is simply visible. */
+/* The reveal belongs to a pointer on a screen wide enough for the collage.
+   Below 1025px, or on a touch screen, there is no hover to trigger it and
+   nothing stands in for one — the cards stay as their clips, nothing else. */
 @media (min-width: 1025px) and (hover: hover) {
-  .card::after, .card__meta, .card__line, .card__arrow { opacity: 0; }
   .card:hover::after,
   .card:hover .card__meta,
   .card:hover .card__line,
