@@ -83,17 +83,23 @@
     e.preventDefault();
   });
 
-  /* A two-finger sideways swipe arrives as wheel events carrying deltaX.
-     They come in a long stream — the gesture plus the trackpad's inertia —
-     so the deltas accumulate to a threshold and then the slider is locked
-     out briefly, otherwise one flick would run through every slide. */
-  const STEP_DELTA = 60;      // how far a swipe travels before it counts
-  const SETTLE_MS = 320;      // roughly one slide's animation
+  /* A two-finger sideways swipe arrives as wheel events carrying deltaX, in a
+     long stream: the gesture itself, then the trackpad's inertia, which on a
+     Mac runs on for a second or more after the fingers have lifted.
+
+     So one step per *gesture*, not per timeout. Once a step is taken the
+     slider is locked, and the lock is only released after the wheel events
+     stop for GESTURE_END_MS — the inertia is swallowed rather than counted.
+     A fixed lock could not work: any value short enough to feel responsive
+     expired while the tail was still arriving, and the leftovers immediately
+     bought a second step. That is what made one flick move two slides. */
+  const STEP_DELTA = 60;        // how far a swipe travels before it counts
+  const GESTURE_END_MS = 140;   // quiet gap that means the flick is over
 
   function bindWheel(it) {
     let acc = 0;
     let locked = false;
-    let lastAt = 0;
+    let idle = 0;
 
     it.el.addEventListener('wheel', (e) => {
       /* A mostly-vertical wheel is the page scrolling past, not a swipe at
@@ -103,11 +109,11 @@
 
       e.preventDefault();     // stop the browser treating it as back/forward
 
-      const now = e.timeStamp || Date.now();
-      if (now - lastAt > 200) { acc = 0; locked = false; }   // a fresh gesture
-      lastAt = now;
-      if (locked) return;     // still riding the inertia of the last step
+      /* every event pushes the end of the gesture further out */
+      clearTimeout(idle);
+      idle = setTimeout(() => { locked = false; acc = 0; }, GESTURE_END_MS);
 
+      if (locked) return;     // this gesture has already had its step
       acc += e.deltaX;
       if (Math.abs(acc) < STEP_DELTA) return;
 
@@ -115,7 +121,6 @@
       acc = 0;
       if (it.step(dir) === false) return;
       locked = true;
-      setTimeout(() => { locked = false; }, SETTLE_MS);
     }, { passive: false });
   }
 
