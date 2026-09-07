@@ -266,7 +266,6 @@ function servicesInteractive() {
   if (!track || !viewport) return;
   const segs = [...document.querySelectorAll('#ksSegs button')];
   const arrow = document.getElementById('ksArrow');
-  const hoverable = window.matchMedia('(hover: hover)').matches;
   let slideIdx = 0;
 
   /* build slides */
@@ -302,16 +301,14 @@ function servicesInteractive() {
         slide.classList.add('has-active');
         slide.querySelectorAll('.ks__col').forEach((el) => el.classList.toggle('is-active', el === col));
       };
-      /* Desktop opens a service on hover. Touch needs its own path: the
-         synthesized click a tap is supposed to produce does not always
-         survive (the swipe handler on the viewport and the browser's own
-         scroll arbitration can swallow it), so drive it off pointerup
-         directly. A movement threshold keeps a swipe from counting as a tap.
-         `hoverable` is read live rather than once at load, so a device that
-         reports hover but is driven by touch still opens on tap. */
-      col.addEventListener('mouseenter', () => {
-        if (window.matchMedia('(hover: hover)').matches) activate();
-      });
+      /* A service opens on a deliberate press, on every device — hover used
+         to do it on a pointer, which meant the panel swung open at whatever
+         the cursor happened to cross on its way past.
+
+         The press is driven off pointerup rather than click: the synthesized
+         click a tap is supposed to produce does not always survive (the swipe
+         handler on the viewport and the browser's own scroll arbitration can
+         swallow it). A movement threshold keeps a swipe from counting. */
       let downX = 0, downY = 0, moved = false;
       col.addEventListener('pointerdown', (e) => {
         downX = e.clientX; downY = e.clientY; moved = false;
@@ -327,10 +324,6 @@ function servicesInteractive() {
         if (!col.classList.contains('is-active')) activate();
       });
     }
-    if (hoverable) slide.addEventListener('mouseleave', () => {
-      slide.classList.remove('has-active');
-      slide.querySelectorAll('.ks__col').forEach((el) => el.classList.remove('is-active'));
-    });
     track.appendChild(slide);
     slides.push(slide);
   }
