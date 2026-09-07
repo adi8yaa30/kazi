@@ -95,11 +95,14 @@
      bought a second step. That is what made one flick move two slides. */
   const STEP_DELTA = 60;        // how far a swipe travels before it counts
   const GESTURE_END_MS = 140;   // quiet gap that means the flick is over
+  const RESTART_RATIO = 1.6;    // a delta this much bigger than the last is a push
+  const RESTART_FLOOR = 10;     // ...as long as it is not just tail noise
 
   function bindWheel(it) {
     let acc = 0;
     let locked = false;
     let idle = 0;
+    let lastMag = 0;
 
     it.el.addEventListener('wheel', (e) => {
       /* A mostly-vertical wheel is the page scrolling past, not a swipe at
@@ -109,11 +112,27 @@
 
       e.preventDefault();     // stop the browser treating it as back/forward
 
+      const mag = Math.abs(e.deltaX);
+
       /* every event pushes the end of the gesture further out */
       clearTimeout(idle);
-      idle = setTimeout(() => { locked = false; acc = 0; }, GESTURE_END_MS);
+      idle = setTimeout(() => { locked = false; acc = 0; lastMag = 0; }, GESTURE_END_MS);
 
-      if (locked) return;     // this gesture has already had its step
+      if (locked) {
+        /* Waiting for the flick to finish. A second flick landing before the
+           first one's inertia has died is indistinguishable by timing alone —
+           both are just more wheel events — so tell them apart by shape:
+           inertia only ever decays, while a fresh push climbs back up. */
+        if (mag > lastMag * RESTART_RATIO && mag > RESTART_FLOOR) {
+          locked = false;
+          acc = 0;
+        } else {
+          lastMag = mag;
+          return;
+        }
+      }
+
+      lastMag = mag;
       acc += e.deltaX;
       if (Math.abs(acc) < STEP_DELTA) return;
 
