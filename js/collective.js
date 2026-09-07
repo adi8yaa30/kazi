@@ -188,22 +188,28 @@ function teamRows() {
 
     const tl = gsap.timeline({ paused: true });
 
+    /* power3.inOut spent its first third barely moving, so the mask still read
+       as empty well after the row had arrived. An out-curve puts most of the
+       wipe in the first moments, where it does the work of telling you a
+       photograph is there. */
     tl.fromTo(mask,
       { clipPath: fromRight ? 'inset(0 100% 0 0)' : 'inset(0 0 0 100%)' },
-      { clipPath: 'inset(0 0 0 0)', duration: .8, ease: 'power3.inOut' }, 0)
-      .from(lines, { yPercent: 115, duration: .7, stagger: .07, ease: 'power3.out' }, 0.18)
-      .from(bio, { y: 26, opacity: 0, duration: .6, stagger: .09, ease: 'power2.out' }, 0.34);
+      { clipPath: 'inset(0 0 0 0)', duration: .65, ease: 'power2.out' }, 0)
+      .from(lines, { yPercent: 115, duration: .7, stagger: .07, ease: 'power3.out' }, 0.14)
+      .from(bio, { y: 26, opacity: 0, duration: .6, stagger: .09, ease: 'power2.out' }, 0.28);
 
     /* And hold the wipe until the photo is actually there. With the warm-up
        above it is already decoded by this point in all but the worst case;
        when it isn't, waiting is better than revealing an empty mask. */
     ScrollTrigger.create({
       trigger: row,
-      /* The portrait is clipped fully out until this fires, so triggering at
-         78% left the row on screen for ~200px of scrolling showing nothing
-         where the photo should be — which reads as the image loading slowly.
-         It now starts as the row edges in. */
-      start: 'top 96%',
+      /* The portrait is clipped fully out until this fires, so every pixel of
+         scrolling before it is a blank where a photograph should be — which
+         reads as the image loading slowly. 78% was bad, 96% still left the
+         row a third of the way up the screen before it filled. It starts now
+         as the row's first edge crosses the bottom, so the wipe is finishing
+         about when the row is properly in view. */
+      start: 'top bottom+=10%',
       once: true,
       onEnter: () => {
         const img = imgOf(row);
