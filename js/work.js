@@ -1006,24 +1006,50 @@
     it.listEl.querySelector('.ex__tile-media').appendChild(v);
     return v;
   }
+  /* Getting a clip started on a phone takes more than calling play().
+     Safari decides whether a clip may run at the moment play() is called, and
+     with nothing buffered it simply refuses — these tiles are created with
+     preload="metadata", so on a phone the answer was no and the tile sat
+     there as a poster. Nudge the load and try again once there is something
+     to play, exactly as the case-study reel rows do.
+
+     Sound is asked for first and given up if refused: no browser allows
+     unattended audio, so a clip reached by scrolling runs muted, while one
+     reached by tapping the reel — a real gesture — keeps its sound. */
+  function startListVideo(v, it) {
+    const go = () => {
+      /* the wait for data can outlive the card's turn in the centre — by then
+         it has been stopped, and starting it would be a clip playing from
+         somewhere off screen */
+      if (listPlaying !== it) return;
+      v.play().catch(() => {
+        if (!v.muted) {                 /* it was the audio it objected to */
+          v.muted = true;
+          v.setAttribute('muted', '');  /* some Safari builds read the attribute */
+          go();
+          return;
+        }
+        it.listEl.classList.add('is-paused');  /* refused outright: offer the badge */
+      });
+    };
+    if (v.readyState >= 2) { go(); return; }  /* HAVE_CURRENT_DATA or better */
+    v.preload = 'auto';                       /* preload="metadata" buffers no frames */
+    v.addEventListener('canplay', go, { once: true });
+    if (v.networkState === HTMLMediaElement.NETWORK_EMPTY) v.load();
+    go();
+  }
+
   function playListVideo(it) {
     if (!it) return;
     if (listPlaying && listPlaying !== it) stopListVideo(listPlaying);
     const v = ensureListVideo(it);
     if (!v.paused) return;              /* already running — don't restart it */
     v.muted = false;
+    v.removeAttribute('muted');
     it.listEl.classList.remove('is-paused');
-    v.play().catch(() => {
-      /* autoplay policy can still refuse an unmuted start — fall back rather
-         than leaving the viewer with a dead tile */
-      v.muted = true;
-      v.play().catch(() => {
-        /* genuinely refused: show the badge so there is something to tap */
-        it.listEl.classList.add('is-paused');
-      });
-    });
     it.listEl.classList.add('is-playing');
     listPlaying = it;
+    startListVideo(v, it);
   }
   function toggleListVideo(it) {
     if (!it) return;
