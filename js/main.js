@@ -223,10 +223,16 @@ const SERVICES = [
     imgStatic: 'assets/img/services/static-state/video-production-image-static-state.webp',
     imgHover:  'assets/img/services/hovered-state/video-production-image-hovered-state.webp',
     desc: 'Cinematic productions crafted for brands, products, commercials, and digital campaigns.' },
-  { num: '02', name: 'CGI & Motion Graphics',   kicker: 'Imagination, Rendered',
-    imgStatic: 'assets/img/services/static-state/cgi-&-motion-graphics-image-static-state.webp',
-    imgHover:  'assets/img/services/hovered-state/cgi-&-motion-graphics-image-hovered-state.webp',
-    desc: 'High-impact CGI, motion design, and visual effects that transform ideas into immersive digital experiences.' },
+  /* The one service whose artwork is a screenshot rather than a photograph.
+     Cropping a photo to fill the frame costs nothing; cropping a web page
+     cuts off the navigation, the wordmark and the layout — the very things
+     that make it read as a website. `fit: 'whole'` puts this card's stills on
+     object-fit: contain so the page is shown entire. */
+  { num: '02', name: 'Web Designing',           kicker: 'Built to Perform',
+    fit: 'whole',
+    imgStatic: 'assets/img/services/static-state/web-designing-image-static-state.webp',
+    imgHover:  'assets/img/services/hovered-state/web-designing-image-hovered-state.webp',
+    desc: 'Design, motion and front-end development under one roof \u2014 sites built by hand around the brand rather than a template.' },
   /* The only service with a clip rather than the two Figma stills — `video`
      takes the place of both states, since it fills the wrapper the same way
      in either. */
@@ -266,7 +272,12 @@ function servicesInteractive() {
   if (!track || !viewport) return;
   const segs = [...document.querySelectorAll('#ksSegs button')];
   const arrow = document.getElementById('ksArrow');
+  const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
   let slideIdx = 0;
+  /* only one column can be under the cursor at a time, so a single pending
+     open-timer covers the whole section — and leaving the section can cancel
+     it with one clearTimeout */
+  let hoverT = 0;
 
   /* build slides */
   const slides = [];
@@ -277,7 +288,7 @@ function servicesInteractive() {
       const svc = SERVICES[s * 3 + c];
       const pos = ['a', 'b', 'c'][c];
       const col = document.createElement('div');
-      col.className = 'ks__col ks__col--' + pos;
+      col.className = 'ks__col ks__col--' + pos + (svc.fit === 'whole' ? ' ks__col--whole' : '');
       const media = svc.video
         ? '<video class="ks__img ks__vid" muted loop playsinline preload="none"'
           + ' poster="' + svc.poster + '" aria-label="' + svc.name + '">'
@@ -302,13 +313,14 @@ function servicesInteractive() {
         + '<div class="ks__rail"><span>' + svc.num + '</span></div>';
       slide.appendChild(col);
 
-      const activate = () => {
+      const activate = (watch = true) => {
         slide.classList.add('has-active');
         slide.querySelectorAll('.ks__col').forEach((el) => el.classList.toggle('is-active', el === col));
+        if (watch) startWatch();
       };
-      /* A service opens on a deliberate press, on every device — hover used
-         to do it on a pointer, which meant the panel swung open at whatever
-         the cursor happened to cross on its way past.
+      /* On a mouse the service opens on hover; on a touch screen — where
+         there is no hover — it opens on a press. Both routes end in the
+         same activate().
 
          The press is driven off pointerup rather than click: the synthesized
          click a tap is supposed to produce does not always survive (the swipe
@@ -321,13 +333,32 @@ function servicesInteractive() {
       col.addEventListener('pointermove', (e) => {
         if (Math.abs(e.clientX - downX) > 10 || Math.abs(e.clientY - downY) > 10) moved = true;
       });
-      const tap = () => { if (!moved && !col.classList.contains('is-active')) activate(); };
+      const tap = () => {
+        if (moved || col.classList.contains('is-active')) return;
+        activate(!!track.querySelector('.ks__col:hover'));
+      };
       col.addEventListener('pointerup', tap);
       col.addEventListener('pointercancel', () => { moved = true; });
       /* belt and braces for anything that delivers a click but no pointerup */
       col.addEventListener('click', () => {
-        if (!col.classList.contains('is-active')) activate();
+        if (!col.classList.contains('is-active')) activate(!!track.querySelector('.ks__col:hover'));
       });
+
+      /* Hover, for a mouse only. The short delay before opening is what
+         keeps this civil: without it the panel swung open at every column
+         the cursor crossed on its way somewhere else. A cursor that is
+         merely passing through clears the timer on the way out; one that
+         settles opens the service. 45ms is about the shortest that still
+         reads as intent rather than reflex — below that a fast sweep across
+         the row starts opening panels behind the cursor. */
+      col.addEventListener('pointerenter', (e) => {
+        if (e.pointerType !== 'mouse' || !finePointer.matches) return;
+        clearTimeout(hoverT);
+        hoverT = setTimeout(() => {
+          if (!col.classList.contains('is-active')) activate();
+        }, 45);
+      });
+      col.addEventListener('pointerleave', () => clearTimeout(hoverT));
     }
     track.appendChild(slide);
     slides.push(slide);
@@ -378,25 +409,73 @@ function servicesInteractive() {
     });
   }
 
+  /* the default view: nothing open, every column back to a third of the
+     width. Both the slider and the cursor leaving the section return here. */
+  function closeAll() {
+    slides.forEach((sl) => {
+      sl.classList.remove('has-active');
+      sl.querySelectorAll('.ks__col').forEach((el) => el.classList.remove('is-active'));
+    });
+  }
+
+  /* Hover belongs to this section only: once the cursor is outside it, the
+     panel has no reason to stay open, and the visitor comes back to the same
+     default view they first saw.
+
+     Detecting that by events turned out to be a losing game. The section is a
+     full 100svh, so scrolling slides it out from under a cursor that never
+     moved and fires no pointer event at all; and because the section is
+     exactly as tall as the window, the cursor usually leaves by leaving the
+     window — down to the Dock, up to the toolbar — which fires nothing inside
+     the page either.
+
+     :hover is the one piece of this the browser maintains correctly through
+     all of it, scroll and window edge included. So rather than reconstruct
+     the cursor's whereabouts from events, we ask the browser directly, once a
+     frame, and only for as long as something is actually open.
+
+     What it is asked is deliberately narrow: is the cursor on a service
+     column. Not on the section — the heading above the columns and the
+     "slide to view more" footer below them are section, not service, and a
+     cursor resting there is a cursor that has left the service it opened. */
+
+  function anyOpen() {
+    return slides.some((sl) => sl.classList.contains('has-active'));
+  }
+  function leaveSection() {
+    clearTimeout(hoverT);
+    closeAll();
+    ensureMobileActive();
+  }
+  let watching = false;
+  function watchHover() {
+    if (!finePointer.matches || !anyOpen()) { watching = false; return; }
+    /* any column, not the open one: on the way from one service to its
+       neighbour both are briefly true, and asking about the open one alone
+       would close and reopen the panel in the gap */
+    if (!track.querySelector('.ks__col:hover')) { leaveSection(); watching = false; return; }
+    requestAnimationFrame(watchHover);
+  }
+  /* runs only while a panel is open, and stops itself the moment one closes */
+  function startWatch() {
+    if (watching || !finePointer.matches) return;
+    watching = true;
+    requestAnimationFrame(watchHover);
+  }
+
   /* slider */
   function goTo(i) {
     slideIdx = (i + 3) % 3;
     track.style.transition = prefersReduced ? 'none' : 'transform 0.85s cubic-bezier(0.22, 1, 0.36, 1)';
     track.style.transform = 'translateX(' + (-slideIdx * 100 / 3) + '%)';
     segs.forEach((b, j) => b.classList.toggle('is-active', j === slideIdx));
-    slides.forEach((sl) => {
-      sl.classList.remove('has-active');
-      sl.querySelectorAll('.ks__col').forEach((el) => el.classList.remove('is-active'));
-    });
+    closeAll();
     ensureMobileActive();
   }
   goTo(0);
   smallScreen.addEventListener && smallScreen.addEventListener('change', () => {
     if (smallScreen.matches) ensureMobileActive();
-    else slides.forEach((sl) => {
-      sl.classList.remove('has-active');
-      sl.querySelectorAll('.ks__col').forEach((el) => el.classList.remove('is-active'));
-    });
+    else closeAll();
   });
   arrow && arrow.addEventListener('click', () => goTo(slideIdx + 1));
 
