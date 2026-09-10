@@ -675,6 +675,8 @@ h1, h2, h3, h4 {
   position: absolute; left: 0; right: 0; overflow: hidden;
   border: 5px solid var(--color-accent); background: var(--color-bg);
   cursor: pointer;
+  /* so the monogram below can size itself in cqh against this card */
+  container-type: size;
 }
 .ts__card img {
   display: block; width: 100%; height: 100%; object-fit: cover;
@@ -683,6 +685,43 @@ h1, h2, h3, h4 {
 }
 .ts__card.is-active img { filter: grayscale(0) brightness(1); }
 .ts__card:not(.is-active):hover img { filter: grayscale(1) brightness(0.85); }
+
+/* --- Monogram card: the fallback when a testimonial has no portrait ------
+   The strip's inactive treatment is a grayscale filter on the <img>, and
+   there is no img here — so this dims by swapping grounds instead. Cream
+   with muted type when it is one of the neighbours, accent with cream type
+   when it is the one being read. That reads as "selected" as plainly as the
+   colour returning to a photograph does. */
+.ts__card--mono {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 0.5em;
+  background: var(--color-surface);
+  transition: background 0.6s ease, color 0.6s ease;
+  color: var(--color-muted);
+}
+/* Dark, not accent. The quote panel beside this strip is accent, so an
+   accent card dissolved straight into it and the selection read as nothing
+   at all — dark is the one ground that separates from both the cream
+   section and that panel. */
+.ts__card--mono.is-active { background: var(--color-dark); color: var(--color-bg); }
+.ts__card--mono:not(.is-active):hover { background: var(--color-border); }
+
+.ts__mono {
+  font-family: var(--font-display); font-weight: 800; text-transform: uppercase;
+  letter-spacing: -0.03em; line-height: 0.85;
+  /* sized against the card, not the viewport — the strip is a fixed fraction
+     of the viewport height, so the card is the frame that actually varies */
+  font-size: clamp(48px, 22cqh, 132px);
+  color: currentColor;
+}
+.ts__mono-org {
+  font-family: var(--font-body);
+  font-size: clamp(11px, 3.4cqh, 16px);
+  letter-spacing: 0.16em; text-transform: uppercase;
+  text-align: center; padding: 0 1.5em;
+  color: currentColor; opacity: 0.85;
+}
 
 /* ---- right: orange panel ---- */
 .ts__panel {

@@ -507,10 +507,14 @@ function servicesInteractive() {
    grayscale. Nav dashes / card clicks / vertical swipe move the strip;
    the right-panel content fades + lifts on each change. A 3x duplicated
    set keeps the vertical loop seamless. */
-/* Two of these have a portrait; the other two carry their company's mark on
-   a plain ground instead. Mixing a portrait with a project still would read
-   as a missing photo — the brand mark reads as a decision, and the panel
-   beside the card is what actually names the person either way. */
+/* `img` is optional. Where there is no portrait the card falls back to a
+   monogram — the speaker's initials over their company — rather than
+   borrowing a project still or a logo. A photograph of someone's work next
+   to a photograph of a person reads as a missing headshot; set type reads as
+   a decision, and the panel beside the card is what names them either way.
+
+   This is a fallback rather than a special case: a testimonial that arrives
+   with no artwork needs nothing added to make it presentable. */
 const TESTIMONIALS = [
   { img: 'assets/img/testimonials/rhik-baruah.webp', name: 'Rhik Baruah', role: 'RAB Automotors, Owner',
     quote: 'Working with Kazi felt less like hiring an agency and more like collaborating with a creative partner. Every idea was thoughtfully executed, and the final result exceeded our expectations.' },
@@ -518,9 +522,9 @@ const TESTIMONIALS = [
     quote: 'Kazi understood our vision from day one and translated it into work that felt thoughtful, refined, and true to our brand. Their collaborative approach and attention to detail made the entire process seamless. We couldn’t have asked for a better creative partner.' },
   { img: 'assets/img/testimonials/kaustav-hazarika.webp', name: 'Kaustav Hazarika', role: 'Relax Mattresses and Sleep Systems, Operations Manager',
     quote: 'Had the opportunity to work with Kazi to develop our online presence and reach. They did a tremendous job giving us the exposure and visibility needed to really make our presence felt in the market. Highly recommend for anyone looking to grow their digital marketing.' },
-  { img: 'assets/img/testimonials/raj-buragohain.webp', name: 'Raj Buragohain', role: 'Orient Processors, HOD — Marketing',
+  { name: 'Raj Buragohain', role: 'Orient Processors, HOD — Marketing',
     quote: 'Kazi Team is a creative and innovative team who consistently bring fresh ideas to the table. They understand our requirements well, communicate clearly, and are great to work with.' },
-  { img: 'assets/img/testimonials/juthika-talukdar.webp', name: 'Juthika Talukdar', role: 'Axel Public School, HOD — Operations',
+  { name: 'Juthika Talukdar', role: 'Axel Public School, HOD — Operations',
     quote: 'Kazi Network is an excellent video agency to work with. The team is creative, professional, and genuinely committed to delivering high-quality work. They understood our vision quickly, brought great ideas to the table, and handled the entire process smoothly from concept to final production. The communication was clear, the turnaround was impressive, and the final videos looked polished and engaging.' },
   { img: 'assets/img/testimonials/heena-manav.webp', name: 'Heena Manav', role: 'Jorhat Stallions, Management',
     quote: 'Working with Kazi Network has been such a fun and refreshing experience. Their young perspective, super creative approach, and ability to think outside the box really stand out. They bring a lot of energy to every project and make the entire process feel effortless and enjoyable.' },
@@ -550,11 +554,24 @@ function testimonials() {
   for (let s = 0; s < SETS; s++) {
     TESTIMONIALS.forEach((t, i) => {
       const c = document.createElement('div');
-      c.className = 'ts__card';
+      c.className = 'ts__card' + (t.img ? '' : ' ts__card--mono');
       c.dataset.idx = i;
-      const img = document.createElement('img');
-      img.src = t.img; img.alt = t.name; img.draggable = false; img.loading = 'lazy';
-      c.appendChild(img);
+      if (t.img) {
+        const img = document.createElement('img');
+        img.src = t.img; img.alt = t.name; img.draggable = false; img.loading = 'lazy';
+        c.appendChild(img);
+      } else {
+        /* Initials from the name, and the company from the role — the role
+           reads "Company, Title", so the company is everything before the
+           first comma. */
+        const mono = document.createElement('span');
+        mono.className = 'ts__mono';
+        mono.textContent = t.name.trim().split(/\s+/).map((w) => w[0]).join('').slice(0, 3).toUpperCase();
+        const org = document.createElement('span');
+        org.className = 'ts__mono-org';
+        org.textContent = t.role.split(',')[0].trim();
+        c.append(mono, org);
+      }
       c.addEventListener('click', () => goTo(i));
       frag.appendChild(c);
     });
