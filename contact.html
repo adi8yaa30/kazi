@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Contact — Kazi Network</title>
-  <meta name="description" content="Make your next move. Discover, strategize, create, connect — start a conversation with Kazi Network." />
+  <meta name="description" content="Make your next move. Start a conversation with Kazi Network — a creative studio from Guwahati, Assam." />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23D74E31'/%3E%3Ctext x='50%25' y='54%25' font-family='Arial Black,Arial' font-weight='900' font-size='20' fill='%23FFFFF0' text-anchor='middle' dominant-baseline='central'%3EK%3C/text%3E%3C/svg%3E" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -17,7 +17,6 @@
   <!-- ============ NAVBAR (shared component) ============ -->
   <header class="nav is-visible" id="nav">
     <div class="nav__inner">
-      <a href="index.html" class="nav__brand" aria-label="Kazi"><img decoding="async" fetchpriority="high" src="assets/img/logo-mark.webp" alt="Kazi" /></a>
       <button class="nav__burger" id="navBurger" aria-label="Open menu" aria-expanded="false">
         <span></span><span></span><span></span>
       </button>
@@ -28,7 +27,7 @@
           <a href="work.html">Work</a>
           <a href="contact.html" aria-current="page">Contact</a>
         </nav>
-        <a href="contact.html" class="btn btn--filled nav__cta">Grow Your Brand</a>
+        <a href="contact.html" class="btn btn--filled nav__cta">Grow My Brand</a>
       </div>
     </div>
   </header>
@@ -49,22 +48,34 @@
       </div>
     </section>
 
-    <!-- ============ GRID: pillars + MAKE YOUR NEXT MOVE ============ -->
+    <!-- ============ MAKE YOUR NEXT MOVE ============ -->
     <section class="ct__grid ct__reveal">
-      <div class="ct__cells">
-        <div class="ct__cell"><h2>Discover</h2></div>
-        <div class="ct__cell"><h2>Strategize</h2></div>
-        <div class="ct__cell"><h2>Create</h2></div>
-        <div class="ct__cell">
-          <h2>Connect</h2>
-          <ul class="ct__contacts">
-            <li><a href="mailto:hello@kazinetwork.in">hello@kazinetwork.in</a></li>
-            <li><a href="tel:+91">+91-XXXXX-XXXXX</a></li>
-          </ul>
-        </div>
-      </div>
       <div class="ct__move">
-        <h2>Make<br />your next<br />move.</h2>
+        <h2>Make your next<br />move.</h2>
+        <!-- The four pillars that used to sit alongside this are gone, and the
+             email and phone went with them — they lived inside the Connect
+             one. They are kept here rather than dropped: this is the contact
+             page, and the form below is not a substitute for an address
+             somebody can copy. -->
+        <ul class="ct__contacts">
+          <li>
+            <a href="mailto:hello@kazinetwork.in">
+              <svg class="ct__ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <rect x="2" y="4" width="20" height="16" rx="1" />
+                <path d="M2.5 5.5 12 13l9.5-7.5" />
+              </svg>
+              hello@kazinetwork.in
+            </a>
+          </li>
+          <li>
+            <a href="tel:+91">
+              <svg class="ct__ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2Z" />
+              </svg>
+              +91-XXXXX-XXXXX
+            </a>
+          </li>
+        </ul>
       </div>
     </section>
 
@@ -98,7 +109,7 @@
           <select class="ct__input ct__select" id="ctService" name="service" required>
             <option value="" disabled selected>Select a Service</option>
             <option value="video-production">Video Production</option>
-            <option value="cgi-motion">CGI &amp; Motion Graphics</option>
+            <option value="web-designing">Web Designing</option>
             <option value="brand-identity">Brand Identity</option>
             <option value="branded-content">Branded Content</option>
             <option value="social-media">Social Media Management</option>
