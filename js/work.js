@@ -149,6 +149,32 @@
       const img = document.createElement('img');
       img.src = it.img; img.alt = it.name;
       el.appendChild(img);
+      /* A case-study cover is the only card on this canvas that goes
+         somewhere, and being wider than the reels was the only thing saying
+         so — which reads as a layout accident, not an invitation. The plate
+         names the brand and says what a click does. It is built for every
+         cover but only shown on the canvas: the featured view already prints
+         the brand name under the card, and the landing stack is a collage
+         where captions would be noise. */
+      const cap = document.createElement('div');
+      cap.className = 'ex__cap';
+      const nm = document.createElement('span');
+      nm.className = 'ex__cap-name';
+      nm.textContent = it.name;
+      const hint = document.createElement('span');
+      hint.className = 'ex__cap-hint';
+      hint.textContent = 'Click for the full story';
+      /* The narrow covers have no room for that sentence beside the brand
+         name. Rather than drop the affordance on the smallest cards — the
+         ones that need it most — it shrinks to an arrow, which CSS swaps in
+         by the card's own width. */
+      const arrow = document.createElement('span');
+      arrow.className = 'ex__cap-arrow';
+      arrow.setAttribute('aria-hidden', 'true');
+      arrow.textContent = '\u2192';
+      cap.append(nm, hint, arrow);
+      el.appendChild(cap);
+      it.capEl = cap;
     } else {
       const v = document.createElement('video');
       v.src = it.src; v.poster = it.poster;
@@ -458,6 +484,8 @@
   function setNavActive(v) {
     exNavLinks.forEach((b) => b.classList.toggle('is-active', b.dataset.view === v));
     modeBtn.classList.toggle('is-visible', v === 'snippets');
+    /* the caption plates belong to the canvas only — CSS reads this */
+    canvas.classList.toggle('is-all', v === 'all');
   }
 
   function setView(v) {
@@ -690,7 +718,10 @@
   function openCase(it, fromEl) {
     if (busy) return;
     busy = true; panEnabled = false;
-    const r = (fromEl || it.el).getBoundingClientRect();
+    /* Measure the picture, not the plate. The caption is part of the card's
+       box now, and taking the rect from the whole element would start the
+       ghost too tall and squash the image for the length of the flight. */
+    const r = (fromEl || it.el.querySelector('img') || it.el).getBoundingClientRect();
     const targetH = heroTargetHeight();
     const sx = r.width / vw(), sy = r.height / targetH;
     const ghost = document.createElement('div');
