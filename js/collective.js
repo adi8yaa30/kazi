@@ -99,6 +99,7 @@ function heroZoom() {
   if (!section || !pin || !wrap) return;
 
   const sub      = document.getElementById('clHeroSub');
+  const cue      = document.getElementById('clHeroScroll');
   const brackets = wrap.querySelectorAll('.clh__bracket');
   const wMeet    = section.querySelector('[data-w="meet"]');
   const wThe     = section.querySelector('[data-w="the"]');
@@ -148,8 +149,11 @@ function heroZoom() {
     },
   });
 
-  // Subline clears out early so it never collides with the growing frame.
+  // Subline clears out early so it never collides with the growing frame, and
+  // the scroll cue goes with it — once you are scrolling it has made its point,
+  // and it would otherwise sit over the frame as that grows past it.
   tl.to(sub, { opacity: 0, duration: 0.18, ease: 'none' }, 0);
+  if (cue) tl.to(cue, { opacity: 0, duration: 0.12, ease: 'none' }, 0);
 
   // Words push off both edges while the frame grows into the space. MEET/THE
   // travel in viewport units so they always clear the top, whatever the
@@ -237,12 +241,27 @@ function officeSeries() {
   const copy   = document.getElementById('clCopy');
   const btns   = [...section.querySelectorAll('.clo__ep')];
 
+
   let current = 0;
   let swap;                    // in-flight rotation, killed on rapid clicks
-  let inView  = false;
+  /* Two separate ideas about being on screen. `near` is the generous one — it
+     decides when the clips and posters may start loading, and wants a head
+     start. `onScreen` is the strict one, and it is the only thing allowed to
+     start playback. They used to be a single flag on a 400px margin, which is
+     why the dialogue could be heard from most of a screen away, before the
+     deck was anywhere in sight. */
+  let near     = false;
+  let onScreen = false;
+  /* Deliberate choices by the visitor. Both survive episode changes and
+     scrolling away and back — having asked once for quiet, you should not
+     have to ask again at every reel. */
+  let paused    = false;
+  let userMuted = false;
 
-  const applyClasses = () => slides.forEach((sl, n) =>
-    sl.classList.toggle('clo__slide--center', n === current));
+  const applyClasses = () => {
+    slides.forEach((sl, n) => sl.classList.toggle('clo__slide--center', n === current));
+    syncControls();          // the live pair follows the centre reel
+  };
 
   // Which slot episode `n` occupies when `c` is chosen.
   const slotOf = (n, c) => {
@@ -268,7 +287,7 @@ function officeSeries() {
   let soundOK = true;                  // flips to false if audio is blocked
 
   const startReel = (v, n) => {
-    const wantSound = soundOK;
+    const wantSound = soundOK && !userMuted;
     v.muted = !wantSound;
     if (wantSound) v.removeAttribute('muted');
     else v.setAttribute('muted', '');  // some Safari builds read the attribute
@@ -294,13 +313,90 @@ function officeSeries() {
     go();
   };
 
+  /* Buffering is not playing. The strict observer above keeps the sound from
+     arriving early, but the clips are ~25MB and setting src is what starts the
+     download — gating that on the same signal would trade an early-sound bug
+     for a reel that stares back as a poster for a second or two after you
+     arrive. So the generous observer primes the centre clip: source attached,
+     buffering, paused and silent, ready for the moment it is genuinely on
+     screen. */
+  function primeReel(n) {
+    const v = vids[n];
+    if (!v || v.getAttribute('src') === EPISODES[n].src) return;
+    v.src = EPISODES[n].src;
+    v.preload = 'auto';
+    v.load();
+  }
+
   function playCentre() {
     vids.forEach((v, n) => {
-      if (n === current && inView) { startReel(v, n); return; }
+      if (n === current && onScreen && !paused) { startReel(v, n); return; }
       v.pause();
       v.muted = true;          /* only the centre one ever carries sound */
     });
   }
+
+  /* --- the two controls, one pair per reel -----------------------------
+     Every slide carries a pair; CSS only reveals and enables the centre one.
+     The state classes go on the slide rather than the buttons because the
+     icons and their persistence are drawn from it, and it is the slide that
+     knows whether it is the centre.
+
+     Only the centre reel's pair sits in the tab order — three identical pairs
+     would otherwise put six stops in the way of anyone tabbing through, five
+     of them on cards that cannot be clicked. */
+  function syncControls() {
+    slides.forEach((sl, n) => {
+      const centre = n === current;
+      sl.classList.toggle('is-paused', centre && paused);
+      sl.classList.toggle('is-muted',  centre && userMuted);
+      const st = sl.querySelector('.clo__state');
+      const sd = sl.querySelector('.clo__sound');
+      const ep = n + 1;
+      if (st) {
+        st.tabIndex = centre ? 0 : -1;
+        st.setAttribute('aria-pressed', String(centre && paused));
+        st.setAttribute('aria-label',
+          (centre && paused ? 'Play' : 'Pause') + ' episode ' + ep);
+      }
+      if (sd) {
+        sd.tabIndex = centre ? 0 : -1;
+        sd.setAttribute('aria-pressed', String(centre && userMuted));
+        sd.setAttribute('aria-label',
+          (centre && userMuted ? 'Unmute' : 'Mute') + ' episode ' + ep);
+      }
+    });
+  }
+
+  /* One listener on the deck rather than six on the buttons and three on the
+     cards — the pairs are per-slide but the state they toggle is not.
+
+     The whole centre card is the pause target, the way the case-study reels
+     work: the badge is where the eye goes, but nobody should have to hit a
+     56px circle to stop a video they can see. Sound is the exception and has
+     to be carved out first — its badge sits inside that same card, and a
+     click there must not also stop playback. Off-centre cards are scenery. */
+  deck.addEventListener('click', (e) => {
+    const centre = e.target.closest('.clo__slide--center');
+    if (!centre) return;
+
+    if (e.target.closest('.clo__sound')) {
+      userMuted = !userMuted;
+      syncControls();
+      /* Straight at the element rather than through playCentre: unmuting must
+         not restart a clip the visitor paused, and muting must not disturb one
+         that is running. */
+      const v = vids[current];
+      if (v) v.muted = userMuted || !soundOK;
+      return;
+    }
+
+    paused = !paused;
+    syncControls();
+    playCentre();
+  });
+
+  syncControls();
 
   /* The first interaction of any kind is what lets audio through — and it also
      releases Low Power Mode, which refuses even muted autoplay. Retry then,
@@ -330,14 +426,25 @@ function officeSeries() {
     vids.forEach((v) => { if (v.dataset.poster) v.poster = v.dataset.poster; });
   }
 
-  // Only fetch and play while the deck is on screen — the clips are ~25MB each.
+  /* Loading runs early — the clips are ~25MB each, so a head start is the
+     difference between playing on arrival and staring at a poster. */
   new IntersectionObserver((entries) => {
     entries.forEach((e) => {
-      inView = e.isIntersecting;
-      if (inView) loadPosters();
-      playCentre();
+      near = e.isIntersecting;
+      if (near) { loadPosters(); primeReel(current); }
     });
   }, { rootMargin: '400px' }).observe(deck);
+
+  /* Playback does not. Nothing starts — and so nothing is heard — until a
+     real part of the deck is actually in the viewport. No rootMargin, and a
+     quarter of it has to be showing, so scrolling briskly past the section
+     does not fire off a burst of dialogue on the way by. */
+  new IntersectionObserver((entries) => {
+    entries.forEach((e) => {
+      onScreen = e.isIntersecting;
+      playCentre();
+    });
+  }, { threshold: 0.25 }).observe(deck);
 
   // --- entrance -------------------------------------------------------
   if (!reduced) {
@@ -360,6 +467,7 @@ function officeSeries() {
     current = i;
     const ep = EPISODES[i];
     btns.forEach((b, n) => b.setAttribute('aria-pressed', String(n === i)));
+    if (near) primeReel(current);
     playCentre();
 
     applyClasses();   // CSS transitions grow the new centre and shrink the old

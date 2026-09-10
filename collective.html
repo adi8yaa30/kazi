@@ -19,7 +19,6 @@
   <!-- ============ NAVBAR (shared component) ============ -->
   <header class="nav is-visible" id="nav">
     <div class="nav__inner">
-      <a href="index.html" class="nav__brand" aria-label="Kazi"><img decoding="async" fetchpriority="high" src="assets/img/logo-mark.webp" alt="Kazi" /></a>
       <button class="nav__burger" id="navBurger" aria-label="Open menu" aria-expanded="false">
         <span></span><span></span><span></span>
       </button>
@@ -30,7 +29,7 @@
           <a href="work.html">Work</a>
           <a href="contact.html">Contact</a>
         </nav>
-        <a href="contact.html" class="btn btn--filled nav__cta">Grow Your Brand</a>
+        <a href="contact.html" class="btn btn--filled nav__cta">Grow My Brand</a>
       </div>
     </div>
   </header>
@@ -65,6 +64,14 @@
             Hover To Discover The People Behind KAZI.
           </p>
         </div>
+
+        <!-- Anchored to the pin, not the stage: the stage is scaled and moved
+             by the zoom timeline, and the cue has to hold still at the foot of
+             the viewport while that happens. -->
+        <a href="#clTeam" class="clh__scroll" id="clHeroScroll" aria-label="Scroll down to the team">
+          <span>Scroll Down</span>
+          <span class="clh__scroll-arrow" aria-hidden="true">&darr;</span>
+        </a>
       </div>
     </section>
 
@@ -73,6 +80,74 @@
       <h2 class="sr-only" id="clTeamHeading">The Kazi Collective</h2>
 
       <!-- Row 1 — image left, copy right -->
+      <article class="clt__row clt__row--img-left">
+        <div class="clt__media">
+          <div class="clt__mask">
+            <img src="assets/img/collective/aratrika.webp" decoding="async"
+                 alt="Aratrika Tarafdar seated with a phone and a laptop, photographed in black and white" />
+          </div>
+        </div>
+        <div class="clt__copy">
+          <h3 class="clt__name"><span>Aratrika Tarafdar</span></h3>
+          <p class="clt__role"><span>Communications &amp; Operations</span></p>
+          <div class="clt__bio">
+            <p>Operations Are The Foundation That Allows Creativity To Thrive. From Project Planning And Internal Coordination To Client Communication And Execution, This Department Ensures Every Moving Part Works Together Seamlessly. Aratrika Leads These Efforts With Clarity, Organisation And A People-First Approach, Providing The Structure That Keeps KAZI's Creative Momentum Moving Forward.</p>
+          </div>
+        </div>
+      </article>
+
+      <!-- Row 2 — copy left, image right -->
+      <article class="clt__row clt__row--img-right">
+        <div class="clt__copy">
+          <h3 class="clt__name"><span>Amrit Xess</span></h3>
+          <p class="clt__role"><span>D.O.P</span></p>
+          <div class="clt__bio">
+            <p>Production Is Where Ideas Become Reality. Every Frame, Every Composition And Every Moment Captured Contributes To Telling A Brand's Story With Authenticity And Precision. Amrit Leads KAZI's Production Efforts Across Commercial Campaigns, Documentaries And Live Productions, Bringing A Calm Presence, Technical Discipline And An Intuitive Eye For Cinematic Storytelling To Every Project.</p>
+          </div>
+        </div>
+        <div class="clt__media">
+          <div class="clt__mask">
+            <img src="assets/img/collective/amrit.webp" decoding="async"
+                 alt="Amrit Xess seated beside a camera on a tripod, photographed in black and white" />
+          </div>
+        </div>
+      </article>
+
+      <!-- Row 3 — image left, copy right -->
+      <article class="clt__row clt__row--img-left">
+        <div class="clt__media">
+          <div class="clt__mask">
+            <img src="assets/img/collective/peaby.webp" decoding="async"
+                 alt="Priyangshu Banerjee holding a camera and a copy of A Brief History of Time, photographed in black and white" />
+          </div>
+        </div>
+        <div class="clt__copy">
+          <h3 class="clt__name"><span>Priyangshu &ldquo;Peaby&rdquo; Banerjee</span></h3>
+          <p class="clt__role"><span>Digital Media Artist</span></p>
+          <div class="clt__bio">
+            <p>Motion Transforms Information Into Experience. Through Animation, Visual Effects And Digital Design, KAZI Creates Visual Stories That Are Dynamic, Memorable And Built For Modern Audiences. Peaby Brings These Ideas To Life With An Instinct For Movement, A Technical Mindset Shaped By His Background In Physics And An Ability To Visualise Concepts Long Before They Reach The Screen.</p>
+          </div>
+        </div>
+      </article>
+      <!-- Row 4 — copy left, image right -->
+      <article class="clt__row clt__row--img-right">
+        <div class="clt__copy">
+          <h3 class="clt__name"><span>Ankita Bishaya</span></h3>
+          <p class="clt__role"><span>Co-Founder | Marketing Director</span></p>
+          <div class="clt__bio">
+            <p>Marketing At KAZI Moves Well Beyond The Screen. The Department Brings Together Campaign Strategy, Performance Marketing, Client Servicing And Graphic Communication Across Digital And Physical Spaces—From Social Media And Campaign Creatives To Signages, Hoardings, Vehicle Wraps, Promotional Collateral, Outdoor Advertising And Other Brand-Facing Externals.</p>
+            <p>Ankita Leads This Space With Over A Decade Of Marketing Experience And A Strong Understanding Of How Brands Should Present Themselves Across Different Environments. Her Strength Lies In Taking Projects From Strategy To Rollout—Coordinating People, Media And Deliverables While Keeping The Brand Consistent Wherever It Appears. That Ability To Carry Ideas Through Execution Has Become An Important Part Of KAZI's Long-Standing Client Relationships</p>
+          </div>
+        </div>
+        <div class="clt__media">
+          <div class="clt__mask">
+            <img src="assets/img/collective/ankita.webp" decoding="async"
+                 alt="Ankita Bishaya in a tailored black coat, photographed in black and white" />
+          </div>
+        </div>
+      </article>
+
+      <!-- Row 5 — image left, copy right -->
       <article class="clt__row clt__row--img-left">
         <div class="clt__media">
           <div class="clt__mask">
@@ -90,74 +165,6 @@
         </div>
       </article>
 
-      <!-- Row 2 — copy left, image right -->
-      <article class="clt__row clt__row--img-right">
-        <div class="clt__copy">
-          <h3 class="clt__name"><span>Ankita Saikia</span></h3>
-          <p class="clt__role"><span>Co-Founder | Marketing Director</span></p>
-          <div class="clt__bio">
-            <p>Marketing At KAZI Moves Well Beyond The Screen. The Department Brings Together Campaign Strategy, Performance Marketing, Client Servicing And Graphic Communication Across Digital And Physical Spaces—From Social Media And Campaign Creatives To Signages, Hoardings, Vehicle Wraps, Promotional Collateral, Outdoor Advertising And Other Brand-Facing Externals.</p>
-            <p>Ankita Leads This Space With Over A Decade Of Marketing Experience And A Strong Understanding Of How Brands Should Present Themselves Across Different Environments. Her Strength Lies In Taking Projects From Strategy To Rollout—Coordinating People, Media And Deliverables While Keeping The Brand Consistent Wherever It Appears. That Ability To Carry Ideas Through Execution Has Become An Important Part Of KAZI's Long-Standing Client Relationships</p>
-          </div>
-        </div>
-        <div class="clt__media">
-          <div class="clt__mask">
-            <img src="assets/img/collective/ankita.webp" decoding="async"
-                 alt="Ankita Saikia in a tailored black coat, photographed in black and white" />
-          </div>
-        </div>
-      </article>
-
-      <!-- Row 3 — image left, copy right -->
-      <article class="clt__row clt__row--img-left">
-        <div class="clt__media">
-          <div class="clt__mask">
-            <img src="assets/img/collective/aratrika.webp" decoding="async"
-                 alt="Aratrika Tarafdar holding a phone and a pen mid-call, photographed in black and white" />
-          </div>
-        </div>
-        <div class="clt__copy">
-          <h3 class="clt__name"><span>Aratrika Tarafdar</span></h3>
-          <p class="clt__role"><span>Communications &amp; Operations</span></p>
-          <div class="clt__bio">
-            <p>Operations Are The Foundation That Allows Creativity To Thrive. From Project Planning And Internal Coordination To Client Communication And Execution, This Department Ensures Every Moving Part Works Together Seamlessly. Aratrika Leads These Efforts With Clarity, Organisation And A People-First Approach, Providing The Structure That Keeps KAZI's Creative Momentum Moving Forward.</p>
-          </div>
-        </div>
-      </article>
-
-      <!-- Row 4 — copy left, image right -->
-      <article class="clt__row clt__row--img-right">
-        <div class="clt__copy">
-          <h3 class="clt__name"><span>Amrit Xess</span></h3>
-          <p class="clt__role"><span>D.O.P</span></p>
-          <div class="clt__bio">
-            <p>Production Is Where Ideas Become Reality. Every Frame, Every Composition And Every Moment Captured Contributes To Telling A Brand's Story With Authenticity And Precision. Amrit Leads KAZI's Production Efforts Across Commercial Campaigns, Documentaries And Live Productions, Bringing A Calm Presence, Technical Discipline And An Intuitive Eye For Cinematic Storytelling To Every Project.</p>
-          </div>
-        </div>
-        <div class="clt__media">
-          <div class="clt__mask">
-            <img src="assets/img/collective/amrit.webp" decoding="async"
-                 alt="Amrit Xess seated beside a camera on a tripod, photographed in black and white" />
-          </div>
-        </div>
-      </article>
-
-      <!-- Row 5 — image left, copy right -->
-      <article class="clt__row clt__row--img-left">
-        <div class="clt__media">
-          <div class="clt__mask">
-            <img src="assets/img/collective/peaby.webp" decoding="async"
-                 alt="Priyanshu Banerjee holding a camera and a copy of A Brief History of Time, photographed in black and white" />
-          </div>
-        </div>
-        <div class="clt__copy">
-          <h3 class="clt__name"><span>Priyanshu &ldquo;Peaby&rdquo; Banerjee</span></h3>
-          <p class="clt__role"><span>Digital Media Artist</span></p>
-          <div class="clt__bio">
-            <p>Motion Transforms Information Into Experience. Through Animation, Visual Effects And Digital Design, KAZI Creates Visual Stories That Are Dynamic, Memorable And Built For Modern Audiences. Peaby Brings These Ideas To Life With An Instinct For Movement, A Technical Mindset Shaped By His Background In Physics And An Ability To Visualise Concepts Long Before They Reach The Screen.</p>
-          </div>
-        </div>
-      </article>
     </section>
 
     <!-- ============ OFFICE SERIES ============ -->
@@ -178,16 +185,25 @@
               <video class="clo__video" muted loop playsinline preload="none"
                      data-poster="assets/img/collective/ep-1-poster.webp"
                      aria-label="The Fake Office, Season 1 Episode 1"></video>
+            
+              <button type="button" class="clo__state" data-act="pause" tabindex="-1" aria-label="Pause episode 1"><span class="clo__state-icon" aria-hidden="true"></span></button>
+              <button type="button" class="clo__sound" data-act="mute" tabindex="-1" aria-label="Mute episode 1"><span class="clo__sound-icon" aria-hidden="true"></span></button>
             </div>
             <div class="clo__slide" data-ep="1">
               <video class="clo__video" muted loop playsinline preload="none"
                      data-poster="assets/img/collective/ep-2-poster.webp"
                      aria-label="The Fake Office, Season 1 Episode 2"></video>
+            
+              <button type="button" class="clo__state" data-act="pause" tabindex="-1" aria-label="Pause episode 2"><span class="clo__state-icon" aria-hidden="true"></span></button>
+              <button type="button" class="clo__sound" data-act="mute" tabindex="-1" aria-label="Mute episode 2"><span class="clo__sound-icon" aria-hidden="true"></span></button>
             </div>
             <div class="clo__slide" data-ep="2">
               <video class="clo__video" muted loop playsinline preload="none"
                      data-poster="assets/img/collective/ep-3-poster.webp"
                      aria-label="The Fake Office, Season 1 Episode 3"></video>
+            
+              <button type="button" class="clo__state" data-act="pause" tabindex="-1" aria-label="Pause episode 3"><span class="clo__state-icon" aria-hidden="true"></span></button>
+              <button type="button" class="clo__sound" data-act="mute" tabindex="-1" aria-label="Mute episode 3"><span class="clo__sound-icon" aria-hidden="true"></span></button>
             </div>
           </div>
         </div>

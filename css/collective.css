@@ -49,6 +49,23 @@ html { scroll-behavior: auto; }
   aspect-ratio: 370 / 233;   /* the frame's proportions in the Figma */
 }
 
+/* --- Scroll cue ----------------------------------------------
+   The same device as the home hero, and for the same reason: this hero fills
+   the viewport, is pinned, and gives no edge of the next section away, so
+   nothing tells a first-time visitor there is a page below. Matching type and
+   cadence to .hero__scroll on purpose — a cue that reads differently on each
+   page is a cue you have to learn twice. */
+.clh__scroll {
+  position: absolute; left: 50%; bottom: clamp(20px, 4vh, 44px);
+  transform: translateX(-50%);
+  z-index: 4;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  color: var(--color-bg); font-family: var(--font-body);
+  font-size: 12px; font-weight: 500; letter-spacing: 0.22em; text-transform: uppercase;
+  will-change: opacity;
+}
+.clh__scroll-arrow { font-size: 18px; line-height: 1; animation: hero-bounce 1.6s ease-in-out infinite; }
+
 /* --- Headline ------------------------------------------------ */
 .clh__title {
   margin: 0;
@@ -277,6 +294,9 @@ html { scroll-behavior: auto; }
   height: 41.6vw;
   z-index: 2;
   box-shadow: 0 24px 60px rgba(17, 17, 17, .45);
+  /* the whole card stops and starts the episode, so it has to look like it
+     does — the badge is the hint, not the only target */
+  cursor: pointer;
 }
 /* Safari rasterises a blurred layer in tiles and leaves a hairline seam where
    two tiles meet — the black line that showed across the side reels. Blurring
@@ -324,6 +344,79 @@ html { scroll-behavior: auto; }
 .clo__ep[aria-pressed='false'] { background: transparent; color: var(--color-bg); }
 .clo__ep[aria-pressed='false']:hover { background: rgba(255, 255, 240, .16); }
 .clo__ep:focus-visible { outline: 2px solid var(--color-bg); outline-offset: 3px; }
+
+/* --- Playback controls, inside the reel -------------------------------
+   The same idea as cs__reel-state on the case-study pages: the control lives
+   on the card it acts on, rests invisible, and comes up on hover — or stays
+   up on its own once the reel is stopped or silenced, because a state the
+   visitor chose has to be visible without hunting for it.
+
+   These are real buttons rather than that page's decorative span, so they are
+   reachable and announced; tabindex is managed in JS so only the centre
+   reel's pair is in the tab order. */
+.clo__state,
+.clo__sound {
+  position: absolute; z-index: 3;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0; border: none; border-radius: 50%;
+  background: var(--color-bg); color: var(--color-accent);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity .25s ease, transform .25s ease;
+  /* off-centre reels are scenery: their controls never take a click */
+  pointer-events: none;
+}
+.clo__state { left: 50%; top: 50%; transform: translate(-50%, -50%); width: 56px; height: 56px; }
+.clo__sound { right: 14px; bottom: 14px; width: 40px; height: 40px; }
+
+/* only the centre reel's controls are live, and only it reveals them */
+.clo__slide--center .clo__state,
+.clo__slide--center .clo__sound { pointer-events: auto; }
+.clo__slide--center:hover .clo__state,
+.clo__slide--center:hover .clo__sound,
+.clo__slide--center .clo__state:focus-visible,
+.clo__slide--center .clo__sound:focus-visible { opacity: 1; }
+/* a chosen state outlasts the hover that set it */
+.clo__slide--center.is-paused .clo__state,
+.clo__slide--center.is-muted .clo__sound { opacity: 1; }
+.clo__slide--center .clo__state:hover { transform: translate(-50%, -50%) scale(1.1); }
+.clo__slide--center .clo__sound:hover { transform: scale(1.1); }
+.clo__state:focus-visible,
+.clo__sound:focus-visible { outline: 2px solid var(--color-bg); outline-offset: 3px; }
+
+/* Drawn, not typed — a glyph font gives ❚❚ and ▶ at different weights and
+   baselines, and these sit on the same card. */
+.clo__state-icon { position: relative; width: 13px; height: 15px; }
+.clo__state-icon::before,
+.clo__state-icon::after {
+  content: ''; position: absolute; top: 0;
+  width: 4px; height: 100%; background: currentColor;
+}
+.clo__state-icon::before { left: 0; }
+.clo__state-icon::after  { right: 0; }
+/* paused: the button now offers Play, so the mark becomes a triangle */
+.clo__slide.is-paused .clo__state-icon::before {
+  left: 2px; width: 0; height: 0; background: none;
+  border-top: 7.5px solid transparent;
+  border-bottom: 7.5px solid transparent;
+  border-left: 13px solid currentColor;
+}
+.clo__slide.is-paused .clo__state-icon::after { display: none; }
+
+/* A speaker, body and cone cut from one shape so they cannot drift apart.
+   A bare triangle was the first attempt and read as a play arrow — the wrong
+   thing entirely to sit on the same card as a pause button. */
+.clo__sound-icon { position: relative; width: 15px; height: 14px; }
+.clo__sound-icon::before {
+  content: ''; position: absolute; inset: 0;
+  background: currentColor;
+  clip-path: polygon(0 34%, 30% 34%, 62% 2%, 62% 98%, 30% 66%, 0 66%);
+}
+.clo__slide.is-muted .clo__sound-icon::after {
+  content: ''; position: absolute; left: 0; top: 50%;
+  width: 17px; height: 2px; background: currentColor;
+  transform: translateY(-50%) rotate(-45deg);
+}
 
 .clo__copy {
   max-width: 62ch;
@@ -500,6 +593,14 @@ html { scroll-behavior: auto; }
     margin-top: clamp(24px, 4vw, 40px);
     white-space: normal;
   }
+  /* the hero is a normal stacked block here, so the cue sits in the flow
+     under the subline instead of pinned to the foot of the viewport */
+  .clh__scroll {
+    position: static;
+    transform: none;
+    margin: clamp(28px, 5vw, 48px) auto 0;
+  }
+  .clh__scroll-arrow { animation: none; }
 
   .clt__mask { clip-path: none; }
   .clt__media:hover img { transform: none; filter: none; }
