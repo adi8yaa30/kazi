@@ -43,6 +43,8 @@
     if (next === tier) return;
     tier = next;
     listeners.forEach((fn) => { try { fn(tier); } catch (_) {} });
+    /* on dropping to slow, stop what the pages just paused from downloading */
+    if (tier === 'slow') setTimeout(() => document.querySelectorAll('video').forEach(release), 300);
   }
 
   if (conn && conn.addEventListener) {
@@ -56,22 +58,71 @@
      start counts. A stall once playback has begun is the reliable one. */
   const SLOW_START_MS = 6000;   // a watched clip taking longer than this to show its first frame
   const FAST_START_MS = 600;    // … or shorter than this, with no stall since
-  let stalls = 0;
+  const FAST_STARTS = 2;        // quick starts needed before "fast" — one small clip proves little
+  const STALL_MS = 800;         // a 'waiting' blip shorter than this is not a stall
+  let stalls = 0, quickStarts = 0;
   function watch(v) {
     if (!v || v.__kaziNet) return;
     v.__kaziNet = true;
     const t0 = performance.now();
-    const started = () => {
+    v.addEventListener('playing', () => {
       const ms = performance.now() - t0;
       if (ms > SLOW_START_MS) set('slow');
-      else if (ms < FAST_START_MS && stalls === 0 && !(conn && conn.saveData)) set(tier === 'slow' ? 'normal' : 'fast');
-    };
-    v.addEventListener('playing', started, { once: true });
-    /* a stall once playing has begun is the clearest sign of all */
+      else if (ms < FAST_START_MS && stalls === 0 && !(conn && conn.saveData) && ++quickStarts >= FAST_STARTS) {
+        set(tier === 'slow' ? 'normal' : 'fast');
+      }
+    }, { once: true });
+    /* A stall once playing has begun is the clearest sign of all — but only a
+       real one. Chrome fires 'waiting' for momentary hiccups even on a fast
+       line, and treating each as a stall sent a 50 Mbps visit to "slow".
+       A stall steps the tier down one level, not straight to the bottom. */
+    let tm = 0;
+    const clear = () => { clearTimeout(tm); tm = 0; };
     v.addEventListener('waiting', () => {
-      if (v.currentTime > 0.2) { stalls++; set(tier === 'fast' ? 'normal' : 'slow'); }
+      if (v.currentTime <= 0.2 || v.seeking || tm) return;
+      tm = setTimeout(() => {
+        tm = 0;
+        if (!v.paused && v.readyState < 3) { stalls++; set(tier === 'fast' ? 'normal' : 'slow'); }
+      }, STALL_MS);
     });
+    v.addEventListener('playing', clear);
+    v.addEventListener('pause', clear);
   }
+
+  /* Pausing a video does not stop its download — a paused neighbour goes on
+     buffering and keeps taking bandwidth from the one being watched. On the
+     slow tier a paused video is released instead: its source is detached (the
+     poster shows again) and put back, at the same point, the next time
+     anything asks it to play. Patching play() covers every page's own player. */
+  function release(v) {
+    if (v.__kaziSrc || !v.paused || v.networkState !== HTMLMediaElement.NETWORK_LOADING) return;
+    /* a clip is given either a src attribute or <source> children (the
+       homepage cards) — either way, take it off and keep it to put back */
+    const src = v.getAttribute('src');
+    const sources = src ? [] : [...v.querySelectorAll('source')];
+    if (!src && !sources.length) return;
+    v.__kaziSrc = src ? { src } : { sources };
+    v.__kaziAt = v.currentTime;
+    if (src) v.removeAttribute('src');
+    else sources.forEach((el) => el.remove());
+    v.load();
+  }
+  const nativePlay = HTMLMediaElement.prototype.play;
+  HTMLMediaElement.prototype.play = function () {
+    if (this.__kaziSrc) {
+      const at = this.__kaziAt, kept = this.__kaziSrc;
+      this.__kaziSrc = null;
+      if (kept.src) this.setAttribute('src', kept.src);
+      else { kept.sources.forEach((el) => this.appendChild(el)); this.load(); }
+      if (at > 0) this.addEventListener('loadedmetadata', () => { try { this.currentTime = at; } catch (_) {} }, { once: true });
+    }
+    return nativePlay.apply(this, arguments);
+  };
+  document.addEventListener('pause', (e) => {
+    const v = e.target;
+    if (tier !== 'slow' || !(v instanceof HTMLVideoElement)) return;
+    setTimeout(() => { if (tier === 'slow') release(v); }, 300);
+  }, true);
 
   /* "Healthy" means safe to start another stream alongside this one: the
      browser expects to play through, or there are a few seconds in hand.

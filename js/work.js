@@ -323,7 +323,7 @@
      the one before to be running. The rest hold their posters until a pan
      brings them towards the middle. */
   const CANVAS_MAX_PLAYING = 5;        /* normal connection */
-  const CANVAS_MAX_FAST = 8;           /* fast: more, and all at once */
+  const CANVAS_MAX_FAST = 6;           /* fast: a few more, still one at a time */
   let canvasStarting = null;
   function syncCanvasPlayback() {
     if (!canvasPlaying) return;
@@ -333,8 +333,10 @@
        same work. Tapping a reel still plays it.
 
        On desktop the connection sets the cap (js/net.js): one reel on a slow
-       connection, five on a normal one started one at a time, and up to
-       eight at once on a fast one. */
+       connection, five on a normal one and six on a fast one — always
+       started one at a time. Eight at once froze reels even at 10 Mbps, and
+       on a line that really is fast each reel is healthy almost at once, so
+       the queue costs next to nothing. */
     const net = window.KaziNet;
     const cap = net ? Math.min(CANVAS_MAX_FAST, 1 + net.ambient(CANVAS_MAX_PLAYING - 1)) : CANVAS_MAX_PLAYING;
     const cx = vw() / 2, cy = vh() / 2;
@@ -347,10 +349,6 @@
       if (r === focused) return;      /* the one being watched is not ambient */
       if (!want.includes(r) && !r.video.paused) r.video.pause();
     });
-    if (net && !net.staggered()) {
-      want.forEach((r) => { if (r.video.paused) { r.video.muted = true; r.video.play().catch(() => {}); } });
-      return;
-    }
     /* play() flips paused to false at once, so "starting" means asked to play
        but not yet running; a refusal flips it back and frees the slot */
     /* the slot is held until done() below — i.e. until the reel is healthy.

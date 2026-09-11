@@ -114,6 +114,7 @@
       const r = el.getBoundingClientRect();
       return r.right > -REEL_MARGIN && r.left < window.innerWidth + REEL_MARGIN;
     }
+    let sideStarting = null;     // the neighbour currently being let in (normal tier)
     function syncStripPlayback() {
       if (!inView) return;
       /* How the neighbours behave depends on the connection (js/net.js):
@@ -135,8 +136,29 @@
         if (!reelVisible(el)) { if (!v.paused) v.pause(); return; }
         if (i === active) { if (!paused) { v.muted = !soundOK; if (net) net.watch(v); safePlay(v); } }
         else if (!sideAllowed) { if (!v.paused) v.pause(); }
-        else if (leadGoing || !waitForLead) { v.muted = true; safePlay(v); }
+        else if (!waitForLead) { v.muted = true; safePlay(v); }
       });
+      /* On a normal connection the neighbours come in one at a time, nearest
+         first, each once the one before has a few seconds in hand. All four
+         at once, the moment the centre was ready, was enough to stall the
+         centre reel on a 10 Mbps line. */
+      if (sideAllowed && waitForLead && leadGoing) {
+        if (sideStarting && (sideStarting.paused || !reelVisible(reels[vids.indexOf(sideStarting)]))) sideStarting = null;
+        const next = sideStarting ? null : vids
+          .map((v, i) => ({ v, i }))
+          .filter(({ v, i }) => i !== active && v.paused && reelVisible(reels[i]))
+          .sort((a, b) => Math.abs(a.i - active) - Math.abs(b.i - active))[0];
+        if (next) {
+          const v = next.v;
+          sideStarting = v;
+          const go = () => { if (sideStarting === v) { sideStarting = null; syncStripPlayback(); } };
+          v.addEventListener('playing', () => (net ? net.whenHealthy(v, go) : go()), { once: true });
+          v.addEventListener('error', go, { once: true });
+          setTimeout(go, 10000);     /* a reel that will not start must not hold the rest */
+          v.muted = true;
+          safePlay(v);
+        }
+      }
       if (sideAllowed && waitForLead && !leadGoing && !lead._kaziLead) {
         lead._kaziLead = true;
         const go = () => { lead._kaziLead = false; syncStripPlayback(); };
