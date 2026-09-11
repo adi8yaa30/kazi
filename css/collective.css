@@ -527,13 +527,16 @@ html { scroll-behavior: auto; }
   .collective-page { --pad: 20px; }
 
   .clh__stage { --stage-w: min(64vw, 360px, 30vh); }
-  /* A narrow screen can't carry the desktop type ratio, and the side words
-     have to stay partly readable rather than bleeding off entirely. */
+  /* A narrow screen can't carry the desktop type ratio. */
   .clh__title { font-size: calc(var(--stage-w) * 0.30); }
-  .clh__word[data-w='kazi'] { right: 62%; }
-  .clh__word[data-w='team'] { left: 62%; }
   .clh__word[data-w='meet'] { bottom: 128%; }
   .clh__word[data-w='the']  { bottom: 112%; }
+  /* There is no room beside the frame on a phone: set either side of it,
+     KAZI. and TEAM sat behind the photo and ran off both edges. They go
+     below it instead, mirroring MEET THE above — KAZI. ending just left of
+     centre and higher, TEAM starting just right of it and lower. */
+  .clh__word[data-w='kazi'] { left: auto; right: calc(50% + .06em); top: 112%; transform: none; }
+  .clh__word[data-w='team'] { right: auto; left: calc(50% + .06em); top: 128%; transform: none; }
   .clh__bracket { border-width: 0; }
   .clh__bracket--tl { border-top-width: 5px; border-left-width: 5px; }
   .clh__bracket--br { border-bottom-width: 5px; border-right-width: 5px; }
@@ -543,7 +546,8 @@ html { scroll-behavior: auto; }
     white-space: normal;
     width: min(86vw, 330px);
     left: 50%;
-    top: 118%;
+    /* below KAZI. TEAM, which now occupy the band under the frame */
+    top: 175%;
   }
 
   /* Team rows stack: portrait first, then copy, every row. */

@@ -129,10 +129,13 @@ function heroZoom() {
   const pct = (el, deltaPx) => (el.offsetWidth ? (deltaPx / el.offsetWidth) * 100 : 0);
 
   // A phone's frame already fills most of the width at rest, so it keeps a
-  // simple near-full-bleed zoom and lets the side words bleed off as before.
+  // simple near-full-bleed zoom. There is no room beside the frame on a phone,
+  // so KAZI. TEAM sit below it (see collective.css), mirroring MEET THE above,
+  // and leave downwards as MEET THE leave upwards — sliding them sideways
+  // would leave them under the frame as it grows over them.
   const scaleTo  = () => (mobile ? 0.92 : END_FRAME_W) * window.innerWidth / stageW();
-  const kaziTo   = () => (mobile ? -90 : pct(wKazi, END_KAZI_R * window.innerWidth - startRight(wKazi)));
-  const teamTo   = () => (mobile ?  90 : pct(wTeam, END_TEAM_L * window.innerWidth - startLeft(wTeam)));
+  const kaziTo   = () => pct(wKazi, END_KAZI_R * window.innerWidth - startRight(wKazi));
+  const teamTo   = () => pct(wTeam, END_TEAM_L * window.innerWidth - startLeft(wTeam));
 
   const tl = gsap.timeline({
     scrollTrigger: {
@@ -158,9 +161,9 @@ function heroZoom() {
   // Words push off both edges while the frame grows into the space. MEET/THE
   // travel in viewport units so they always clear the top, whatever the
   // headline's own size works out to.
-  tl.to(wKazi, { xPercent: kaziTo, ease: 'none' }, 0)
-    .to(wTeam, { xPercent: teamTo, ease: 'none' }, 0)
-    .to([wMeet, wThe], { y: () => -window.innerHeight * 0.62, ease: 'none' }, 0)
+  if (mobile) tl.to([wKazi, wTeam], { y: () => window.innerHeight * 0.62, ease: 'none' }, 0);
+  else tl.to(wKazi, { xPercent: kaziTo, ease: 'none' }, 0).to(wTeam, { xPercent: teamTo, ease: 'none' }, 0);
+  tl.to([wMeet, wThe], { y: () => -window.innerHeight * 0.62, ease: 'none' }, 0)
     .to(wrap, { scale: scaleTo, ease: 'none' }, 0)
     // Counter-scale keeps the bracket strokes a constant weight as the frame
     // grows — without this they'd fatten with the wrapper.
