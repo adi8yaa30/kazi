@@ -193,6 +193,9 @@ h1, h2, h3, h4 {
 /* ---- Desktop nav__menu: transparent passthrough ---- */
 .nav__menu { display: contents; }
 
+/* The brand mark is for phones only; the desktop pill is the links alone */
+.nav__brand { display: none; }
+
 /* ============================================================
    HERO
    ============================================================ */
@@ -843,9 +846,14 @@ h1, h2, h3, h4 {
 
   /* --- Hamburger visible, desktop links hidden --- */
   .nav__burger { display: flex; }
-  /* the dropdown is taken out of flow here, so centring would leave the
-     burger stranded in the middle of an otherwise empty pill */
-  .nav__inner { justify-content: flex-end; }
+  /* the dropdown is taken out of flow here, so the pill holds just the brand
+     mark on the left and the burger on the right */
+  .nav__inner { justify-content: space-between; }
+  .nav__brand {
+    display: block; flex: 0 0 auto;
+    height: 34px; border-radius: 6px; overflow: hidden;
+  }
+  .nav__brand img { display: block; height: 100%; width: auto; object-fit: contain; }
 
   /* The pill must not clip the dropdown (it is the fixed/abs containing
      block because of its transform + backdrop-filter) */

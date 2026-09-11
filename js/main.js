@@ -463,6 +463,26 @@ function servicesInteractive() {
     requestAnimationFrame(watchHover);
   }
 
+  /* On a phone the three slides sit side by side on one track, and the
+     viewport took the height of the tallest — so a slide with shorter titles
+     left a band of empty space under its last service (Brand Identity, Event
+     Coverage). The viewport follows the slide on screen instead: eased
+     alongside the slide change, and kept in step frame by frame while a
+     service opens or closes. */
+  let slidingUntil = 0;
+  function fitViewport() {
+    if (!smallScreen.matches) { viewport.style.height = ''; viewport.style.transition = ''; return; }
+    const sl = slides[slideIdx];
+    if (!sl) return;
+    const sliding = !prefersReduced && performance.now() < slidingUntil;
+    viewport.style.transition = sliding ? 'height 0.85s cubic-bezier(0.22, 1, 0.36, 1)' : 'none';
+    viewport.style.height = sl.offsetHeight + 'px';
+  }
+  if (typeof ResizeObserver !== 'undefined') {
+    const ro = new ResizeObserver(fitViewport);
+    slides.forEach((sl) => ro.observe(sl));
+  }
+
   /* slider */
   function goTo(i) {
     slideIdx = (i + 3) % 3;
@@ -471,11 +491,14 @@ function servicesInteractive() {
     segs.forEach((b, j) => b.classList.toggle('is-active', j === slideIdx));
     closeAll();
     ensureMobileActive();
+    slidingUntil = performance.now() + 850;
+    fitViewport();
   }
   goTo(0);
   smallScreen.addEventListener && smallScreen.addEventListener('change', () => {
     if (smallScreen.matches) ensureMobileActive();
     else closeAll();
+    fitViewport();
   });
   arrow && arrow.addEventListener('click', () => goTo(slideIdx + 1));
 
