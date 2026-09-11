@@ -844,8 +844,11 @@ h1, h2, h3, h4 {
 @media (max-width: 768px) {
   :root { --pad: 20px; --nav-h: 60px; }
 
-  /* --- Hamburger visible, desktop links hidden --- */
-  .nav__burger { display: flex; }
+  /* --- Hamburger visible, desktop links hidden ---
+     margin-left:auto pins it right on its own terms. Leaving that to the
+     pill's space-between put it on the LEFT whenever it was the only item in
+     flow (the logo missing, or a cached page without it). */
+  .nav__burger { display: flex; margin-left: auto; }
   /* the dropdown is taken out of flow here, so the pill holds just the brand
      mark on the left and the burger on the right */
   .nav__inner { justify-content: space-between; }
