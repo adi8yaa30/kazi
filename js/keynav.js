@@ -92,9 +92,17 @@
      stop for GESTURE_END_MS — the inertia is swallowed rather than counted.
      A fixed lock could not work: any value short enough to feel responsive
      expired while the tail was still arriving, and the leftovers immediately
-     bought a second step. That is what made one flick move two slides. */
+     bought a second step. That is what made one flick move two slides.
+
+     140ms of quiet was still too little: a Mac often pauses between the
+     fingers lifting and the inertia starting, and the page is busy at that
+     moment starting the new slide, so the gap could run past it — the lock
+     released and the inertia alone bought a second step (one swipe, EP1 to
+     EP3). The quiet gap is longer now, and no second step is taken within
+     MIN_LOCK_MS of the first, whatever the stream does. */
   const STEP_DELTA = 60;        // how far a swipe travels before it counts
-  const GESTURE_END_MS = 140;   // quiet gap that means the flick is over
+  const GESTURE_END_MS = 300;   // quiet gap that means the flick is over
+  const MIN_LOCK_MS = 700;      // never two steps closer together than this
   const RESTART_RATIO = 1.6;    // a delta this much bigger than the last is a push
   const RESTART_FLOOR = 10;     // ...as long as it is not just tail noise
 
@@ -103,6 +111,14 @@
     let locked = false;
     let idle = 0;
     let lastMag = 0;
+    let lockedAt = 0;
+    /* the gesture is over once the stream goes quiet — but never sooner
+       than MIN_LOCK_MS after the step */
+    const release = () => {
+      const wait = MIN_LOCK_MS - (performance.now() - lockedAt);
+      if (locked && wait > 0) { idle = setTimeout(release, wait); return; }
+      locked = false; acc = 0; lastMag = 0;
+    };
 
     it.el.addEventListener('wheel', (e) => {
       /* A mostly-vertical wheel is the page scrolling past, not a swipe at
@@ -116,14 +132,15 @@
 
       /* every event pushes the end of the gesture further out */
       clearTimeout(idle);
-      idle = setTimeout(() => { locked = false; acc = 0; lastMag = 0; }, GESTURE_END_MS);
+      idle = setTimeout(release, GESTURE_END_MS);
 
       if (locked) {
         /* Waiting for the flick to finish. A second flick landing before the
            first one's inertia has died is indistinguishable by timing alone —
            both are just more wheel events — so tell them apart by shape:
            inertia only ever decays, while a fresh push climbs back up. */
-        if (mag > lastMag * RESTART_RATIO && mag > RESTART_FLOOR) {
+        const tooSoon = performance.now() - lockedAt < MIN_LOCK_MS;
+        if (!tooSoon && mag > lastMag * RESTART_RATIO && mag > RESTART_FLOOR) {
           locked = false;
           acc = 0;
         } else {
@@ -140,6 +157,7 @@
       acc = 0;
       if (it.step(dir) === false) return;
       locked = true;
+      lockedAt = performance.now();
     }, { passive: false });
   }
 
