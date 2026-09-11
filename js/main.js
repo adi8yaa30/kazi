@@ -540,6 +540,41 @@ function testimonials() {
   const elCount = document.getElementById('tsCount');
   if (!section || !strip) return;
 
+  /* In the two-column layout the panel is a fixed height, matched to the card
+     strip, and a long quote used to run straight through the bottom of it —
+     taking the name, the role and the arrows with it, out of reach. So each
+     quote starts at its designed size and steps down only as far as it takes
+     for everything to fit. Short quotes are untouched; only the long ones give.
+     Stacked (<=920px) the panel grows with its content, so there is nothing to
+     fit and the inline size is simply cleared. */
+  const panel = elText.closest('.ts__panel');
+  const grid = panel && panel.closest('.ts__grid');
+  const stacked = window.matchMedia('(max-width: 920px)');
+  const QUOTE_FLOOR = 16;         // px — design.md: no body text below 16px, at any breakpoint
+  function fitQuote() {
+    elText.style.fontSize = '';
+    const wasGrown = !!grid && grid.classList.contains('ts__grid--grow');
+    if (grid) grid.classList.remove('ts__grid--grow');
+    if (panel && !stacked.matches) {
+      let size = parseFloat(getComputedStyle(elText).fontSize);
+      /* the starting size is fractional (1.9vw is 27.36px at 1440), so each
+         step is clamped — stepping whole pixels from 16.36 would otherwise
+         land on 15.36, under the floor */
+      while (panel.scrollHeight > panel.clientHeight + 1 && size > QUOTE_FLOOR) {
+        size = Math.max(QUOTE_FLOOR, size - 1);
+        elText.style.fontSize = size + 'px';
+      }
+      /* Last resort, for a very long quote on a very short window: at the
+         floor and still too long for the frame. The row grows with the panel
+         rather than clipping the controls or breaking the 16px rule. */
+      if (panel.scrollHeight > panel.clientHeight + 1) grid.classList.add('ts__grid--grow');
+    }
+    /* the strip sizes its cards from its own height, so a change in frame
+       means re-measuring it; mid-slide, the slide's own place() settles it */
+    const isGrown = !!grid && grid.classList.contains('ts__grid--grow');
+    if (isGrown !== wasGrown) { measure(); if (!dragging && !animating) place(); }
+  }
+
   const N = TESTIMONIALS.length;
   const SETS = 3;                 // 3 copies → seamless vertical loop
   const CARD_FR = 0.62;           // card height as fraction of the viewport
@@ -604,12 +639,14 @@ function testimonials() {
   function setContent(i) {
     const t = TESTIMONIALS[i];
     if (prefersReduced) {
-      elText.textContent = t.quote; elName.textContent = t.name; elRole.textContent = t.role; return;
+      elText.textContent = t.quote; elName.textContent = t.name; elRole.textContent = t.role;
+      fitQuote(); return;
     }
     gsap.to([elText, elName, elRole], {
       opacity: 0, y: -14, duration: 0.28, ease: 'power2.in',
       onComplete: () => {
         elText.textContent = t.quote; elName.textContent = t.name; elRole.textContent = t.role;
+        fitQuote();                        // sized while still invisible
         gsap.fromTo([elText, elName, elRole],
           { opacity: 0, y: 16 },
           { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out', stagger: 0.05 });
@@ -680,6 +717,15 @@ function testimonials() {
   measure(); place(); highlight();
   const first = TESTIMONIALS[0];
   elText.textContent = first.quote; elName.textContent = first.name; elRole.textContent = first.role;
+  fitQuote();
+  /* DM Sans is wider than the fallback it replaces, so a fit taken before it
+     loads would come out a size too big */
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitQuote);
+  let fitTick = 0;
+  window.addEventListener('resize', () => {
+    cancelAnimationFrame(fitTick);
+    fitTick = requestAnimationFrame(fitQuote);
+  });
 }
 
 /* ---------- Lemon word opacity reveal on scroll ---------- */

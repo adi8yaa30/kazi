@@ -665,8 +665,17 @@ h1, h2, h3, h4 {
   --ts-h: clamp(500px, 62vh, 600px);
   width: 100%; max-width: 1520px; margin: 0 auto; padding: 0 clamp(20px, 3vw, 44px);
   display: grid; grid-template-columns: min(480px, 40%) 1fr; column-gap: clamp(28px, 3vw, 44px);
+  /* The row has to be pinned to the grid's height. Left implicit it was
+     auto-sized to its content, so the panel's height: 100% grew with a long
+     quote instead of holding at --ts-h — it ran past the bottom of the card
+     strip and carried the arrows out of reach, and because the panel itself
+     never overflowed, nothing measuring it could tell. */
+  grid-template-rows: minmax(0, 1fr);
   height: var(--ts-h);
 }
+/* fitQuote()'s last resort: a quote that still will not fit at 16px on a very
+   short window lets the row grow with it instead of clipping the controls */
+.ts__grid.ts__grid--grow { height: auto; grid-template-rows: auto; }
 
 /* ---- left: card slider ---- */
 .ts__cards { position: relative; height: 100%; overflow: hidden; touch-action: pan-y; }
@@ -687,7 +696,12 @@ h1, h2, h3, h4 {
 /* ---- right: orange panel ---- */
 .ts__panel {
   position: relative; height: 100%; background: var(--color-accent); color: var(--color-bg);
-  display: flex; flex-direction: column; justify-content: center;
+  /* flex-start, not center. The quote's auto bottom margin already puts the
+     mark at the top and the foot at the bottom whenever there is room, so
+     this changes nothing in the normal case. It matters when a quote runs
+     long: centred, the overflow spilled off both ends at once and scrollHeight
+     under-reported it, which is what fitQuote() in main.js measures. */
+  display: flex; flex-direction: column; justify-content: flex-start;
   padding: clamp(30px, 3.4vw, 60px) clamp(32px, 3.8vw, 66px) clamp(26px, 2.8vw, 46px);
 }
 .ts__quote {
@@ -753,7 +767,7 @@ h1, h2, h3, h4 {
 .ts__stars { font-size: clamp(14px, 1.2vw, 19px); letter-spacing: 4px; color: var(--color-bg); white-space: nowrap; }
 
 @media (max-width: 920px) {
-  .ts__grid { grid-template-columns: 1fr; height: auto; padding: 0 clamp(16px, 4vw, 32px); }
+  .ts__grid { grid-template-columns: 1fr; grid-template-rows: none; height: auto; padding: 0 clamp(16px, 4vw, 32px); }
   .ts__cards { height: clamp(300px, 48vh, 420px); }
   .ts__panel { min-height: clamp(380px, 55vh, 500px); }
   .ts__text { max-width: none; }
