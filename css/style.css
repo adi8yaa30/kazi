@@ -144,20 +144,27 @@ h1, h2, h3, h4 {
   .btn--ghost:hover { color: var(--color-bg); }
   .btn--ghost-light:hover { color: var(--color-bg); }
 }
-.btn:focus-visible, .btn:focus-visible::before { transition-duration: var(--btn-in); }
-.btn:focus-visible .btn__t { transition-duration: calc(var(--btn-in) * .9); }
-.btn:focus-visible { transform: translateY(-2px); }
-.btn:focus-visible::before { transform: translateY(0); animation-play-state: running; }
-.btn:focus-visible .btn__t { transform: translateY(-100%); }
-.btn--filled:focus-visible { color: var(--color-accent); border-color: var(--color-accent); }
-.btn--ghost:focus-visible, .btn--ghost-light:focus-visible { color: var(--color-bg); }
+/* keyboard focus, and a tap on a touchscreen (.is-pressed, from js/press.js,
+   which holds the page change for the fill to be seen — so a tap fills at
+   double speed) */
+.btn.is-pressed { --btn-in: .5s; }
+.btn:focus-visible, .btn:focus-visible::before,
+.btn.is-pressed, .btn.is-pressed::before { transition-duration: var(--btn-in); }
+.btn:focus-visible .btn__t, .btn.is-pressed .btn__t { transition-duration: calc(var(--btn-in) * .9); }
+.btn:focus-visible, .btn.is-pressed { transform: translateY(-2px); }
+.btn:focus-visible::before, .btn.is-pressed::before { transform: translateY(0); animation-play-state: running; }
+.btn:focus-visible .btn__t, .btn.is-pressed .btn__t { transform: translateY(-100%); }
+.btn--filled:focus-visible, .btn--filled.is-pressed { color: var(--color-accent); border-color: var(--color-accent); }
+.btn--ghost:focus-visible, .btn--ghost-light:focus-visible,
+.btn--ghost.is-pressed, .btn--ghost-light.is-pressed { color: var(--color-bg); }
 
 /* reduced motion: the colours still change, nothing travels or ripples */
 @media (prefers-reduced-motion: reduce) {
   .btn { --btn-in: .01s; --btn-out: .01s; }
   .btn::before, .btn:hover::before, .btn:focus-visible::before { animation: none; }
-  .btn:hover, .btn:focus-visible { transform: none; }
-  .btn:hover .btn__t, .btn:focus-visible .btn__t { transform: none; }
+  .btn:hover, .btn:focus-visible, .btn.is-pressed { transform: none; }
+  .btn:hover .btn__t, .btn:focus-visible .btn__t, .btn.is-pressed .btn__t { transform: none; }
+  .btn.is-pressed { --btn-in: .01s; }
 }
 
 /* ============================================================
@@ -229,14 +236,30 @@ h1, h2, h3, h4 {
 .nav__links { display: flex; gap: 36px; }
 .nav__links a {
   font-family: var(--font-body); font-size: 14px; color: var(--color-bg);
-  position: relative; transition: color .2s ease;
+  position: relative;
 }
-.nav__links a::after {
-  content: ''; position: absolute; left: 0; bottom: -6px; width: 0; height: 1px;
-  background: var(--color-accent); transition: width .25s ease;
+/* The same roll as the buttons: the word slides up and out as an orange
+   copy rises into place, and an underline draws in beneath it. On a phone or
+   tablet the tap plays it (js/press.js adds .is-pressed and holds the page
+   change until it has been seen). */
+/* inline-block so it — and the underline — is as wide as the word, even in
+   the phone menu where the link itself spans the whole row */
+.nav__label { display: inline-block; vertical-align: top; position: relative; overflow: hidden; line-height: 1.3; }
+.nav__t { display: block; transition: transform .5s cubic-bezier(0.45, 0.05, 0.35, 1); }
+.nav__t + .nav__t { position: absolute; left: 0; right: 0; top: 100%; color: var(--color-accent); }
+.nav__label::after {
+  content: ''; position: absolute; left: 0; bottom: 0; width: 0; height: 1px;
+  background: var(--color-accent); transition: width .45s cubic-bezier(0.45, 0.05, 0.35, 1);
 }
-.nav__links a:hover { color: var(--color-accent); }
-.nav__links a:hover::after { width: 100%; }
+@media (hover: hover) {
+  .nav__links a:hover .nav__t { transform: translateY(-100%); }
+  .nav__links a:hover .nav__label::after { width: 100%; }
+}
+.nav__links a:focus-visible .nav__t, .nav__links a.is-pressed .nav__t { transform: translateY(-100%); }
+.nav__links a:focus-visible .nav__label::after, .nav__links a.is-pressed .nav__label::after { width: 100%; }
+@media (prefers-reduced-motion: reduce) {
+  .nav__t, .nav__label::after { transition-duration: .01s; }
+}
 .nav__cta { padding: 10px 22px; }
 
 /* ---- Hamburger button (hidden on desktop) ---- */
