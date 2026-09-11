@@ -576,21 +576,38 @@ function testimonials() {
   const QUOTE_FLOOR = 16;         // px — design.md: no body text below 16px, at any breakpoint
   function fitQuote() {
     elText.style.fontSize = '';
+    elText.style.maxWidth = '';
     const wasGrown = !!grid && grid.classList.contains('ts__grid--grow');
     if (grid) grid.classList.remove('ts__grid--grow');
     if (panel && !stacked.matches) {
       let size = parseFloat(getComputedStyle(elText).fontSize);
+      /* The column is 30ch wide, and ch shrinks with the font, so every step
+         down also narrowed it — a long quote ended up in a strip half the
+         panel wide, with more lines, needing smaller type still. The column
+         keeps the width it has at full size while the type steps down. */
+      elText.style.maxWidth = getComputedStyle(elText).maxWidth;
       /* the starting size is fractional (1.9vw is 27.36px at 1440), so each
          step is clamped — stepping whole pixels from 16.36 would otherwise
          land on 15.36, under the floor */
-      while (panel.scrollHeight > panel.clientHeight + 1 && size > QUOTE_FLOOR) {
+      /* Overflow is measured from the foot, not from scrollHeight. A quote
+         only slightly too long pushed the foot down into the panel's bottom
+         padding, which scrollHeight does not count — so it "fit", and the
+         name, role, arrows and stars sat up to 30px lower on the longer
+         testimonials than on the short ones. Held to the padding's edge, the
+         foot sits in the same place on every testimonial. */
+      const foot = panel.querySelector('.ts__foot');
+      const overflows = () => (foot
+        ? foot.getBoundingClientRect().bottom >
+          panel.getBoundingClientRect().bottom - parseFloat(getComputedStyle(panel).paddingBottom) + 1
+        : panel.scrollHeight > panel.clientHeight + 1);
+      while (overflows() && size > QUOTE_FLOOR) {
         size = Math.max(QUOTE_FLOOR, size - 1);
         elText.style.fontSize = size + 'px';
       }
       /* Last resort, for a very long quote on a very short window: at the
          floor and still too long for the frame. The row grows with the panel
          rather than clipping the controls or breaking the 16px rule. */
-      if (panel.scrollHeight > panel.clientHeight + 1) grid.classList.add('ts__grid--grow');
+      if (overflows()) grid.classList.add('ts__grid--grow');
     }
     /* the strip sizes its cards from its own height, so a change in frame
        means re-measuring it; mid-slide, the slide's own place() settles it */
