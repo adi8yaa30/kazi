@@ -56,7 +56,10 @@
   font-size: clamp(13px, 1.05vw, 16px); line-height: 1.6;
 }
 .ct__contacts a { display: inline-flex; align-items: center; gap: .6em; }
-.ct__contacts a:hover { opacity: 0.75; }
+/* the label rolls (see .lnk in style.css); the icon darkens with it */
+.ct__contacts a .ct__ico { transition: color .45s cubic-bezier(0.45, 0.05, 0.35, 1); }
+@media (hover: hover) { .ct__contacts a:hover .ct__ico { color: var(--color-dark); } }
+.ct__contacts a:focus-visible .ct__ico, .ct__contacts a.is-pressed .ct__ico { color: var(--color-dark); }
 /* Sized in em so the mark tracks the label at every breakpoint, and stroked
    in currentColor so it inherits the link's hover state with it. */
 .ct__ico {
@@ -177,9 +180,7 @@
   letter-spacing: 0.02em;
   color: var(--color-bg);
   padding: 0;
-  transition: opacity 0.25s ease;
 }
-.ct__submit:hover { opacity: 0.7; }
 
 /* ---------------- Intro animation states (set by contact.js) ----------------
    Pre-hidden only when JS tags the page as animating, so no-JS still renders. */

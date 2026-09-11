@@ -897,6 +897,39 @@ h1, h2, h3, h4 {
 .marquee__set img:nth-child(7) { height: clamp(250px, 33vw, 400px); }
 
 /* ============================================================
+   ROLLING LINK LABEL
+   The nav links' roll, for links set on the orange ground — the footer, the
+   contact page's email and phone, [LET'S TALK]. The copy that rises in, and
+   the underline, are dark: an orange copy would vanish on orange. A link or
+   button opts in with data-roll, and wraps its label in .lnk with two
+   .lnk__t copies (the second aria-hidden). A tap on a touchscreen plays it
+   too (js/press.js).
+   ============================================================ */
+.lnk {
+  --lnk-copy: var(--color-dark);
+  --lnk-ease: cubic-bezier(0.45, 0.05, 0.35, 1);
+  display: inline-block; vertical-align: top; position: relative; overflow: hidden; line-height: 1.3;
+}
+.lnk__t { display: block; transition: transform .5s var(--lnk-ease); }
+.lnk__t + .lnk__t { position: absolute; left: 0; right: 0; top: 100%; color: var(--lnk-copy); }
+.lnk::after {
+  content: ''; position: absolute; left: 0; bottom: 0; width: 0; height: 1px;
+  background: var(--lnk-copy); transition: width .45s var(--lnk-ease);
+}
+/* an icon rolls the same way, without the underline */
+.lnk--ico { line-height: 0; }
+.lnk--ico::after { display: none; }
+@media (hover: hover) {
+  [data-roll]:hover .lnk__t { transform: translateY(-100%); }
+  [data-roll]:hover .lnk::after { width: 100%; }
+}
+[data-roll]:focus-visible .lnk__t, [data-roll].is-pressed .lnk__t { transform: translateY(-100%); }
+[data-roll]:focus-visible .lnk::after, [data-roll].is-pressed .lnk::after { width: 100%; }
+@media (prefers-reduced-motion: reduce) {
+  .lnk__t, .lnk::after { transition-duration: .01s; }
+}
+
+/* ============================================================
    FOOTER
    ============================================================ */
 .footer { background: var(--color-accent); color: var(--color-bg); padding-top: var(--space-lg); overflow: hidden; }
@@ -906,8 +939,7 @@ h1, h2, h3, h4 {
   border-bottom: 1px solid rgba(255,255,240,.3);
 }
 .footer__nav { display: flex; gap: var(--space-lg); }
-.footer__nav a, .footer__contact a { font-size: 14px; transition: opacity .2s ease; }
-.footer__nav a:hover, .footer__contact a:hover { opacity: .7; }
+.footer__nav a, .footer__contact a { font-size: 14px; }
 .footer__contact { display: flex; align-items: center; gap: var(--space-md); }
 .footer__ig { display: inline-flex; }
 .footer__wordmark { padding: var(--space-lg) var(--pad) 0; }
