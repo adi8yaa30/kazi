@@ -94,7 +94,10 @@ html { scroll-behavior: auto; }
   inset: 0;
   z-index: 2;
   transform-origin: center center;
-  will-change: transform;
+  /* No will-change: transform here. The scroll zoom scales this frame UP,
+     and with that hint Chrome rasterises the photo once at its small resting
+     size and then stretches the bitmap — the pixelation seen at full zoom.
+     Without it the frame is redrawn at the size it is actually shown. */
 }
 .clh__frame {
   height: 100%;
