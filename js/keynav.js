@@ -103,6 +103,15 @@
   const STEP_DELTA = 60;        // how far a swipe travels before it counts
   const GESTURE_END_MS = 300;   // quiet gap that means the flick is over
   const MIN_LOCK_MS = 700;      // never two steps closer together than this
+  /* Timing alone can always be beaten — a long enough pause before the
+     inertia and any quiet gap expires; a fixed window after the step expires
+     too, on a slow page that stretches the gesture. So the stream's shape
+     decides: inertia only ever dies away, event by event, while a fresh swipe
+     climbs. After a step, a stream that is only dying away is still the old
+     flick and never adds up to a new step — until the stream climbs again (a
+     new push) or goes fully quiet for NEW_GESTURE_MS, which inertia never
+     does mid-flight. */
+  const NEW_GESTURE_MS = 600;
   const RESTART_RATIO = 1.6;    // a delta this much bigger than the last is a push
   const RESTART_FLOOR = 10;     // ...as long as it is not just tail noise
 
@@ -111,6 +120,9 @@
     let locked = false;
     let idle = 0;
     let lastMag = 0;
+    let prevMag = 0;              // the previous event's size, kept across releases
+    let lastAt = 0;               // when the previous event arrived
+    let tail = false;             // a step's inertia may still be arriving
     let lockedAt = 0;
     /* the gesture is over once the stream goes quiet — but never sooner
        than MIN_LOCK_MS after the step */
@@ -129,6 +141,13 @@
       e.preventDefault();     // stop the browser treating it as back/forward
 
       const mag = Math.abs(e.deltaX);
+      const now = performance.now();
+      if (now - lastAt > NEW_GESTURE_MS) { tail = false; prevMag = 0; }   // a long silence: whatever comes next is new
+      lastAt = now;
+      const decaying = mag < prevMag;
+      /* a push that climbs well above the last event is a new flick */
+      if (mag > prevMag * RESTART_RATIO && mag > RESTART_FLOOR) tail = false;
+      prevMag = mag;
 
       /* every event pushes the end of the gesture further out */
       clearTimeout(idle);
@@ -149,6 +168,9 @@
         }
       }
 
+      /* past the lock, but the stream is still just the old flick dying away */
+      if (tail && decaying) { lastMag = mag; return; }
+
       lastMag = mag;
       acc += e.deltaX;
       if (Math.abs(acc) < STEP_DELTA) return;
@@ -157,6 +179,7 @@
       acc = 0;
       if (it.step(dir) === false) return;
       locked = true;
+      tail = true;
       lockedAt = performance.now();
     }, { passive: false });
   }
