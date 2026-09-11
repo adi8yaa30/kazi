@@ -315,19 +315,62 @@
         && r.y + r.h > -CANVAS_MARGIN && r.y < vh() + CANVAS_MARGIN;
   }
   let canvasPlaying = false;
+  /* Ambient canvas playback is capped and staggered. Every on-screen reel used
+     to start at once — fifteen downloads over one connection, and at 10 Mbps
+     nine of the fourteen on screen were still frozen on their first frame ten
+     seconds later. Now only the reels nearest the middle of the screen play,
+     up to CANVAS_MAX_PLAYING, and they start one at a time, each waiting for
+     the one before to be running. The rest hold their posters until a pan
+     brings them towards the middle. */
+  const CANVAS_MAX_PLAYING = 5;        /* normal connection */
+  const CANVAS_MAX_FAST = 8;           /* fast: more, and all at once */
+  let canvasStarting = null;
   function syncCanvasPlayback() {
     if (!canvasPlaying) return;
+    /* Phones keep their posters. Even cut to what is on screen this is eight
+       clips downloading at once over whatever signal the visitor has, for
+       motion on cards a couple of hundred pixels wide; the posters carry the
+       same work. Tapping a reel still plays it.
+
+       On desktop the connection sets the cap (js/net.js): one reel on a slow
+       connection, five on a normal one started one at a time, and up to
+       eight at once on a fast one. */
+    const net = window.KaziNet;
+    const cap = net ? Math.min(CANVAS_MAX_FAST, 1 + net.ambient(CANVAS_MAX_PLAYING - 1)) : CANVAS_MAX_PLAYING;
+    const cx = vw() / 2, cy = vh() / 2;
+    const dist = (r) => Math.hypot(r.x + r.w / 2 - cx, r.y + r.h / 2 - cy);
+    const want = onPhone() ? [] : reels
+      .filter((r) => r !== focused && reelOnScreen(r))
+      .sort((p, q) => dist(p) - dist(q))
+      .slice(0, cap);
     reels.forEach((r) => {
       if (r === focused) return;      /* the one being watched is not ambient */
-      /* Phones keep their posters. Even cut to what is on screen this is eight
-         clips downloading at once over whatever signal the visitor has, for
-         motion on cards a couple of hundred pixels wide; the posters carry the
-         same work. Tapping a reel still plays it. */
-      const want = !onPhone() && reelOnScreen(r);
-      if (want && r.video.paused) { r.video.muted = true; r.video.play().catch(() => {}); }
-      else if (!want && !r.video.paused) r.video.pause();
+      if (!want.includes(r) && !r.video.paused) r.video.pause();
     });
+    if (net && !net.staggered()) {
+      want.forEach((r) => { if (r.video.paused) { r.video.muted = true; r.video.play().catch(() => {}); } });
+      return;
+    }
+    /* play() flips paused to false at once, so "starting" means asked to play
+       but not yet running; a refusal flips it back and frees the slot */
+    /* the slot is held until done() below — i.e. until the reel is healthy.
+       Freeing it on readyState alone let the next reel in at the first frame
+       and starved the one before it */
+    const sv = canvasStarting && canvasStarting.video;
+    if (sv && (sv.paused || !want.includes(canvasStarting))) canvasStarting = null;
+    if (canvasStarting) return;
+    const next = want.find((r) => r.video.paused);
+    if (!next) return;
+    canvasStarting = next;
+    const v = next.video;
+    const done = () => { if (canvasStarting === next) { canvasStarting = null; syncCanvasPlayback(); } };
+    v.addEventListener('playing', () => (net ? net.whenHealthy(v, done) : done()), { once: true });
+    v.addEventListener('error', done, { once: true });
+    setTimeout(done, 10000);          /* a reel that stalls must not hold the queue */
+    if (net) net.watch(v);
+    v.muted = true; v.play().catch(() => {});
   }
+  if (window.KaziNet) window.KaziNet.onChange(() => syncCanvasPlayback());
   const playAll = () => { canvasPlaying = true; syncCanvasPlayback(); };
   const pauseAll = () => {
     canvasPlaying = false;

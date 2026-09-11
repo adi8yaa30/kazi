@@ -287,6 +287,7 @@ function officeSeries() {
   let soundOK = true;                  // flips to false if audio is blocked
 
   const startReel = (v, n) => {
+    if (window.KaziNet) window.KaziNet.watch(v);   // its start time rates the connection
     const wantSound = soundOK && !userMuted;
     v.muted = !wantSound;
     if (wantSound) v.removeAttribute('muted');

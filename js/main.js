@@ -840,17 +840,62 @@ function ensureVideosPlay() {
 
   if (typeof IntersectionObserver === 'undefined') { vids.forEach(play); return; }
 
+  /* One at a time. The work grid brings five clips into view together, and
+     starting all five in the same instant split the connection five ways —
+     at 10 Mbps none of them moved for over two seconds. Instead the clip
+     nearest the middle of the screen starts first, and each next one waits
+     for the one before it to actually be playing. A clip that will not start
+     is given four seconds before the queue moves past it. */
+  let starting = null;
+  const centreDist = (v) => {
+    const r = v.getBoundingClientRect();
+    return Math.abs((r.top + r.bottom) / 2 - innerHeight / 2) + Math.abs((r.left + r.right) / 2 - innerWidth / 2);
+  };
+  /* The connection decides how many (js/net.js): on a fast one every card in
+     view starts at once, on a normal one they queue, and on a slow one only
+     the card nearest the middle plays — the rest keep their posters. */
+  const budget = () => {
+    const net = window.KaziNet;
+    return net ? 1 + net.ambient(Infinity) : Infinity;
+  };
+  const pump = () => {
+    const net = window.KaziNet;
+    const paused = [...inView].filter((v) => v.paused).sort((a, b) => centreDist(a) - centreDist(b));
+    if (net && !net.staggered()) { paused.forEach((v) => { net.watch(v); play(v); }); return; }
+    if (starting) return;
+    const running = [...inView].filter((v) => !v.paused).length;
+    if (running >= budget()) return;
+    const next = paused[0];
+    if (!next) return;
+    starting = next;
+    const done = () => { if (starting === next) { starting = null; pump(); } };
+    /* the next card waits for this one to have a few seconds in hand, not just
+       its first frame — otherwise the new stream starves it straight away */
+    next.addEventListener('playing', () => (net ? net.whenHealthy(next, done) : done()), { once: true });
+    next.addEventListener('error', done, { once: true });
+    setTimeout(done, 10000);       /* a card that will not start must not hold the queue */
+    if (net) net.watch(next);
+    play(next);
+  };
+  /* on a downgrade, keep only the most central card running */
+  if (window.KaziNet) window.KaziNet.onChange(() => {
+    const on = [...inView].filter((v) => !v.paused).sort((a, b) => centreDist(a) - centreDist(b));
+    on.slice(budget()).forEach((v) => v.pause());
+    pump();
+  });
+
   const io = new IntersectionObserver((entries) => {
     entries.forEach((e) => {
       const v = e.target;
-      if (e.isIntersecting) { inView.add(v); play(v); }
-      else { inView.delete(v); if (!v.paused) v.pause(); }
+      if (e.isIntersecting) inView.add(v);
+      else { inView.delete(v); if (starting === v) starting = null; if (!v.paused) v.pause(); }
     });
+    pump();
     /* 200px of lead-in so the clip has a moment to buffer before it is seen */
   }, { rootMargin: '200px 0px', threshold: 0 });
   vids.forEach((v) => io.observe(v));
 
-  const retry = () => inView.forEach(play);
+  const retry = () => { starting = null; pump(); };
   ['pointerdown', 'touchstart', 'keydown'].forEach((ev) =>
     window.addEventListener(ev, retry, { once: true, passive: true })
   );

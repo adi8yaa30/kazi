@@ -113,13 +113,41 @@
     }
     function syncStripPlayback() {
       if (!inView) return;
+      /* How the neighbours behave depends on the connection (js/net.js):
+           slow    the centre reel plays alone; the blurred neighbours hold
+                   their posters and fetch nothing, because a second stream is
+                   what makes the watched one stall on a weak signal
+           normal  the centre gets the connection first and the neighbours
+                   follow the moment it is running
+           fast    everything starts together — waiting only costs time
+         Neighbours already playing are left alone on normal and fast, so
+         sliding between reels never makes them flicker. */
+      const net = window.KaziNet;
+      const sideAllowed = !net || net.ambient(1) > 0;
+      const waitForLead = !net || net.staggered();
+      const lead = vids[active];
+      const leadGoing = paused || !lead || (!lead.paused && (net ? net.healthy(lead) : lead.readyState >= 3));
       reels.forEach((el, i) => {
         const v = vids[i];
         if (!reelVisible(el)) { if (!v.paused) v.pause(); return; }
-        if (i === active) { if (!paused) { v.muted = !soundOK; safePlay(v); } }
-        else { v.muted = true; safePlay(v); }
+        if (i === active) { if (!paused) { v.muted = !soundOK; if (net) net.watch(v); safePlay(v); } }
+        else if (!sideAllowed) { if (!v.paused) v.pause(); }
+        else if (leadGoing || !waitForLead) { v.muted = true; safePlay(v); }
       });
+      if (sideAllowed && waitForLead && !leadGoing && !lead._kaziLead) {
+        lead._kaziLead = true;
+        const go = () => { lead._kaziLead = false; syncStripPlayback(); };
+        /* not merely playing — playing with a few seconds in hand. Letting the
+           neighbours in at the centre's first frame made it stall straight
+           after, as four more streams arrived to share the line with it. */
+        if (net) lead.addEventListener('playing', () => net.whenHealthy(lead, go), { once: true });
+        else lead.addEventListener('playing', go, { once: true });
+        lead.addEventListener('error', go, { once: true });
+      }
     }
+    /* a change of tier mid-visit re-applies the rules at once — on a
+       downgrade that pauses the neighbours and frees the bandwidth */
+    if (window.KaziNet) window.KaziNet.onChange(() => syncStripPlayback());
 
     function togglePause() {
       paused = !paused;
@@ -156,6 +184,7 @@
     let inView = false;
     function firstStart() {
       const first = vids[active];
+      if (window.KaziNet) window.KaziNet.watch(first);   // its start time rates the connection
       first.muted = false;
       first.volume = 1;
       first.play().catch(() => {
@@ -173,10 +202,11 @@
         window.addEventListener('keydown', unmute);
         window.addEventListener('touchstart', unmute, { passive: true });
       });
-      reels.forEach((el, i) => {
-        if (i === active) return;
-        if (reelVisible(el)) { vids[i].muted = true; safePlay(vids[i]); }
-      });
+      /* The neighbours are not started alongside the centre here — this was
+         the path that actually runs on first arrival, and it fetched all five
+         at once. syncStripPlayback() holds them back until the centre is
+         running, then lets them in. */
+      syncStripPlayback();
     }
 
     /* Play only while the section is on screen — so audio never runs before
