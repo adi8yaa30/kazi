@@ -473,7 +473,13 @@
   will-change: transform;
 }
 .ex__tile.is-centre .ex__tile-in { transform: scale(1); }
+/* display: block is load-bearing. This is a <span>, so without it the box is
+   inline — and Safari resolves the absolutely positioned <video>'s width: 100%
+   against the inline span, which is 0 wide. The clip then played, sound and
+   all, in a box with no width, and only the poster <img> in front of it could
+   be seen. Chrome measured against the <img> instead, so it never showed. */
 .ex__tile-media {
+  display: block;
   position: relative; aspect-ratio: 9 / 16; overflow: hidden;
   background: var(--color-dark);
 }
