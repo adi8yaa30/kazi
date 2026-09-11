@@ -185,4 +185,11 @@
   /* two up rather than one, so a column of 3:4 portraits doesn't turn the
      gallery into an endless scroll on a phone */
   .cs__trio, .cs__pair { grid-template-columns: 1fr 1fr; padding: 0 clamp(16px, 4vw, 24px); }
+  /* A row of three in two columns leaves its third photo alone on the left,
+     with an empty cell beside it. Give it the whole row but keep it the same
+     size as the others, centred, so the rhythm reads as 2 then 1. */
+  .cs__trio img:last-child:nth-child(odd) {
+    grid-column: 1 / -1; justify-self: center;
+    width: calc(50% - clamp(14px, 1.6vw, 24px) / 2);
+  }
 }
