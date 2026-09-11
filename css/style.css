@@ -75,32 +75,36 @@ h1, h2, h3, h4 {
 .accent { color: var(--color-accent); }
 
 /* Buttons
-   Hover is two movements on one curve, fast out of the gate and a long soft
-   settle: a fill rises from below with a curved leading edge that flattens
+   Hover is two movements on one slow, even curve — a gentle start, a steady
+   climb and a soft landing, so the fill is seen rising rather than snapping
+   into place (1.4s in; it clears in 0.6s, so a button never hangs in its
+   hover state after the pointer has left): a fill rises from below with a curved leading edge that flattens
    as it lands, and the label rolls — the word slides up and out as its copy
    rises into place. The fill is a layer under the label (isolation keeps its
    z-index:-1 above the button's own ground), clipped by the padding box so
    the outline stays visible around it. */
 .btn {
-  --btn-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --btn-ease: cubic-bezier(0.37, 0, 0.3, 1);
+  --btn-in: 1.4s;              /* hover on: the slow fill */
+  --btn-out: .6s;              /* hover off */
   --btn-fill: var(--color-bg);
   position: relative; isolation: isolate; overflow: hidden;
   display: inline-flex; align-items: center; justify-content: center;
   font-family: var(--font-body); font-size: 14px; font-weight: 500;
   letter-spacing: 0.02em;
   padding: 14px 30px; border: 1px solid transparent; border-radius: 7px; cursor: pointer;
-  transition: transform .5s var(--btn-ease), color .45s var(--btn-ease), border-color .45s var(--btn-ease);
+  transition: transform var(--btn-out) var(--btn-ease), color var(--btn-out) var(--btn-ease), border-color var(--btn-out) var(--btn-ease);
 }
 .btn::before {
   content: ''; position: absolute; inset: 0; z-index: -1;
   background: var(--btn-fill);
   border-radius: 50% 50% 0 0 / 70% 70% 0 0;
   transform: translateY(101%);
-  transition: transform .6s var(--btn-ease), border-radius .6s var(--btn-ease);
+  transition: transform var(--btn-out) var(--btn-ease), border-radius var(--btn-out) var(--btn-ease);
 }
 /* the label is two stacked copies in a one-line window */
 .btn__label { display: block; position: relative; overflow: hidden; line-height: 1.3; text-align: center; }
-.btn__t { display: block; transition: transform .55s var(--btn-ease); }
+.btn__t { display: block; transition: transform calc(var(--btn-out) * .9) var(--btn-ease); }
 .btn__t + .btn__t { position: absolute; left: 0; right: 0; top: 100%; }
 
 .btn--filled { background: var(--color-accent); color: var(--color-bg); --btn-fill: var(--color-bg); }
@@ -110,6 +114,8 @@ h1, h2, h3, h4 {
 /* Only where a pointer can actually hover: on a touchscreen a tap would
    leave the button stuck mid-state. Keyboard focus gets the same motion. */
 @media (hover: hover) {
+  .btn:hover, .btn:hover::before { transition-duration: var(--btn-in); }
+  .btn:hover .btn__t { transition-duration: calc(var(--btn-in) * .9); }
   .btn:hover { transform: translateY(-2px); }
   .btn:hover::before { transform: translateY(0); border-radius: 0; }
   .btn:hover .btn__t { transform: translateY(-100%); }
@@ -119,6 +125,8 @@ h1, h2, h3, h4 {
   .btn--ghost:hover { color: var(--color-bg); }
   .btn--ghost-light:hover { color: var(--color-bg); }
 }
+.btn:focus-visible, .btn:focus-visible::before { transition-duration: var(--btn-in); }
+.btn:focus-visible .btn__t { transition-duration: calc(var(--btn-in) * .9); }
 .btn:focus-visible { transform: translateY(-2px); }
 .btn:focus-visible::before { transform: translateY(0); border-radius: 0; }
 .btn:focus-visible .btn__t { transform: translateY(-100%); }
@@ -127,7 +135,7 @@ h1, h2, h3, h4 {
 
 /* reduced motion: the colours still change, nothing travels */
 @media (prefers-reduced-motion: reduce) {
-  .btn, .btn::before, .btn__t { transition-duration: .01s; }
+  .btn { --btn-in: .01s; --btn-out: .01s; }
   .btn:hover, .btn:focus-visible { transform: none; }
   .btn:hover .btn__t, .btn:focus-visible .btn__t { transform: none; }
 }
