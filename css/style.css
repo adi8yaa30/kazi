@@ -900,13 +900,13 @@ h1, h2, h3, h4 {
    ROLLING LINK LABEL
    The nav links' roll, for links set on the orange ground — the footer, the
    contact page's email and phone, [LET'S TALK]. The copy that rises in, and
-   the underline, are dark: an orange copy would vanish on orange. A link or
+   the underline, keep the label's own colour — only the motion changes. A link or
    button opts in with data-roll, and wraps its label in .lnk with two
    .lnk__t copies (the second aria-hidden). A tap on a touchscreen plays it
    too (js/press.js).
    ============================================================ */
 .lnk {
-  --lnk-copy: var(--color-dark);
+  --lnk-copy: currentColor;
   --lnk-ease: cubic-bezier(0.45, 0.05, 0.35, 1);
   display: inline-block; vertical-align: top; position: relative; overflow: hidden; line-height: 1.3;
 }
