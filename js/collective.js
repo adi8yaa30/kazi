@@ -516,6 +516,31 @@ function officeSeries() {
 
   btns.forEach((b) => b.addEventListener('click', () => setEpisode(Number(b.dataset.ep))));
 
+  /* Swipe between episodes on a touchscreen: left for the next, right for the
+     previous, wrapping like the tabs. The deck only claims sideways movement
+     (touch-action: pan-y), so an up-and-down swipe still scrolls the page.
+     A swipe that ends on the centre card must not also pause it — the click
+     it can leave behind is swallowed before the card's own handler sees it.
+     A mouse keeps the tabs and the arrow keys. */
+  const SWIPE_PX = 40;
+  let sx = 0, sy = 0, tracking = false, swiped = false;
+  deck.addEventListener('pointerdown', (e) => {
+    if (e.pointerType === 'mouse') return;
+    sx = e.clientX; sy = e.clientY; tracking = true; swiped = false;
+  }, { passive: true });
+  deck.addEventListener('pointermove', (e) => {
+    if (!tracking || swiped) return;
+    const dx = e.clientX - sx, dy = e.clientY - sy;
+    if (Math.abs(dx) > SWIPE_PX && Math.abs(dx) > Math.abs(dy) * 1.2) {
+      swiped = true;
+      setEpisode((current + (dx < 0 ? 1 : -1) + slides.length) % slides.length);
+    }
+  }, { passive: true });
+  ['pointerup', 'pointercancel'].forEach((ev) => deck.addEventListener(ev, () => { tracking = false; }, { passive: true }));
+  deck.addEventListener('click', (e) => {
+    if (swiped) { swiped = false; e.stopImmediatePropagation(); }
+  }, true);
+
   /* Arrow keys move through the episodes, wrapping the way the deck does. */
   if (window.KaziKeyNav) {
     window.KaziKeyNav.register({

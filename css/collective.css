@@ -275,6 +275,9 @@ html { scroll-behavior: auto; }
   overflow: hidden;
   /* Tall enough for the centre reel. */
   height: 41.6vw;
+  /* a sideways swipe changes the episode (collective.js); an up-and-down one
+     still scrolls the page */
+  touch-action: pan-y;
   display: flex;
   align-items: center;
 }
@@ -290,13 +293,14 @@ html { scroll-behavior: auto; }
   height: 33.2vw;
   overflow: hidden;
   background: #000;
-  transition: width .55s ease, height .55s ease, box-shadow .55s ease;
+  transition: width .55s ease, height .55s ease;
 }
 .clo__slide--center {
   width: 23.4vw;
   height: 41.6vw;
   z-index: 2;
-  box-shadow: 0 24px 60px rgba(17, 17, 17, .45);
+  /* No drop shadow: a 60px-blurred one read as a dark box bleeding past the
+     sides and foot of the reel on the orange ground. */
   /* the whole card stops and starts the episode, so it has to look like it
      does — the badge is the hint, not the only target */
   cursor: pointer;
