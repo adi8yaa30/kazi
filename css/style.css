@@ -979,20 +979,6 @@ h1, h2, h3, h4 {
      mark on the left and the burger on the right */
   .nav__inner { justify-content: space-between; }
 
-  /* Frosted glass is re-blurred against whatever scrolls behind it, every
-     frame, and these are fixed — on a phone that is paid on every scrolled
-     pixel. The glass goes solid here; at this size, against this palette, it
-     reads the same. The menu card was already 96% opaque, so its blur was
-     buying nothing at all. */
-  .nav {
-    backdrop-filter: none; -webkit-backdrop-filter: none;
-    background: rgba(20, 18, 16, 0.88);
-  }
-  .nav__menu { backdrop-filter: none; -webkit-backdrop-filter: none; }
-  .cs__back {
-    backdrop-filter: none; -webkit-backdrop-filter: none;
-    background: rgba(20, 18, 16, 0.78);
-  }
   .nav__brand {
     display: block; flex: 0 0 auto;
     height: 34px; border-radius: 6px; overflow: hidden;

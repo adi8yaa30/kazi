@@ -53,7 +53,15 @@
     let active = 2;              // reel-3 starts in the centre
     let soundOK = true;          // flips to false if autoplay-with-sound is blocked
     let paused = false;
-    let dragging = false, sx = 0, dx = 0, startRX = 0;
+    let dragging = false, sx = 0, dx = 0, startRX = 0, dragTick = 0;
+    const coarse = window.matchMedia('(hover: none)');
+    /* While a finger is on the strip the neighbours are scenery: paused, they
+       still show their frame, and the phone is not decoding four clips at once
+       while it also moves and blurs them. setActive() starts them again. */
+    function quietSides() {
+      if (!coarse.matches) return;
+      vids.forEach((v, i) => { if (i !== active && v && !v.paused) v.pause(); });
+    }
 
     const isMobile = () => window.innerWidth <= 768;
     const wFor = (d) => window.innerWidth * (isMobile() ? (d ? 0.34 : 0.56) : (d ? 0.227 : 0.234));
@@ -265,16 +273,21 @@
       dragging = true; sx = e.clientX; dx = 0;
       startRX = Number(gsap.getProperty(row, 'x'));
       row.classList.add('is-grabbing');
+      quietSides();
       try { row.setPointerCapture && row.setPointerCapture(e.pointerId); } catch (err) {}
     });
     row.addEventListener('pointermove', (e) => {
       if (!dragging) return;
       dx = e.clientX - sx;
-      gsap.set(row, { x: startRX + dx });
+      /* One move per frame. A finger reports faster than the screen redraws,
+         and every extra set() was a transform the phone drew and threw away. */
+      if (!dragTick) dragTick = requestAnimationFrame(() => { dragTick = 0; gsap.set(row, { x: startRX + dx }); });
     });
     const endDrag = (e) => {
       if (!dragging) return;
       dragging = false; row.classList.remove('is-grabbing');
+      if (dragTick) { cancelAnimationFrame(dragTick); dragTick = 0; }
+      gsap.set(row, { x: startRX + dx });        /* the frame the finger ended on */
       try { row.releasePointerCapture && e && e.pointerId != null && row.releasePointerCapture(e.pointerId); } catch (err) {}
       if (Math.abs(dx) <= 6 && e && e.type === 'pointerup') {
         const idx = reels.findIndex((el) => {
