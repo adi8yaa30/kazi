@@ -146,7 +146,12 @@ function heroZoom() {
       // section height can never drift out of sync.
       end: () => '+=' + window.innerHeight * (window.innerWidth <= 760 ? 1.5 : 2),
       pin: pin,
-      scrub: true,
+      /* A number, not true, where there is no pointer. iOS delivers scroll in
+         bursts while the finger is moving and during the momentum after it,
+         and a zoom tied straight to those steps rather than glides. With a
+         short catch-up GSAP interpolates every frame instead, which is what
+         makes it feel smooth. A mouse reports evenly, so it keeps true. */
+      scrub: isTouch ? 0.35 : true,
       anticipatePin: 1,
       invalidateOnRefresh: true,
     },
