@@ -565,6 +565,46 @@ function gallery() {
   // every photo tiny, so give them a bump there.
   const wScale = window.innerWidth <= 760 ? 1.3 : 1;
 
+  /* That bump is what broke the scattered layout on a phone: the photos grow
+     but the Figma's x positions do not move, so the outer ones ran past both
+     edges of a 390px screen — 14px off the left, 9px off the right, measured.
+     The spread is pulled in about the centre by just enough that the outermost
+     photo keeps the same margin the desktop layout leaves it (and never less
+     than 8px on a small screen). The arrangement, the rotations, the sizes and
+     the vertical spread are the Figma's, untouched — only the width of the
+     spread changes, so the phone reads as the desktop composition.
+
+     A tilted photo needs more room than its width: the rig sits at 6 degrees,
+     which costs it another ~8px a side. So the reach measured here is the
+     rotated footprint, taken from the laid-out element rather than guessed. */
+  const stageW = () => stage.clientWidth || 1;
+  const reachPct = (i, g, w) => {
+    const el = photos[i];
+    const rad = (Math.abs(g.scatter.rotate) * Math.PI) / 180;
+    const k = (100 / stageW()) * (w / wScale);          // px -> % of the stage, at width scale w
+    return (el.offsetWidth * k * Math.cos(rad) + el.offsetHeight * k * Math.sin(rad)) / 2;
+  };
+  const tightest = (w, f) => Math.min(...GALLERY.map((g, i) =>
+    50 - Math.abs(g.scatter.x - 50) * f - reachPct(i, g, w)));
+  /* Worked out when a photo is actually placed, not at set-up: a photo's
+     height — and so its rotated reach — is its image's, and the images have
+     not loaded yet while this runs. Cached against the stage's width and the
+     photos' heights, so it is recomputed after a resize or a rotate and not
+     on every frame of the spread. */
+  let fitCache = 1, fitKey = '';
+  const fitX = () => {
+    if (wScale === 1) return 1;
+    const key = stageW() + ':' + photos.reduce((n, el) => n + el.offsetHeight, 0);
+    if (key === fitKey) return fitCache;
+    const want = Math.max(tightest(1, 1), (8 / stageW()) * 100);   // desktop's margin, or 8px
+    fitKey = key;
+    fitCache = Math.min(1, ...GALLERY.map((g, i) => {
+      const off = Math.abs(g.scatter.x - 50);
+      return off < 0.5 ? 1 : Math.max(0, (50 - want - reachPct(i, g, wScale)) / off);
+    }));
+    return fitCache;
+  };
+
   photos.forEach((photo, i) => {
     photo.style.zIndex = GALLERY[i].z;
     gsap.set(photo, { width: GALLERY[i].w * wScale + '%' });
@@ -574,14 +614,23 @@ function gallery() {
     const p = GALLERY[i][key];
     // left/top put the photo's centre on the stage; xPercent/yPercent do the
     // centring, so the numbers above stay readable as stage coordinates.
+    //
+    // x: 0, y: 0 are load-bearing. .clg__photo carries translate(-50%, -50%)
+    // in the stylesheet as a pre-script fallback, and GSAP reads that existing
+    // transform back as pixels — so a photo could end up centred twice, drawn
+    // half its own width to the left of where it belongs. It hit whichever
+    // photos GSAP happened to parse that way (the chair shot on a phone,
+    // measured: 68px adrift), which is why it looked like one image was
+    // misaligned rather than a layout that was wrong everywhere.
     if (key !== 'stack') {
-      return { left: p.x + '%', top: p.y + '%', xPercent: -50, yPercent: -50, rotation: p.rotate, scale: 1 };
+      return { left: 50 + (p.x - 50) * fitX() + '%', top: p.y + '%', x: 0, y: 0, xPercent: -50, yPercent: -50, rotation: p.rotate, scale: 1 };
     }
     // The pile shrinks about its own centre, so the arrangement is preserved.
     const c = GALLERY[0].stack;
     return {
       left: c.x + (p.x - c.x) * STACK_SHRINK + '%',
       top:  c.y + (p.y - c.y) * STACK_SHRINK + '%',
+      x: 0, y: 0,
       xPercent: -50, yPercent: -50,
       rotation: p.rotate,
       // Every photo takes the front one's width, so the back ones show as thin
