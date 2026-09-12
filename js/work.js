@@ -314,6 +314,20 @@
     return r.x + r.w > -CANVAS_MARGIN && r.x < vw() + CANVAS_MARGIN
         && r.y + r.h > -CANVAS_MARGIN && r.y < vh() + CANVAS_MARGIN;
   }
+  /* Safari decides whether a clip may run at the moment play() is called, and
+     these cards carry preload="none" — with nothing buffered yet the answer is
+     no, and the card just sat on its poster (measured in WebKit: nothing
+     played, and a tap left the reel paused and muted). Nudge the load and try
+     again once there is something to play, exactly as the case-study reel rows
+     do. Chromium starts them either way. */
+  function nudgePlay(v, onRefused) {
+    const go = () => v.play().catch(() => { if (onRefused) onRefused(); });
+    if (v.readyState >= 2) { go(); return; }
+    v.preload = 'auto';
+    v.addEventListener('canplay', go, { once: true });
+    if (v.networkState === HTMLMediaElement.NETWORK_EMPTY) v.load();
+    go();
+  }
   let canvasPlaying = false;
   /* Ambient canvas playback is capped and staggered. Every on-screen reel used
      to start at once — fifteen downloads over one connection, and at 10 Mbps
@@ -324,24 +338,30 @@
      brings them towards the middle. */
   const CANVAS_MAX_PLAYING = 5;        /* normal connection */
   const CANVAS_MAX_FAST = 6;           /* fast: a few more, still one at a time */
+  const CANVAS_MAX_PHONE = 2;          /* a phone: the pair nearest the middle */
   let canvasStarting = null;
   function syncCanvasPlayback() {
     if (!canvasPlaying) return;
-    /* Phones keep their posters. Even cut to what is on screen this is eight
-       clips downloading at once over whatever signal the visitor has, for
-       motion on cards a couple of hundred pixels wide; the posters carry the
-       same work. Tapping a reel still plays it.
+    /* The connection sets the cap (js/net.js): one reel on a slow connection,
+       five on a normal one and six on a fast one — always started one at a
+       time. Eight at once froze reels even at 10 Mbps, and on a line that
+       really is fast each reel is healthy almost at once, so the queue costs
+       next to nothing.
 
-       On desktop the connection sets the cap (js/net.js): one reel on a slow
-       connection, five on a normal one and six on a fast one — always
-       started one at a time. Eight at once froze reels even at 10 Mbps, and
-       on a line that really is fast each reel is healthy almost at once, so
-       the queue costs next to nothing. */
+       A phone gets the two nearest the middle. The canvas is the point of the
+       page, so posters everywhere read as broken — but a phone decodes in
+       hardware and has the least of it, and a pair is the most it can carry
+       without the page turning sticky. Tapping one still opens it, from the
+       top and with sound. */
     const net = window.KaziNet;
-    const cap = net ? Math.min(CANVAS_MAX_FAST, 1 + net.ambient(CANVAS_MAX_PLAYING - 1)) : CANVAS_MAX_PLAYING;
+    const capped = net ? Math.min(CANVAS_MAX_FAST, 1 + net.ambient(CANVAS_MAX_PLAYING - 1)) : CANVAS_MAX_PLAYING;
+    const cap = onPhone() ? Math.min(capped, CANVAS_MAX_PHONE) : capped;
     const cx = vw() / 2, cy = vh() / 2;
     const dist = (r) => Math.hypot(r.x + r.w / 2 - cx, r.y + r.h / 2 - cy);
-    const want = onPhone() ? [] : reels
+    /* while a reel is open with sound on a phone, nothing else plays behind
+       it — one clip is what the visitor asked for, and the phone has the
+       least decoding to spare */
+    const want = focused && onPhone() ? [] : reels
       .filter((r) => r !== focused && reelOnScreen(r))
       .sort((p, q) => dist(p) - dist(q))
       .slice(0, cap);
@@ -366,7 +386,8 @@
     v.addEventListener('error', done, { once: true });
     setTimeout(done, 10000);          /* a reel that stalls must not hold the queue */
     if (net) net.watch(v);
-    v.muted = true; v.play().catch(() => {});
+    v.muted = true;
+    nudgePlay(v);
   }
   if (window.KaziNet) window.KaziNet.onChange(() => syncCanvasPlayback());
   const playAll = () => { canvasPlaying = true; syncCanvasPlayback(); };
@@ -723,8 +744,11 @@
     it.el.style.zIndex = 50;
     it.video.currentTime = 0;
     it.video.muted = false;
-    it.video.play().catch(() => { it.video.muted = true; it.video.play().catch(() => {}); });
+    /* sound is asked for first — this is a real tap, so a browser allows it —
+       and given up if refused, rather than losing the clip with it */
+    nudgePlay(it.video, () => { it.video.muted = true; nudgePlay(it.video); });
     it.focusFrom = { x: r.left, y: r.top, w: r.width, h: r.height };
+    syncCanvasPlayback();        /* on a phone, quiet the ambient pair */
     gsap.to(it.el, {
       x: (vw() - fw) / 2, y: (vh() - fh) / 2, width: fw, height: fh,
       duration: reduce ? 0.01 : 0.8, ease: 'expo.out',
@@ -742,7 +766,7 @@
       onComplete: () => {
         it.el.style.zIndex = '';
         panEnabled = (view === 'all' || (view === 'snippets' && snippetMode === 'scattered'));
-        syncCanvasPlayback();     /* on a phone this puts the poster back */
+        syncCanvasPlayback();     /* the ambient pair picks up again */
       },
     });
   }

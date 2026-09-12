@@ -893,15 +893,25 @@ function ensureVideosPlay() {
   };
   /* The connection decides how many (js/net.js): on a fast one every card in
      view starts at once, on a normal one they queue, and on a slow one only
-     the card nearest the middle plays — the rest keep their posters. */
+     the card nearest the middle plays — the rest keep their posters.
+
+     A phone caps at two whatever the connection says. Five clips decoding at
+     once while a finger is dragging the page is what makes the scroll feel
+     sticky; the card in the middle of the screen and the one after it keep
+     the grid alive without that. */
+  const phone = window.matchMedia('(max-width: 768px)');
+  const PHONE_PLAYING = 2;
   const budget = () => {
     const net = window.KaziNet;
-    return net ? 1 + net.ambient(Infinity) : Infinity;
+    const cap = net ? 1 + net.ambient(Infinity) : Infinity;
+    return phone.matches ? Math.min(cap, PHONE_PLAYING) : cap;
   };
   const pump = () => {
     const net = window.KaziNet;
     const paused = [...inView].filter((v) => v.paused).sort((a, b) => centreDist(a) - centreDist(b));
-    if (net && !net.staggered()) { paused.forEach((v) => { net.watch(v); play(v); }); return; }
+    /* the all-at-once path is for a desktop on a fast line; a phone queues
+       even then, or the cap above would be bypassed */
+    if (net && !net.staggered() && !phone.matches) { paused.forEach((v) => { net.watch(v); play(v); }); return; }
     if (starting) return;
     const running = [...inView].filter((v) => !v.paused).length;
     if (running >= budget()) return;
