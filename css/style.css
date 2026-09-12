@@ -233,6 +233,11 @@ h1, h2, h3, h4 {
 }
 .lead__input::placeholder { color: rgba(17, 17, 17, 0.35); }
 .lead__input:focus { outline: none; border-bottom-color: var(--color-accent); }
+.lead__input.is-wrong { border-bottom-color: var(--color-accent); }
+.lead__error {
+  font-family: var(--font-body); font-size: 12.5px; line-height: 1.4;
+  color: var(--color-accent);
+}
 textarea.lead__input { resize: vertical; min-height: 76px; }
 .lead__note {
   margin-top: 16px;

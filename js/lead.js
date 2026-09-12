@@ -25,7 +25,9 @@
     + '<span class="lead__label">' + text + (note ? ' <em>' + note + '</em>' : '') + '</span>'
     + (name === 'message'
       ? '<textarea class="lead__input" name="message" rows="3" placeholder="Anything you would like us to know"></textarea>'
-      : '<input class="lead__input" name="' + name + '" ' + attrs + ' />')
+      : '<input class="lead__input" name="' + name + '" id="lead-' + name + '"'
+        + ' aria-describedby="lead-' + name + '-err" ' + attrs + ' />')
+    + (name === 'message' ? '' : '<span class="lead__error" id="lead-' + name + '-err" hidden></span>')
     + '</label>';
 
   const dlg = document.createElement('dialog');
@@ -56,6 +58,73 @@
   const form = dlg.querySelector('form');
   const note = dlg.querySelector('.lead__note');
 
+  /* What each field has to be before we will send it. Checked here rather
+     than left to the browser: "required" only asks for something, and a lead
+     we cannot reply to or ring back is not worth having. */
+  const EMAIL = /^[^\s@"'()<>,;:]+@[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*\.[a-z]{2,}$/i;
+  /* the handful of misspellings that are never what anyone meant */
+  const TYPOS = {
+    'gmial.com': 'gmail.com', 'gmai.com': 'gmail.com', 'gmali.com': 'gmail.com',
+    'gnail.com': 'gmail.com', 'gmaill.com': 'gmail.com', 'gmail.con': 'gmail.com',
+    'gmail.cm': 'gmail.com', 'yahoo.con': 'yahoo.com', 'yaho.com': 'yahoo.com',
+    'hotmial.com': 'hotmail.com', 'hotmai.com': 'hotmail.com',
+    'outlok.com': 'outlook.com', 'outlook.con': 'outlook.com',
+  };
+  const digitsOf = (s) => (s.match(/\d/g) || []).join('');
+
+  const RULES = {
+    name: (v) => {
+      if (!v) return 'Please tell us your name.';
+      /* two words, three letters between them — enough to rule out "Adi" while
+         leaving initials ("J K Rowling") and short names ("Li Wu") alone */
+      if (v.split(/\s+/).filter(Boolean).length < 2) return 'Please enter your full name — first and last.';
+      if ((v.match(/\p{L}/gu) || []).length < 3) return 'Please enter your full name — first and last.';
+      if (!/^[\p{L}][\p{L}'’.-]*(\s+[\p{L}][\p{L}'’.-]*)+$/u.test(v)) return 'Letters only, please — first and last name.';
+      return '';
+    },
+    email: (v) => {
+      if (!v) return 'We need an email to reply to.';
+      if (!EMAIL.test(v)) return 'That does not look like an email address.';
+      const domain = v.split('@')[1].toLowerCase();
+      if (TYPOS[domain]) return 'Did you mean ' + v.split('@')[0] + '@' + TYPOS[domain] + '?';
+      return '';
+    },
+    company: (v) => {
+      if (!v) return 'Please add your company or brand name.';
+      if (v.replace(/[^\p{L}\p{N}]/gu, '').length < 2) return 'Please add your company or brand name.';
+      return '';
+    },
+    phone: (v) => {
+      if (!v) return 'Please add a number we can reach you on.';
+      if (/[^\d\s+()\-.]/.test(v)) return 'Digits, spaces and + only, please.';
+      const d = digitsOf(v);
+      if (d.length < 8 || d.length > 15) return 'Please enter a full phone number, with the country code if you are outside India.';
+      if (/^(\d)\1+$/.test(d)) return 'That does not look like a real number.';
+      return '';
+    },
+  };
+
+  const showError = (input, msg) => {
+    const slot = input.parentElement.querySelector('.lead__error');
+    if (slot) { slot.textContent = msg; slot.hidden = !msg; }
+    input.classList.toggle('is-wrong', !!msg);
+    input.setAttribute('aria-invalid', msg ? 'true' : 'false');
+  };
+  const checkField = (input) => {
+    const rule = RULES[input.name];
+    if (!rule) return '';
+    const msg = rule((input.value || '').trim());
+    showError(input, msg);
+    return msg;
+  };
+  /* Complain on the way out of a field, never while it is being typed in —
+     and clear the complaint as soon as it is being fixed. */
+  Object.keys(RULES).forEach((n) => {
+    const input = form.elements[n];
+    input.addEventListener('blur', () => { if (input.value.trim()) checkField(input); });
+    input.addEventListener('input', () => { if (input.classList.contains('is-wrong')) showError(input, ''); });
+  });
+
   /* Hold the page still behind the sheet. Not the shared is-locked class:
      the preloader and the mobile menu both take that off when they are done,
      and one of them was clearing it out from under an open form. */
@@ -80,7 +149,9 @@
 
   form.addEventListener('submit', (e) => {
     e.preventDefault();
-    if (!form.reportValidity()) return;            /* the browser says which field */
+    let first = null;
+    Object.keys(RULES).forEach((n) => { if (checkField(form.elements[n]) && !first) first = form.elements[n]; });
+    if (first) { first.focus(); return; }
     const v = (n) => (form.elements[n].value || '').trim();
     const subject = 'New enquiry — ' + (v('company') || v('name'));
     const body = [
