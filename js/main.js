@@ -932,20 +932,53 @@ function ensureVideosPlay() {
        even then, or the cap above would be bypassed */
     if (net && !net.staggered() && !phone.matches) { paused.forEach((v) => { net.watch(v); play(v); }); return; }
     if (starting) return;
-    const running = [...inView].filter((v) => !v.paused).length;
-    if (running >= budget()) return;
+    const running = [...inView].filter((v) => !v.paused).sort((a, b) => centreDist(a) - centreDist(b));
+    if (running.length >= budget()) {
+      /* Full, but the card being looked at may not be one of them: scrolling
+         into the grid used to leave the newly centred card waiting behind
+         cards that were on their way out. The farthest one gives up its turn.
+         The 40px margin keeps two cards from trading places on every nudge. */
+      const far = running[running.length - 1];
+      if (paused[0] && far && centreDist(paused[0]) < centreDist(far) - 40) far.pause();
+      else return;
+    }
     const next = paused[0];
     if (!next) return;
     starting = next;
     const done = () => { if (starting === next) { starting = null; pump(); } };
-    /* the next card waits for this one to have a few seconds in hand, not just
-       its first frame — otherwise the new stream starves it straight away */
-    next.addEventListener('playing', () => (net ? net.whenHealthy(next, done) : done()), { once: true });
+    /* On a slow line the next card waits for this one to have a few seconds in
+       hand, or the new stream starves it. On anything better a beat after the
+       first frame is enough — waiting for four seconds of buffer was what made
+       the third and fourth card feel like they were never coming. */
+    next.addEventListener('playing', () => {
+      if (net && net.tier() === 'slow') net.whenHealthy(next, done);
+      else setTimeout(done, 250);
+    }, { once: true });
     next.addEventListener('error', done, { once: true });
     setTimeout(done, 10000);       /* a card that will not start must not hold the queue */
     if (net) net.watch(next);
     play(next);
+    /* and fetch the one after it while this one plays, so its turn does not
+       start from nothing. Not on a slow line, where it would only take
+       bandwidth from the card on screen. */
+    const warm = paused[1];
+    if (warm && warm.preload !== 'auto' && (!net || net.tier() !== 'slow')) {
+      warm.preload = 'auto';
+      if (warm.networkState === HTMLMediaElement.NETWORK_EMPTY) warm.load();
+    }
   };
+  /* Re-checked when the page settles, not only when a card crosses into view:
+     on a phone the whole grid is often in view at once, so the observer never
+     fires while scrolling and the card in the middle of the screen could sit
+     on its poster behind two that were already running. Debounced, so a flick
+     through the grid does not start and stop a clip at every step. */
+  let settle = 0;
+  window.addEventListener('scroll', () => {
+    if (!inView.size) return;
+    clearTimeout(settle);
+    settle = setTimeout(pump, 160);
+  }, { passive: true });
+
   /* on a downgrade, keep only the most central card running */
   if (window.KaziNet) window.KaziNet.onChange(() => {
     const on = [...inView].filter((v) => !v.paused).sort((a, b) => centreDist(a) - centreDist(b));
