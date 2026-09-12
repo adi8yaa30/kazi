@@ -307,6 +307,7 @@ function officeSeries() {
         soundOK = false;
         v.muted = true;
         v.setAttribute('muted', '');
+        syncControls();              /* the badge follows the silence */
         v.play().catch(() => {});
       }
     });
@@ -353,7 +354,10 @@ function officeSeries() {
     slides.forEach((sl, n) => {
       const centre = n === current;
       sl.classList.toggle('is-paused', centre && paused);
-      sl.classList.toggle('is-muted',  centre && userMuted);
+      /* what the visitor can actually hear, not just what they asked for: a
+         phone refuses unattended sound, and the badge used to sit there
+         claiming the episode had it. */
+      sl.classList.toggle('is-muted',  centre && (userMuted || !soundOK));
       const st = sl.querySelector('.clo__state');
       const sd = sl.querySelector('.clo__sound');
       const ep = n + 1;
@@ -385,13 +389,31 @@ function officeSeries() {
     if (!centre) return;
 
     if (e.target.closest('.clo__sound')) {
-      userMuted = !userMuted;
-      syncControls();
       /* Straight at the element rather than through playCentre: unmuting must
          not restart a clip the visitor paused, and muting must not disturb one
-         that is running. */
+         that is running.
+
+         Asking for sound is itself the gesture every browser waits for, so it
+         also clears soundOK. Without that the button was dead on a phone: the
+         unattended first attempt is always refused there, which set soundOK
+         false, and the line below then re-muted the clip on every tap. */
       const v = vids[current];
-      if (v) v.muted = userMuted || !soundOK;
+      if (!v) return;
+      /* Decided by what is coming out of the speaker, not by the flag: when a
+         phone has refused sound the episode is silent while userMuted is
+         still false, and a tap then 'muted' an already-silent clip — so the
+         first tap did nothing and the sound never arrived. */
+      userMuted = !v.muted;
+      if (userMuted) {
+        v.muted = true;
+        v.setAttribute('muted', '');
+      } else {
+        soundOK = true;              /* the tap is the gesture a browser waits for */
+        v.muted = false;
+        v.removeAttribute('muted');
+        if (!paused && v.paused) v.play().catch(() => {});
+      }
+      syncControls();
       return;
     }
 
@@ -405,12 +427,27 @@ function officeSeries() {
   /* The first interaction of any kind is what lets audio through — and it also
      releases Low Power Mode, which refuses even muted autoplay. Retry then,
      with the sound restored: the same fallback the case-study reels use. */
-  const releaseSound = () => {
+  /* Kept listening, rather than spent on the first interaction anywhere: that
+     one chance was usually gone before the deck was ever on screen — a tap at
+     the top of the page — and the episode then played silently for good. Every
+     interaction retries the sound, until an episode is actually running with
+     it. */
+  const releaseSound = (e) => {
+    if (userMuted) return;                       /* asked for quiet: leave it */
+    /* The sound badge speaks for itself. This fires on pointerdown, before
+       the badge's own click: it would turn the sound on, and the badge would
+       then read that as 'playing with sound' and mute it right back. */
+    if (e && e.target && e.target.closest && e.target.closest('.clo__sound')) return;
     soundOK = true;
     playCentre();
+    syncControls();               /* the badge follows the sound back */
+    const v = vids[current];
+    if (v && !v.muted && !v.paused) {
+      ['pointerdown', 'touchstart', 'keydown'].forEach((ev) => window.removeEventListener(ev, releaseSound));
+    }
   };
   ['pointerdown', 'touchstart', 'keydown'].forEach((ev) =>
-    window.addEventListener(ev, releaseSound, { once: true, passive: true })
+    window.addEventListener(ev, releaseSound, { passive: true })
   );
 
   // --- initial paint --------------------------------------------------
