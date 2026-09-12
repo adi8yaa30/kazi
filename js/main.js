@@ -258,7 +258,7 @@ const SERVICES = [
     desc: 'Performance-driven campaigns that combine creative execution with data to generate qualified leads and measurable growth.' },
   { num: '08', name: 'Original IP & Series',    kicker: 'Originals in Progress',
     imgStatic: 'assets/img/services/static-state/original-ip-&-series-image-static-state.webp',
-    imgHover:  'assets/img/services/hovered-state/ original-ip-&-series-image-hovered-state.webp',
+    imgHover:  'assets/img/services/hovered-state/original-ip-&-series-image-hovered-state.webp',
     desc: 'Developing original concepts, documentary formats, and creative series that entertain, inspire, and build communities.' },
   { num: '09', name: 'Photography',             kicker: 'Frames That Speak',
     imgStatic: 'assets/img/services/static-state/photography-image-static-state.webp',
@@ -281,6 +281,14 @@ function servicesInteractive() {
 
   /* build slides */
   const slides = [];
+  /* The art is 1000-1600px wide because a desktop card shows it that big. A
+     phone shows it at ~360, and decoding the full-size files there is what
+     made the page scroll like treacle: 33 megapixels of bitmap for one
+     screen's worth of scrolling. Each file has an 800px copy beside it, and
+     the browser picks by screen. */
+  const phoneArt = (src) => src.replace(/\.webp$/, '-800.webp');
+  const ART_SIZES = '(max-width: 768px) 92vw, 46vw';
+
   for (let s = 0; s < 3; s++) {
     const slide = document.createElement('div');
     slide.className = 'ks__slide';
@@ -298,8 +306,12 @@ function servicesInteractive() {
            track three viewports wide, and the browser fetched every one of
            them at load — 1.4MB, on a phone, for a section far below the fold.
            The collective page's posters use the same trick. */
-        : '<img class="ks__img ks__img--static" data-src="' + svc.imgStatic + '" alt="' + svc.name + '" />'
-          + '<img class="ks__img ks__img--hover" data-src="' + svc.imgHover + '" alt="' + svc.name + ' expanded" />';
+        : '<img class="ks__img ks__img--static" decoding="async" data-src="' + svc.imgStatic + '"'
+            + ' data-srcset="' + phoneArt(svc.imgStatic) + ' 800w, ' + svc.imgStatic + ' 1000w"'
+            + ' sizes="' + ART_SIZES + '" alt="' + svc.name + '" />'
+          + '<img class="ks__img ks__img--hover" decoding="async" data-src="' + svc.imgHover + '"'
+            + ' data-srcset="' + phoneArt(svc.imgHover) + ' 800w, ' + svc.imgHover + ' 1600w"'
+            + ' sizes="' + ART_SIZES + '" alt="' + svc.name + ' expanded" />';
       col.innerHTML =
         '<div class="ks__inner">'
         + '<div class="ks__imgwrap">'
@@ -366,22 +378,28 @@ function servicesInteractive() {
 
   /* Attach the artwork once the section is within a screen of the viewport,
      so nothing is fetched for a section the visitor may never reach. */
-  let artOn = false;
-  function loadServiceArt() {
-    if (artOn) return;
-    artOn = true;
-    track.querySelectorAll('img[data-src]').forEach((img) => {
+  let artArmed = false;        /* the section has been approached; art may load */
+  /* One slide's art, not all of it. Sixteen images at once is ~8 megapixels
+     of decoding on a phone, in the middle of a scroll — and only three
+     services are on screen at a time. The rest arrive when the visitor
+     slides to them. */
+  function loadServiceArt(i) {
+    if (!artArmed) return;       /* still far below the fold: fetch nothing yet */
+    const scope = (typeof i === 'number' && slides[i]) || track;
+    scope.querySelectorAll('img[data-src]').forEach((img) => {
+      if (img.dataset.srcset) { img.srcset = img.dataset.srcset; img.removeAttribute('data-srcset'); }
       img.src = img.dataset.src;
       img.removeAttribute('data-src');
     });
   }
   if (typeof IntersectionObserver !== 'undefined') {
     const artWatch = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting) { loadServiceArt(); artWatch.disconnect(); }
+      if (entries[0].isIntersecting) { artArmed = true; loadServiceArt(slideIdx); artWatch.disconnect(); }
     }, { rootMargin: '100% 0px' });
     artWatch.observe(viewport);
   } else {
-    loadServiceArt();
+    artArmed = true;
+    loadServiceArt(slideIdx);
   }
 
   /* fixed layer widths so the text doesn't reflow while columns animate */
@@ -489,6 +507,7 @@ function servicesInteractive() {
     track.style.transition = prefersReduced ? 'none' : 'transform 0.85s cubic-bezier(0.22, 1, 0.36, 1)';
     track.style.transform = 'translateX(' + (-slideIdx * 100 / 3) + '%)';
     segs.forEach((b, j) => b.classList.toggle('is-active', j === slideIdx));
+    loadServiceArt(slideIdx);      /* this slide's art, if it has not been fetched yet */
     closeAll();
     ensureMobileActive();
     slidingUntil = performance.now() + 850;
