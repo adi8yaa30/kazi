@@ -98,7 +98,12 @@
 }
 .cs__reel-state::after { content: '\275A\275A'; /* ❚❚ */ }
 .cs__reel--center.is-paused .cs__reel-state::after { content: '\25B6'; padding-left: 4px; /* ▶ */ }
-.cs__reel--center:hover .cs__reel-state, .cs__reel--center.is-paused .cs__reel-state { opacity: 1; }
+.cs__reel--center.is-paused .cs__reel-state { opacity: 1; }
+/* Hover only where a pointer can leave again. On a touchscreen :hover sticks
+   after a tap, so the badge stayed lit over a reel that had already resumed. */
+@media (hover: hover) {
+  .cs__reel--center:hover .cs__reel-state { opacity: 1; }
+}
 
 /* ---------------- Services / Impact ---------------- */
 .cs__services { padding-top: clamp(40px, 5vw, 80px); }

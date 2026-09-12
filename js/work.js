@@ -740,6 +740,11 @@
        a third of the screen — a 9:16 clip should nearly fill a 9:16 device */
     const fh = Math.min(vh() * lerp(0.72, 0.74), vw() * lerp(0.86, 0.44) * (16 / 9));
     const fw = fh * (9 / 16);
+    /* The bar across the top sits over the canvas, so centring on the whole
+       viewport left a thin gap above the reel and a deep one below — 36px
+       against 124px on a phone. Centre it in what is actually free below the
+       bar. Desktop has room to spare either way and is left alone. */
+    const barH = vw() <= 1024 ? topEl.getBoundingClientRect().bottom : 0;
     dim.classList.add('is-on');
     it.el.style.zIndex = 50;
     it.video.currentTime = 0;
@@ -748,15 +753,17 @@
        and given up if refused, rather than losing the clip with it */
     nudgePlay(it.video, () => { it.video.muted = true; nudgePlay(it.video); });
     it.focusFrom = { x: r.left, y: r.top, w: r.width, h: r.height };
+    showCloseReel(true);
     syncCanvasPlayback();        /* on a phone, quiet the ambient pair */
     gsap.to(it.el, {
-      x: (vw() - fw) / 2, y: (vh() - fh) / 2, width: fw, height: fh,
+      x: (vw() - fw) / 2, y: barH + (vh() - barH - fh) / 2, width: fw, height: fh,
       duration: reduce ? 0.01 : 0.8, ease: 'expo.out',
     });
   }
   function unfocusReel(instant) {
     if (!focused) return;
     const it = focused; focused = null;
+    showCloseReel(false);
     dim.classList.remove('is-on');
     it.video.muted = true;
     const f = it.focusFrom;
@@ -771,6 +778,22 @@
     });
   }
   dim.addEventListener('pointerup', () => unfocusReel(false));
+
+  /* Tapping the dim closes a focused reel, but on a phone the reel nearly
+     fills the screen and there is barely any dim left to hit — and CLOSE up
+     top means "leave the explorer", not "close this reel". So a touchscreen
+     gets its own × over the reel. A pointer keeps the dim. */
+  const closeReel = document.createElement('button');
+  closeReel.type = 'button';
+  closeReel.className = 'ex__unfocus';
+  closeReel.setAttribute('aria-label', 'Close reel');
+  closeReel.innerHTML = '<span aria-hidden="true">\u00d7</span>';
+  closeReel.addEventListener('click', () => unfocusReel(false));
+  ex.appendChild(closeReel);
+  function showCloseReel(on) {
+    closeReel.classList.toggle('is-on', !!on);
+    if (on) closeReel.style.top = Math.round(topEl.getBoundingClientRect().bottom + 12) + 'px';
+  }
 
   /* ------------------------------------------------------------
      Case-study transition (cover → hero)

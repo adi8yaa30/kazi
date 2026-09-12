@@ -379,15 +379,21 @@ html { scroll-behavior: auto; }
 /* only the centre reel's controls are live, and only it reveals them */
 .clo__slide--center .clo__state,
 .clo__slide--center .clo__sound { pointer-events: auto; }
-.clo__slide--center:hover .clo__state,
-.clo__slide--center:hover .clo__sound,
 .clo__slide--center .clo__state:focus-visible,
 .clo__slide--center .clo__sound:focus-visible { opacity: 1; }
+/* see the case-study rows: :hover sticks after a tap on a touchscreen, and
+   the badge stayed lit over an episode that was already playing again */
+@media (hover: hover) {
+  .clo__slide--center:hover .clo__state,
+  .clo__slide--center:hover .clo__sound { opacity: 1; }
+}
 /* a chosen state outlasts the hover that set it */
 .clo__slide--center.is-paused .clo__state,
 .clo__slide--center.is-muted .clo__sound { opacity: 1; }
-.clo__slide--center .clo__state:hover { transform: translate(-50%, -50%) scale(1.1); }
-.clo__slide--center .clo__sound:hover { transform: scale(1.1); }
+@media (hover: hover) {
+  .clo__slide--center .clo__state:hover { transform: translate(-50%, -50%) scale(1.1); }
+  .clo__slide--center .clo__sound:hover { transform: scale(1.1); }
+}
 .clo__state:focus-visible,
 .clo__sound:focus-visible { outline: 2px solid var(--color-bg); outline-offset: 3px; }
 

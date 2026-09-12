@@ -89,6 +89,19 @@
       if (v.readyState >= 1) seek();
       else v.addEventListener('loadedmetadata', seek, { once: true });
     }
+    /* A swipe can land on a reel with nothing buffered — these carry
+       preload="none", and Safari refuses a play() with no data, so the reel
+       sat on its poster and never started. Check back a moment later, twice,
+       and ask again; safePlay() nudges the load itself. */
+    let centreWatch = [];
+    function watchCentre() {
+      centreWatch.forEach(clearTimeout);
+      centreWatch = [700, 2200].map((ms) => setTimeout(() => {
+        const v = vids[active];
+        if (!paused && inView && v && v.paused) safePlay(v);
+      }, ms));
+    }
+
     function setActive(k, animate = true) {
       k = Math.max(0, Math.min(nR - 1, k));
       const changed = k !== active;
@@ -103,6 +116,7 @@
       if (changed) restart(vids[k]);
       syncAudio();
       syncStripPlayback();
+      watchCentre();
     }
     /* Only the reels actually on screen play. A strip can hold ten of them and
        shows three, so starting them all meant ten clips downloading at once —
