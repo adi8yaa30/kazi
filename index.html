@@ -320,6 +320,13 @@
                disablepictureinpicture disableremoteplayback
                controlslist="nodownload nofullscreen noremoteplayback"
                width="1920" height="1080" aria-hidden="true" tabindex="-1">
+          <!-- A phone was being sent the 1080p cut: 16MB of webm to fill a
+               375px-wide screen. The 720p pair covers a 3x phone (1125px of
+               device pixels) and costs half as much. The browser picks the
+               first source whose media and type it accepts, so the narrow
+               ones have to come first. -->
+          <source src="assets/video/hero-reel-720.webm" type="video/webm" media="(max-width: 768px)" />
+          <source src="assets/video/hero-reel-720.mp4" type="video/mp4" media="(max-width: 768px)" />
           <source src="assets/video/hero-reel.webm" type="video/webm" />
           <source src="assets/video/hero-reel.mp4" type="video/mp4" />
         </video>
