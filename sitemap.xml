@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+
+  <url>
+    <loc>https://kazinetwork.in/</loc>
+    <lastmod>2026-09-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://kazinetwork.in/assets/img/og/og-default.jpg</image:loc>
+      <image:title>Kazi Network — a creative studio from Guwahati, Assam</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://kazinetwork.in/work.html</loc>
+    <lastmod>2026-09-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <image:image>
+      <image:loc>https://kazinetwork.in/assets/img/og/og-work.jpg</image:loc>
+      <image:title>Selected work from Kazi Network</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://kazinetwork.in/collective.html</loc>
+    <lastmod>2026-09-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://kazinetwork.in/assets/img/og/og-collective.jpg</image:loc>
+      <image:title>The Kazi Collective — the team behind Kazi Network</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://kazinetwork.in/contact.html</loc>
+    <lastmod>2026-09-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://kazinetwork.in/assets/img/og/og-contact.jpg</image:loc>
+      <image:title>Contact Kazi Network</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://kazinetwork.in/work-jorhat.html</loc>
+    <lastmod>2026-09-15</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+    <image:image>
+      <image:loc>https://kazinetwork.in/assets/img/og/og-work-jorhat.jpg</image:loc>
+      <image:title>Jorhat Stallions — Kazi Network case study</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://kazinetwork.in/work-orient.html</loc>
+    <lastmod>2026-09-15</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+    <image:image>
+      <image:loc>https://kazinetwork.in/assets/img/og/og-work-orient.jpg</image:loc>
+      <image:title>Orient Yarn — Kazi Network case study</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://kazinetwork.in/work-orfab.html</loc>
+    <lastmod>2026-09-15</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+    <image:image>
+      <image:loc>https://kazinetwork.in/assets/img/og/og-work-orfab.jpg</image:loc>
+      <image:title>Orfab By Orient — Kazi Network case study</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://kazinetwork.in/work-rab.html</loc>
+    <lastmod>2026-09-15</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+    <image:image>
+      <image:loc>https://kazinetwork.in/assets/img/og/og-work-rab.jpg</image:loc>
+      <image:title>RAB Automotors — Kazi Network case study</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://kazinetwork.in/work-rs.html</loc>
+    <lastmod>2026-09-15</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+    <image:image>
+      <image:loc>https://kazinetwork.in/assets/img/og/og-work-rs.jpg</image:loc>
+      <image:title>Relentless Strength — Kazi Network case study</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://kazinetwork.in/work-studio.html</loc>
+    <lastmod>2026-09-15</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+    <image:image>
+      <image:loc>https://kazinetwork.in/assets/img/og/og-work-studio.jpg</image:loc>
+      <image:title>Studio Artitecting — Kazi Network case study</image:title>
+    </image:image>
+  </url>
+
+</urlset>

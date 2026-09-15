@@ -42,7 +42,11 @@ body {
 }
 body.is-locked { overflow: hidden; height: 100vh; }
 
-img, video { display: block; max-width: 100%; }
+/* height:auto lets the intrinsic width/height attributes on every <img>
+   act purely as an aspect-ratio hint (reserving space to stop layout
+   shift) instead of forcing a fixed pixel height when the image is
+   scaled down by max-width. More specific rules still override it. */
+img, video { display: block; max-width: 100%; height: auto; }
 a { color: inherit; text-decoration: none; }
 ul { list-style: none; }
 
@@ -299,6 +303,17 @@ textarea.lead__input { resize: vertical; min-height: 76px; }
 }
 /* Once revealed, the nav stays in place — no auto-hide on scroll. */
 .nav.is-visible { transform: translate(-50%, 0); opacity: 1; }
+
+/* On desktop the bar was running to within 32px of both edges (1376px of a
+   1440px viewport), which read as a full-width bar rather than the floating
+   pill it is drawn as. Narrower here only — the gutter-based width above is
+   already right on phones and tablets, so they are left alone. Change the
+   860px to taste; nothing else depends on it. The content (links + CTA
+   + 36px padding a side) needs about 550px, so that is the floor before
+   anything starts to crowd. */
+@media (min-width: 900px) {
+  .nav { width: min(calc(100% - 2 * clamp(16px, 2.5vw, 32px)), 860px); }
+}
 /* grainy texture over the frosted glass */
 .nav::after {
   content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
@@ -383,7 +398,53 @@ textarea.lead__input { resize: vertical; min-height: 76px; }
   background: var(--color-dark); overflow: hidden;
 }
 .hero__media { position: absolute; inset: 0; transform: scale(1.18); opacity: 0; }
-.hero__video, .hero__img { width: 100%; height: 100%; object-fit: cover; }
+.hero__video, .hero__img, .hero__poster { width: 100%; height: 100%; object-fit: cover; }
+
+/* The clip stays fully visible at all times. It must: Safari only autoplays
+   a video it considers visible on screen, so hiding the clip until it plays
+   deadlocks it — invisible, therefore never started, therefore never
+   visible — and it would only begin on a tap.
+
+   So the still is layered ON TOP of the clip instead, and fades away once
+   playback is under way. That covers Safari's start-playback button (it is
+   painted by the video, which is underneath) without ever making the video
+   itself invisible to the autoplay policy. */
+.hero__video { position: absolute; inset: 0; }
+.hero__poster {
+  position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  transition: opacity 0.45s ease;
+}
+.hero__media.is-playing .hero__poster { opacity: 0; }
+
+/* Without scripting nothing adds .is-playing, so the still would never lift.
+   The browser autoplays the clip natively regardless, so drop the still and
+   let the video show. */
+@media (scripting: none) {
+  .hero__poster { opacity: 0; }
+}
+
+/* The hero plays itself and must never offer a transport control. No
+   `controls` attribute is set, but a tap can still pause a video on some
+   platforms, and Safari paints its own start-playback button over a clip
+   until it actually begins — so the element is made untouchable and every
+   native control surface is hidden. js/main.js resumes anything that still
+   manages to pause. The scroll cue is a sibling, not a child, so it stays
+   clickable. */
+.hero__video { pointer-events: none; }
+
+/* Each pseudo-element gets its OWN rule on purpose. These are vendor
+   pseudo-elements that differ between engines: ...-start-playback-button is
+   Safari's, ...-overlay-play-button is Blink's, and neither engine parses the
+   other's. A selector a browser cannot parse invalidates the WHOLE rule it
+   sits in, so grouping them with commas meant Safari threw all of them away
+   and kept showing its play button. Split, an unknown selector costs only
+   its own line. Do not merge these back together. */
+.hero__video::-webkit-media-controls { display: none !important; -webkit-appearance: none; }
+.hero__video::-webkit-media-controls-panel { display: none !important; -webkit-appearance: none; }
+.hero__video::-webkit-media-controls-start-playback-button { display: none !important; -webkit-appearance: none; opacity: 0; }
+.hero__video::-webkit-media-controls-play-button { display: none !important; -webkit-appearance: none; }
+.hero__video::-webkit-media-controls-overlay-play-button { display: none !important; -webkit-appearance: none; }
+.hero__video::-webkit-media-controls-container { display: none !important; -webkit-appearance: none; }
 .hero__scroll {
   position: absolute; left: 50%; bottom: clamp(20px, 4vh, 44px); transform: translateX(-50%);
   z-index: 3; display: flex; flex-direction: column; align-items: center; gap: 8px;

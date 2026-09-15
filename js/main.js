@@ -34,11 +34,13 @@ function splitLemonWords() {
 }
 
 /* ---------- Navbar reveal ----------
-   The nav is shown only while the page is at the very top, and only after the
-   hero video has played through once. Scrolling down hides it; it reappears
-   only when the user returns to the top (scrolling up midway does not). */
+   The nav is available from the very first paint. It is still shown only while
+   the page is at the very top — scrolling down hides it, and it reappears when
+   the user returns to the top (scrolling up midway does not). While the
+   preloader is up the nav sits behind it (z-index 1000 vs 9999), so "from the
+   start" costs nothing visually. */
 const NAV_TOP_THRESHOLD = 10; // px from the top within which the nav is shown
-let navUnlocked = false;       // becomes true once the hero video has finished
+let navUnlocked = true;        // no gate: the nav is never withheld
 
 function applyNavState() {
   const nav = document.getElementById('nav');
@@ -49,7 +51,7 @@ function applyNavState() {
   }
 }
 
-// Called once the hero video completes: unlock the nav and show it if at top.
+// Kept for callers: the nav is already unlocked, so this just re-applies state.
 function showNav() {
   navUnlocked = true;
   applyNavState();
@@ -58,6 +60,9 @@ function showNav() {
 /* Toggle the nav purely by scroll position: visible at the top, hidden once
    the user scrolls down. */
 function initNavScroll() {
+  // Apply once up front so the nav is present from the first paint rather
+  // than waiting for the first scroll or for the preloader to finish.
+  applyNavState();
   let ticking = false;
   window.addEventListener('scroll', () => {
     if (!ticking) {
@@ -102,45 +107,49 @@ function mobileNav() {
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
 }
 
-/* Reveal the nav only after the hero clip has played all the way through.
-   The hero video loops, which suppresses the native `ended` event, so we
-   watch for the first time playback reaches the end of the clip. A
-   duration-based safety net guarantees the nav can never stay hidden if the
-   video fails to load or autoplay is blocked. */
-function revealNavAfterVideo() {
-  const nav = document.getElementById('nav');
-  if (nav.classList.contains('is-visible')) return;
-  const video = document.querySelector('.hero__video');
+/* ---------- Hero playback ----------
+   The hero must autoplay, loop, and never show a transport control on any
+   browser. `autoplay muted loop playsinline` covers the normal path; this
+   covers the cases where the browser overrides it:
+     - iOS Low Power Mode and Safari's autoplay heuristics refuse the initial
+       play() and would leave a tappable poster sitting there;
+     - returning to a backgrounded tab can leave the clip paused;
+     - a stalled network can drop it out of playback.
+   Any pause that the page did not ask for is undone. Combined with
+   pointer-events:none in CSS, there is no way to end up looking at a paused
+   hero with a play button over it. */
+function keepHeroPlaying() {
+  const v = document.querySelector('.hero__video');
+  if (!v) return;
 
-  let done = false;
-  const reveal = () => { if (done) return; done = true; showNav(); };
-
-  if (!video) { reveal(); return; }
-
-  // Detect a completed pass either by reaching the end of the clip or by the
-  // loop wrapping playback back to the start (`timeupdate` is coarse, so the
-  // backward jump is the reliable signal when `loop` is on).
-  let prev = 0;
-  const onTime = () => {
-    const t = video.currentTime;
-    const reachedEnd = video.duration && t >= video.duration - 0.5;
-    const wrapped = prev > 1 && t < prev - 1;
-    prev = t;
-    if (reachedEnd || wrapped) {
-      video.removeEventListener('timeupdate', onTime);
-      reveal();
-    }
+  const resume = () => {
+    if (v.paused && !document.hidden) v.play().catch(() => {});
   };
-  video.addEventListener('timeupdate', onTime);
-  video.addEventListener('ended', reveal); // covers the case where loop is removed
 
-  // Safety net: reveal a beat after the clip's natural length regardless.
-  const arm = () => {
-    const d = (video.duration && isFinite(video.duration)) ? video.duration : 12;
-    setTimeout(reveal, d * 1000 + 1000);
+  /* Lift the still off the clip once real frames are running — see the CSS
+     note. The flag goes on the container, not the video: the video itself is
+     never hidden, or Safari would refuse to autoplay it. `playing` is the
+     right signal, with a timeupdate fallback for browsers that fire it
+     unreliably; both are harmless to run twice. */
+  const media = v.parentElement;
+  const reveal = () => {
+    if (v.currentTime > 0 || v.readyState >= 3) media.classList.add('is-playing');
   };
-  if (video.readyState >= 1) arm();
-  else video.addEventListener('loadedmetadata', arm, { once: true });
+  v.addEventListener('playing', reveal);
+  v.addEventListener('timeupdate', reveal);
+
+  v.addEventListener('pause', resume);
+  v.addEventListener('stalled', resume);
+  v.addEventListener('suspend', resume);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) resume(); });
+
+  /* Autoplay that is refused outright stays refused until the user touches the
+     page; the first interaction anywhere is enough to start it. */
+  ['pointerdown', 'touchstart', 'keydown', 'scroll'].forEach((ev) =>
+    window.addEventListener(ev, resume, { once: true, passive: true })
+  );
+
+  resume();
 }
 
 /* ---------- Hero scale-in ---------- */
@@ -154,7 +163,7 @@ function playHero() {
     scale: 1, opacity: 1, duration: 1.6, ease: 'power3.out'
   });
   // Navbar appears only after the hero video has played all the way through.
-  revealNavAfterVideo();
+  applyNavState();
 }
 
 /* ---------- Preloader ---------- */
@@ -171,7 +180,7 @@ function finishPreloader(skipHeroAnim) {
     media.style.transform = 'scale(1)';
     const v = document.querySelector('.hero__video');
     if (v) v.play().catch(() => {});
-    revealNavAfterVideo();
+    applyNavState();
   } else {
     playHero();
   }
@@ -868,25 +877,34 @@ function scrollReveals() {
   ScrollTrigger.refresh();
 }
 
-/* ---------- Play portfolio videos while they are on screen ----------
-   The clips carry `preload="none"` and a poster, so they cost nothing until
-   something asks them to play — which means playback has to be driven here
-   rather than by an `autoplay` attribute. Starting every clip on load was
-   pulling all five portfolio videos down at once before the visitor had
-   scrolled anywhere near them; an IntersectionObserver defers each fetch to
-   the point where the card is actually approaching the viewport, and pausing
-   on exit keeps offscreen clips from decoding.
+/* ---------- Keep every portfolio video playing ----------
+   The clips carry `autoplay` and `preload="auto"`, so the browser starts them
+   on its own; this keeps them running and covers the cases it will not.
 
    Browsers may still refuse an unattended play() (power saving, low battery),
-   so the first user interaction retries whatever is currently in view. */
+   so the first user interaction retries all of them. */
 function ensureVideosPlay() {
-  const vids = [...document.querySelectorAll('video')];
-  if (!vids.length) return;
-  const inView = new Set();
+  /* Every portfolio clip plays continuously — in view or not, on every screen
+     size and connection.
 
-  /* Safari will not start a clip that has nothing buffered, and these all carry
-     preload="none" — a bare play() is refused. Nudge the load, then play once
-     the clip is actually playable. */
+     This used to ration playback: clips were paused when they left the
+     viewport, and a phone ran at most two at once (one on a slow line) with
+     the rest queued behind whichever card sat nearest the middle of the
+     screen. That is why only the card in view ever moved on a phone. The
+     rationing is gone; the grid now behaves as one continuous piece.
+
+     The cost is deliberate and worth stating: five 1080p streams decode and
+     buffer at the same time, which uses more data and more battery, and on a
+     weak connection they compete for bandwidth so each starts later than one
+     clip alone would. js/net.js only detaches a source from a clip that is
+     already paused, so nothing here is released behind our back. */
+  const vids = [...document.querySelectorAll('video')].filter(
+    (v) => !v.classList.contains('hero__video')
+  );
+  if (!vids.length) return;
+
+  /* Safari refuses play() on a clip with nothing buffered, so nudge the load
+     and start as soon as it is playable. */
   const play = (v) => {
     if (!v.paused) return;
     const go = () => v.play().catch(() => {});
@@ -897,110 +915,24 @@ function ensureVideosPlay() {
     go();
   };
 
-  if (typeof IntersectionObserver === 'undefined') { vids.forEach(play); return; }
+  const playAll = () => { if (!document.hidden) vids.forEach(play); };
 
-  /* One at a time. The work grid brings five clips into view together, and
-     starting all five in the same instant split the connection five ways —
-     at 10 Mbps none of them moved for over two seconds. Instead the clip
-     nearest the middle of the screen starts first, and each next one waits
-     for the one before it to actually be playing. A clip that will not start
-     is given four seconds before the queue moves past it. */
-  let starting = null;
-  const centreDist = (v) => {
-    const r = v.getBoundingClientRect();
-    return Math.abs((r.top + r.bottom) / 2 - innerHeight / 2) + Math.abs((r.left + r.right) / 2 - innerWidth / 2);
-  };
-  /* The connection decides how many (js/net.js): on a fast one every card in
-     view starts at once, on a normal one they queue, and on a slow one only
-     the card nearest the middle plays — the rest keep their posters.
-
-     A phone caps at two whatever the connection says. Five clips decoding at
-     once while a finger is dragging the page is what makes the scroll feel
-     sticky; the card in the middle of the screen and the one after it keep
-     the grid alive without that. */
-  const phone = window.matchMedia('(max-width: 768px)');
-  const PHONE_PLAYING = 2;
-  const budget = () => {
-    const net = window.KaziNet;
-    const cap = net ? 1 + net.ambient(Infinity) : Infinity;
-    return phone.matches ? Math.min(cap, PHONE_PLAYING) : cap;
-  };
-  const pump = () => {
-    const net = window.KaziNet;
-    const paused = [...inView].filter((v) => v.paused).sort((a, b) => centreDist(a) - centreDist(b));
-    /* the all-at-once path is for a desktop on a fast line; a phone queues
-       even then, or the cap above would be bypassed */
-    if (net && !net.staggered() && !phone.matches) { paused.forEach((v) => { net.watch(v); play(v); }); return; }
-    if (starting) return;
-    const running = [...inView].filter((v) => !v.paused).sort((a, b) => centreDist(a) - centreDist(b));
-    if (running.length >= budget()) {
-      /* Full, but the card being looked at may not be one of them: scrolling
-         into the grid used to leave the newly centred card waiting behind
-         cards that were on their way out. The farthest one gives up its turn.
-         The 40px margin keeps two cards from trading places on every nudge. */
-      const far = running[running.length - 1];
-      if (paused[0] && far && centreDist(paused[0]) < centreDist(far) - 40) far.pause();
-      else return;
-    }
-    const next = paused[0];
-    if (!next) return;
-    starting = next;
-    const done = () => { if (starting === next) { starting = null; pump(); } };
-    /* On a slow line the next card waits for this one to have a few seconds in
-       hand, or the new stream starves it. On anything better a beat after the
-       first frame is enough — waiting for four seconds of buffer was what made
-       the third and fourth card feel like they were never coming. */
-    next.addEventListener('playing', () => {
-      if (net && net.tier() === 'slow') net.whenHealthy(next, done);
-      else setTimeout(done, 250);
-    }, { once: true });
-    next.addEventListener('error', done, { once: true });
-    setTimeout(done, 10000);       /* a card that will not start must not hold the queue */
-    if (net) net.watch(next);
-    play(next);
-    /* and fetch the one after it while this one plays, so its turn does not
-       start from nothing. Not on a slow line, where it would only take
-       bandwidth from the card on screen. */
-    const warm = paused[1];
-    if (warm && warm.preload !== 'auto' && (!net || net.tier() !== 'slow')) {
-      warm.preload = 'auto';
-      if (warm.networkState === HTMLMediaElement.NETWORK_EMPTY) warm.load();
-    }
-  };
-  /* Re-checked when the page settles, not only when a card crosses into view:
-     on a phone the whole grid is often in view at once, so the observer never
-     fires while scrolling and the card in the middle of the screen could sit
-     on its poster behind two that were already running. Debounced, so a flick
-     through the grid does not start and stop a clip at every step. */
-  let settle = 0;
-  window.addEventListener('scroll', () => {
-    if (!inView.size) return;
-    clearTimeout(settle);
-    settle = setTimeout(pump, 160);
-  }, { passive: true });
-
-  /* on a downgrade, keep only the most central card running */
-  if (window.KaziNet) window.KaziNet.onChange(() => {
-    const on = [...inView].filter((v) => !v.paused).sort((a, b) => centreDist(a) - centreDist(b));
-    on.slice(budget()).forEach((v) => v.pause());
-    pump();
+  /* Undo any pause the page did not ask for — a stall, a dropped stream, or a
+     tap on the card. A backgrounded tab is left alone: fighting the browser
+     there would drain the battery for something nobody is looking at. */
+  vids.forEach((v) => {
+    v.addEventListener('pause', () => { if (!document.hidden) play(v); });
+    v.addEventListener('stalled', () => { if (!document.hidden) play(v); });
   });
 
-  const io = new IntersectionObserver((entries) => {
-    entries.forEach((e) => {
-      const v = e.target;
-      if (e.isIntersecting) inView.add(v);
-      else { inView.delete(v); if (starting === v) starting = null; if (!v.paused) v.pause(); }
-    });
-    pump();
-    /* 200px of lead-in so the clip has a moment to buffer before it is seen */
-  }, { rootMargin: '200px 0px', threshold: 0 });
-  vids.forEach((v) => io.observe(v));
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) playAll(); });
 
-  const retry = () => { starting = null; pump(); };
-  ['pointerdown', 'touchstart', 'keydown'].forEach((ev) =>
-    window.addEventListener(ev, retry, { once: true, passive: true })
+  /* Autoplay refused outright stays refused until the page is touched. */
+  ['pointerdown', 'touchstart', 'keydown', 'scroll'].forEach((ev) =>
+    window.addEventListener(ev, playAll, { once: true, passive: true })
   );
+
+  playAll();
 }
 
 /* ---------- Init ---------- */
@@ -1016,6 +948,7 @@ function init() {
   logoMarquee();
   scrollReveals();
   ensureVideosPlay();
+  keepHeroPlaying();
   ScrollTrigger.refresh();
 }
 

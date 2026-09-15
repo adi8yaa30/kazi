@@ -134,21 +134,21 @@
       const r = el.getBoundingClientRect();
       return r.right > -REEL_MARGIN && r.left < window.innerWidth + REEL_MARGIN;
     }
-    let sideStarting = null;     // the neighbour currently being let in (normal tier)
+    let sideStarting = null;     // unused now the stagger is gone; kept so the
+                                 // slide handlers below still have their referent
     function syncStripPlayback() {
       if (!inView) return;
-      /* How the neighbours behave depends on the connection (js/net.js):
-           slow    the centre reel plays alone; the blurred neighbours hold
-                   their posters and fetch nothing, because a second stream is
-                   what makes the watched one stall on a weak signal
-           normal  the centre gets the connection first and the neighbours
-                   follow the moment it is running
-           fast    everything starts together — waiting only costs time
-         Neighbours already playing are left alone on normal and fast, so
-         sliding between reels never makes them flicker. */
       const net = window.KaziNet;
-      const sideAllowed = !net || net.ambient(1) > 0;
-      const waitForLead = !net || net.staggered();
+      /* Every reel that is on screen plays, immediately. This used to be
+         rationed by connection (js/net.js): on a slow line only the centre
+         reel played and the neighbours held their posters, and on a normal
+         line they were let in one at a time behind the centre. That is why
+         reels sat still until they became the active one. Both gates are now
+         open — the trade is that several streams buffer at once on a weak
+         connection, so each can take longer to start than the centre alone
+         would have. */
+      const sideAllowed = true;
+      const waitForLead = false;
       const lead = vids[active];
       const leadGoing = paused || !lead || (!lead.paused && (net ? net.healthy(lead) : lead.readyState >= 3));
       reels.forEach((el, i) => {
@@ -265,7 +265,7 @@
       } else {
         vids.forEach((v) => v.pause());
       }
-    }, { threshold: 0, rootMargin: '-25% 0px -25% 0px' });
+    }, { threshold: 0, rootMargin: '200px 0px' });
     io.observe(document.querySelector('.cs__reels'));
 
     /* drag / swipe / tap */

@@ -142,10 +142,22 @@
   });
 
   ITEMS.forEach((it) => {
-    const el = document.createElement('div');
+    /* A cover is a real <a href> to its case study, not a div the script
+       navigates from. Googlebot follows anchors and does not click
+       JS-driven elements, so as divs these pages had no crawlable inbound
+       link from anywhere on the site. The anchor also buys middle-click and
+       cmd-click "open in new tab" for free. A plain left click is cancelled
+       below so the existing ghost transition still runs. */
+    const el = document.createElement(it.type === 'cover' ? 'a' : 'div');
     el.className = 'ex__item ex__item--' + it.type;
     el.dataset.id = it.id;
     if (it.type === 'cover') {
+      el.href = it.page;
+      el.addEventListener('click', (e) => {
+        /* let the browser handle any click that asks for a new tab/window */
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+        e.preventDefault();
+      });
       const img = document.createElement('img');
       img.src = it.img; img.alt = it.name;
       el.appendChild(img);
@@ -926,14 +938,19 @@
 
   function buildList() {
     covers.forEach((it) => {
-      const row = document.createElement('button');
-      row.type = 'button'; row.className = 'ex__row';
+      /* Same reasoning as the canvas covers: this list is the other place a
+         visitor (or a crawler) reaches a case study from, so it emits real
+         links rather than buttons. */
+      const row = document.createElement('a');
+      row.href = it.page; row.className = 'ex__row';
       row.innerHTML =
         '<span class="ex__row-thumb"><img loading="lazy" decoding="async" src="' + it.img + '" alt=""></span>'
         + '<span class="ex__row-name">' + it.name
         + '<span class="ex__row-tag">' + industryLabel(it.industry) + '</span></span>'
         + '<span class="ex__row-go">View Case Study &rarr;</span>';
       row.addEventListener('click', (e) => {
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+        e.preventDefault();
         dropPointerFocus(e, row);
         openCase(it, row.querySelector('.ex__row-thumb'));
       });
