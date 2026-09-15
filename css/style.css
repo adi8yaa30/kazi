@@ -1183,7 +1183,10 @@ textarea.lead__input { resize: vertical; min-height: 76px; }
   }
 
   /* --- Portfolio grid --- */
-  .work { padding: var(--space-2xl) 0; }
+  /* Bottom trimmed only: the 120px here met the lemon section's 120px
+     top, so the [See Portfolio] button and the lemon line were 240px
+     apart on a phone. The top is left alone — that is a different gap. */
+  .work { padding: var(--space-2xl) 0 var(--space-xl); }
   .work__head { margin-bottom: var(--space-xl); }
   .work__title { font-size: clamp(36px, 11vw, 60px); }
   .work__grid {
@@ -1196,7 +1199,7 @@ textarea.lead__input { resize: vertical; min-height: 76px; }
   .work__cta { margin-top: var(--space-xl); }
 
   /* --- Lemon --- */
-  .lemon { padding-top: var(--space-2xl); }
+  .lemon { padding-top: var(--space-xl); }
   .lemon__text { font-size: clamp(28px, 8vw, 52px); }
   .lemon__strip { margin-top: var(--space-2xl); }
 

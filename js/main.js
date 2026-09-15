@@ -122,9 +122,45 @@ function keepHeroPlaying() {
   const v = document.querySelector('.hero__video');
   if (!v) return;
 
+  /* Set these as properties too, not just attributes. WebKit checks the
+     property when it decides whether an unattended play() is allowed, and a
+     video it thinks is unmuted is refused outright. */
+  v.muted = true;
+  v.playsInline = true;
+
   const resume = () => {
     if (v.paused && !document.hidden) v.play().catch(() => {});
   };
+
+  /* Source-selection safety net. Desktop Safari and every iOS browser are
+     WebKit, and WebKit is far pickier here than Blink: it may decline the
+     VP9/WebM source, or mishandle the `media` attribute on <source>, and
+     when resource selection fails there is no second attempt — the element
+     just sits with no data and never plays. Rather than guess which of those
+     it is, watch for the symptom: no data at all after a few seconds, or an
+     explicit error from any <source>. Then drop the <source> list and point
+     the element straight at the MP4, which every engine can decode.
+     readyState < 2 means "nothing loaded", which is a source problem; a clip
+     that loaded but sits paused is an autoplay-policy problem and is handled
+     by resume() above, so this must not fire for that case. */
+  let swapped = false;
+  const forceMp4 = () => {
+    if (swapped) return;
+    swapped = true;
+    const small = window.matchMedia('(max-width: 768px)').matches;
+    [...v.querySelectorAll('source')].forEach((el) => el.remove());
+    v.src = small ? 'assets/video/hero-reel-720.mp4' : 'assets/video/hero-reel.mp4';
+    v.load();
+    v.play().catch(() => {});
+  };
+  v.addEventListener('error', forceMp4, true);   // capture: <source> errors do not bubble
+  setTimeout(() => { if (v.readyState < 2) forceMp4(); }, 4000);
+
+  /* WebKit often has metadata well before it will act on the autoplay
+     attribute; asking again at each of these is harmless and covers it. */
+  v.addEventListener('loadedmetadata', resume);
+  v.addEventListener('loadeddata', resume);
+  v.addEventListener('canplay', resume);
 
   /* Lift the still off the clip once real frames are running — see the CSS
      note. The flag goes on the container, not the video: the video itself is
