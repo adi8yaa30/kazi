@@ -419,15 +419,34 @@ function officeSeries() {
         if (!paused && v.paused) v.play().catch(() => {});
       }
       syncControls();
+      flashControls();
       return;
     }
 
     paused = !paused;
     syncControls();
+    flashControls();
     playCentre();
   });
 
   syncControls();
+
+  /* On a touchscreen there is no hover to bring the pair up, so the tap that
+     works one control reveals both: pausing used to light the play badge on
+     its own, leaving the sound badge invisible but still clickable in the
+     corner — the only way to find it was to tap where it happened to be.
+     They fade out again a moment later while the episode runs; paused, the
+     rules below hold them. */
+  let badgeHold = 0;
+  function flashControls() {
+    if (!isTouch) return;
+    const sl = slides[current];
+    if (!sl) return;
+    slides.forEach((s) => s.classList.remove('is-controls'));
+    sl.classList.add('is-controls');
+    clearTimeout(badgeHold);
+    badgeHold = setTimeout(() => sl.classList.remove('is-controls'), 2600);
+  }
 
   /* The first interaction of any kind is what lets audio through — and it also
      releases Low Power Mode, which refuses even muted autoplay. Retry then,

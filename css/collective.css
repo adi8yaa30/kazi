@@ -390,6 +390,15 @@ html { scroll-behavior: auto; }
 /* a chosen state outlasts the hover that set it */
 .clo__slide--center.is-paused .clo__state,
 .clo__slide--center.is-muted .clo__sound { opacity: 1; }
+/* Touchscreens have no hover to reveal the pair, so a tap on the card shows
+   both at once (JS adds .is-controls, and drops it again while the episode
+   runs), and an episode sitting paused keeps its sound badge alongside the
+   play badge rather than hiding it in the corner. */
+@media (hover: none) {
+  .clo__slide--center.is-controls .clo__state,
+  .clo__slide--center.is-controls .clo__sound,
+  .clo__slide--center.is-paused .clo__sound { opacity: 1; }
+}
 @media (hover: hover) {
   .clo__slide--center .clo__state:hover { transform: translate(-50%, -50%) scale(1.1); }
   .clo__slide--center .clo__sound:hover { transform: scale(1.1); }
