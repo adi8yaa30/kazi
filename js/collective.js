@@ -192,47 +192,134 @@ function teamRows() {
 
     if (reduced) {
       gsap.set(mask, { clipPath: 'inset(0 0 0 0)' });
+      gsap.set(row.querySelector('.clt__mask img'), { scale: 1, yPercent: 0 });
       return;
     }
 
-    // Wipe from the outer edge inward, mirrored to match the row's layout.
+    const img = imgOf(row);
+
+    /* The portrait sits permanently a touch oversized so the parallax below
+       has somewhere to travel without exposing an edge of the frame: at
+       scale 1.1 there is 5% of overhang top and bottom, and the drift only
+       ever asks for 4%. */
+    const REST_SCALE = 1.1;
+    const DRIFT = 4;
+
+    /* Mirrored to the row's layout: the reveal travels from the page's outer
+       edge inward, so the two columns of a row always open away from each
+       other. */
     const fromRight = row.classList.contains('clt__row--img-right');
+    const exit = fromRight ? 100 : -100;
+
+    /* The plate is built here rather than in the markup so that a page whose
+       JS never runs is left with a plain photograph, not a covered one. */
+    const plate = document.createElement('span');
+    plate.className = 'clt__curtain';
+    plate.setAttribute('aria-hidden', 'true');
+    mask.appendChild(plate);
 
     const tl = gsap.timeline({ paused: true });
 
-    /* power3.inOut spent its first third barely moving, so the mask still read
-       as empty well after the row had arrived. An out-curve puts most of the
-       wipe in the first moments, where it does the work of telling you a
-       photograph is there. */
+    /* The reveal is two moves against each other. The mask opens the frame
+       from one edge, and the dark plate crosses it on the same curve a beat
+       later — so what you actually watch is a band of ink travelling over the
+       frame, laying the photograph down behind it. The delay is the whole
+       trick: it is what makes the band, and it scales with the sweep so the
+       band stays the same proportion of the frame at any speed.
+
+       The frame stays clipped until this runs, which is the reason the plate
+       is invisible beforehand — otherwise every portrait still below the fold
+       would sit on the page as a black slab.
+
+       SWEEP is the dial, and it is a balance between two complaints. Too
+       short and the reveal is over before the eye has settled on the frame;
+       too long and the photograph is simply missing for a beat, which reads
+       as a slow page rather than as an effect. This is tuned hard to the fast
+       end: at .28 the band is brief enough that it reads as a snap more than
+       a sweep, and the portrait is there in under a third of a second.
+       Everything below is expressed as a fraction of it, so changing this one
+       number re-times the row without pulling the beats apart.
+
+       power2.inOut rather than power3: the stronger curve loitered at the
+       start, holding the photo back before the band had visibly moved. */
+    const SWEEP = .28;
+    const LAG = SWEEP * .12;
+    const EASE = 'power2.inOut';
+
     tl.fromTo(mask,
       { clipPath: fromRight ? 'inset(0 100% 0 0)' : 'inset(0 0 0 100%)' },
-      { clipPath: 'inset(0 0 0 0)', duration: .65, ease: 'power2.out' }, 0)
-      .from(lines, { yPercent: 115, duration: .7, stagger: .07, ease: 'power3.out' }, 0.14)
-      .from(bio, { y: 26, opacity: 0, duration: .6, stagger: .09, ease: 'power2.out' }, 0.28);
+      { clipPath: 'inset(0 0 0 0)', duration: SWEEP, ease: EASE }, 0)
+      .fromTo(plate,
+        { xPercent: 0 },
+        { xPercent: exit, duration: SWEEP, ease: EASE }, LAG)
+      /* Behind the band the photograph is already moving, trailing in from a
+         small offset and settling as the plate clears. The two travelling at
+         different rates are what make the plate read as a layer in front of
+         the picture rather than part of it. 4% is inside the 5% of horizontal
+         overhang REST_SCALE buys, so no edge is ever exposed. The scale
+         settles over a longer stretch, so the frame is still coming to rest
+         after the plate has gone. */
+      .fromTo(img,
+        { xPercent: exit > 0 ? -4 : 4, scale: REST_SCALE * 1.11 },
+        { xPercent: 0, scale: REST_SCALE, duration: SWEEP * 1.47, ease: 'power3.out' }, LAG)
+      /* Name and role come up behind the trailing edge of the plate, not after
+         it — by the time it is halfway across, the row is already assembling
+         itself. */
+      .from(lines, { yPercent: 115, duration: .7, stagger: .07, ease: 'power3.out' }, SWEEP * .49)
+      .from(bio, { y: 26, opacity: 0, duration: .6, stagger: .09, ease: 'power2.out' }, SWEEP * .68);
 
-    /* And hold the wipe until the photo is actually there. With the warm-up
+    /* And hold the reveal until the photo is actually there. With the warm-up
        above it is already decoded by this point in all but the worst case;
        when it isn't, waiting is better than revealing an empty mask. */
-    ScrollTrigger.create({
+    let played = false;
+    const play = () => { if (!played) { played = true; tl.play(); } };
+
+    const st = ScrollTrigger.create({
       trigger: row,
-      /* The portrait is clipped fully out until this fires, so every pixel of
-         scrolling before it is a blank where a photograph should be — which
-         reads as the image loading slowly. 78% was bad, 96% still left the
-         row a third of the way up the screen before it filled. It starts now
-         as the row's first edge crosses the bottom, so the wipe is finishing
-         about when the row is properly in view. */
-      start: 'top bottom+=10%',
+      /* This has to fire late enough that the sweep is on screen to be seen.
+         At bottom+=10% it began 10% of a viewport BELOW the fold: the plate
+         had crossed and gone while the frame was still a sliver at the bottom
+         edge, so by the time you were looking at the portrait there was
+         nothing left to watch and the whole thing read as no animation at all.
+         Starting once the frame's top edge is inside the viewport costs a
+         moment of empty frame on the way in, which is the price of the reveal
+         being a reveal — and that price kept coming back as "too slow", so it
+         is now zero: the reveal starts the instant the frame's leading edge
+         touches the viewport, with no empty-frame wait at all. Paired with a
+         short SWEEP the band still plays in front of you, on the way in. */
+      start: 'top bottom',
       once: true,
       onEnter: () => {
-        const img = imgOf(row);
-        if (!img || img.complete) { tl.play(); return; }
-        let played = false;
-        const go = () => { if (!played) { played = true; tl.play(); } };
-        img.addEventListener('load', go, { once: true });
-        img.addEventListener('error', go, { once: true });   // never strand the row
-        setTimeout(go, 900);   // and never stall on it either
+        if (!img || img.complete) { play(); return; }
+        img.addEventListener('load', play, { once: true });
+        img.addEventListener('error', play, { once: true });  // never strand the row
+        /* And never stall on it either. This was 900ms, which on a cold load
+           was 900ms of empty frame before the reveal had even begun — the
+           worst version of the wait it exists to prevent. A quarter second is
+           enough for an image that is nearly in, and past that the reveal
+           itself covers the rest of the decode. */
+        setTimeout(play, 250);
       },
     });
+
+    /* A page that opens already scrolled past this row — a refresh restoring
+       its position, a link into the middle of the section, a back navigation —
+       never crosses the trigger from above, so onEnter is never called and the
+       portrait would stay covered for good. Land those rows in their finished
+       state instead: the reveal is for arriving at a row, and this reader
+       already has. */
+    if (st.progress > 0) { played = true; tl.progress(1); }
+
+    /* Parallax: the portrait drifts against its frame across the row's pass
+       through the viewport. Small on purpose — enough to give the stacked
+       checkerboard some depth, not enough to read as the image sliding. */
+    gsap.fromTo(img,
+      { yPercent: -DRIFT },
+      {
+        yPercent: DRIFT,
+        ease: 'none',
+        scrollTrigger: { trigger: row, start: 'top bottom', end: 'bottom top', scrub: true },
+      });
   });
 }
 

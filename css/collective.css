@@ -178,21 +178,51 @@ html { scroll-behavior: auto; }
   aspect-ratio: 2756 / 3236;
 }
 .clt__mask {
+  position: relative;
   height: 100%;
   overflow: hidden;
-  /* Wipe start state; JS animates to inset(0 0 0 0). */
+  /* Pre-reveal hiding place. JS opens this the moment it has the curtain in
+     the frame, so the photo is never briefly bare between paint and init; the
+     curtain below is what actually performs the reveal. With no JS at all the
+     row stays clipped, as it always has. */
   clip-path: inset(0 0 0 100%);
   will-change: clip-path;
+  /* Hover lives on the mask, not the image: JS owns the image's transform for
+     the reveal settle and the scroll parallax, so the two would fight. The
+     mask sits at inset(0 0 0 0) at rest, so scaling it reads identically —
+     .clt__media clips the overflow. */
+  transition: transform .7s cubic-bezier(.16,1,.3,1);
 }
 .clt__row--img-right .clt__mask { clip-path: inset(0 100% 0 0); }
 .clt__mask img {
   width: 100%; height: 100%;
   object-fit: cover;
   background: var(--color-bg);
-  transition: transform .7s cubic-bezier(.16,1,.3,1), filter .7s ease;
+  transition: filter .7s ease;
+  /* JS parks these at rest (scale 1.1 for parallax headroom); these are the
+     no-JS / pre-init values and must already cover the frame. */
+  transform: scale(1.1);
   will-change: transform;
 }
-.clt__media:hover img { transform: scale(1.035); filter: contrast(1.12); }
+.clt__media:hover .clt__mask { transform: scale(1.035); }
+.clt__media:hover img { filter: contrast(1.12); }
+
+/* The reveal plate — a slab of ink that crosses the frame ahead of the
+   photograph. Inserted by JS so that a JS-less page is never left with a
+   photograph permanently covered.
+
+   Dark, and deliberately not the section's own orange: a plate in the
+   background colour is invisible as a plate, since it matches the ground
+   either side of the portrait, and the whole thing collapses back into
+   looking like the photo simply growing. */
+.clt__curtain {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: var(--color-dark);
+  will-change: transform;
+  pointer-events: none;
+}
 
 .clt__copy {
   display: flex;
@@ -628,7 +658,10 @@ html { scroll-behavior: auto; }
   }
   .clh__scroll-arrow { animation: none; }
 
-  .clt__mask { clip-path: none; }
-  .clt__media:hover img { transform: none; filter: none; }
-  .clt__mask img, .clo__slide, .clo__ep, .clg__photo { transition: none; }
+  .clt__mask { clip-path: none; transform: none; }
+  .clt__curtain { display: none; }
+  .clt__mask img { transform: none; }
+  .clt__media:hover .clt__mask { transform: none; }
+  .clt__media:hover img { filter: none; }
+  .clt__mask, .clt__mask img, .clo__slide, .clo__ep, .clg__photo { transition: none; }
 }
