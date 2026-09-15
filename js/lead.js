@@ -11,7 +11,7 @@
    submit handler for a form service's endpoint and the rest stays as it is.
    ============================================================ */
 (() => {
-  const TO = 'hello@kazinetwork.in';
+  const TO = 'vikram@kazinetwork.in';
 
   /* every "Grow My Brand" on the page: the nav's, the hero's, the closing
      call. The label is carried twice for the roll, so match on the start. */
