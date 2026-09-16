@@ -1166,52 +1166,35 @@
 
   /* Drag: the strip follows the finger, then lands on whichever card the
      distance travelled asked for — the reel rows' arithmetic exactly. */
-  reelGrid.addEventListener('pointerdown', (e) => {
+  const stripTap = (x) => {
+    const vis = visTiles();
+    const hit = vis.findIndex((el) => {
+      const b = el.getBoundingClientRect();
+      return x >= b.left && x <= b.right;
+    });
+    if (hit === -1) setStrip(stripIdx, true);
+    else if (hit === stripIdx) toggleListVideo(ITEMS.find((i) => i.id === vis[hit].dataset.id));
+    else setStrip(hit, true);
+  };
+  const stripBegin = (x) => {
     armStrip();
     gsap.killTweensOf(reelGrid);
     stripDown = true; stripMoved = 0; stripDX = 0;
-    stripFrom = stripLastX = e.clientX;
+    stripFrom = stripLastX = x;
     stripLastT = performance.now(); stripV = 0;
     stripStartX = Number(gsap.getProperty(reelGrid, 'x')) || 0;
-    /* Without capture the drag dies the moment the finger leaves the strip's
-       box — pointerleave fires and ends it — which on a phone is most of the
-       way through any real swipe. The reel rows capture for exactly this
-       reason. */
-    try { reelGrid.setPointerCapture && reelGrid.setPointerCapture(e.pointerId); } catch (err) {}
-  });
-  reelGrid.addEventListener('pointermove', (e) => {
-    if (!stripDown) return;
-    stripDX = e.clientX - stripFrom;
+  };
+  const stripMove = (x) => {
+    stripDX = x - stripFrom;
     const now = performance.now(), dt = now - stripLastT;
-    if (dt > 0) stripV = stripV * 0.3 + ((e.clientX - stripLastX) / dt) * 0.7;
-    stripLastX = e.clientX; stripLastT = now;
+    if (dt > 0) stripV = stripV * 0.3 + ((x - stripLastX) / dt) * 0.7;
+    stripLastX = x; stripLastT = now;
     if (Math.abs(stripDX) > 3) stripMoved = Math.abs(stripDX);
     gsap.set(reelGrid, { x: stripStartX + stripDX });
-  });
-  const endStrip = (e) => {
-    if (!stripDown) return;
-    stripDown = false;
-    try { reelGrid.releasePointerCapture && e && e.pointerId != null && reelGrid.releasePointerCapture(e.pointerId); } catch (err) {}
-    /* Capture sends the click to the strip rather than the tile under the
-       finger, so the tap is resolved here by hit-test — again as the reel
-       rows do. The tiles' own click handlers still serve the keyboard. */
-    if (Math.abs(stripDX) <= 6 && e && e.type === 'pointerup') {
-      const vis = visTiles();
-      const hit = vis.findIndex((el) => {
-        const b = el.getBoundingClientRect();
-        return e.clientX >= b.left && e.clientX <= b.right;
-      });
-      if (hit === -1) setStrip(stripIdx, true);
-      else if (hit === stripIdx) toggleListVideo(ITEMS.find((i) => i.id === vis[hit].dataset.id));
-      else setStrip(hit, true);
-      return;
-    }
-    /* Distance alone asked a phone for half a card's width of drag before
-       anything moved, so a quick flick sprang back and the only swipe that
-       worked was a slow, held one. A short flick or a modest drag is enough
-       now to go one card; a long drag still travels as far as it asks. A
-       flick that has already stopped (finger held still at the end) does not
-       count as fast. */
+  };
+  /* A short flick or a modest drag goes one card; a long drag travels as far
+     as it asks. A flick that stopped before the finger lifted is not fast. */
+  const stripLand = () => {
     const pitch = stripPitch();
     const still = performance.now() - stripLastT > 90;
     const fast = !still && Math.abs(stripV) > 0.3 && Math.abs(stripDX) > 12;
@@ -1219,6 +1202,70 @@
     if (steps === 0 && (fast || Math.abs(stripDX) > Math.min(40, pitch * 0.18))) steps = stripDX < 0 ? 1 : -1;
     setStrip(stripIdx + steps, true);
   };
+
+  /* Mouse and pen use pointer events, with capture. */
+  reelGrid.addEventListener('pointerdown', (e) => {
+    if (e.pointerType === 'touch') return;          /* touch is handled below */
+    stripBegin(e.clientX);
+    try { reelGrid.setPointerCapture && reelGrid.setPointerCapture(e.pointerId); } catch (err) {}
+  });
+  reelGrid.addEventListener('pointermove', (e) => {
+    if (e.pointerType === 'touch' || !stripDown) return;
+    stripMove(e.clientX);
+  });
+  const endStrip = (e) => {
+    if (e.pointerType === 'touch' || !stripDown) return;
+    stripDown = false;
+    try { reelGrid.releasePointerCapture && e.pointerId != null && reelGrid.releasePointerCapture(e.pointerId); } catch (err) {}
+    if (Math.abs(stripDX) <= 6 && e.type === 'pointerup') { stripTap(e.clientX); return; }
+    stripLand();
+  };
+
+  /* Touch uses touch events, so the strip can claim a sideways swipe the moment
+     it looks sideways. With pointer events and touch-action: pan-y, any swipe
+     that wandered a little vertically was handed to the page's scroll — the
+     browser cancelled the drag and the card sprang back, which is why a swipe
+     only worked after holding the finger still first. Here the first few
+     pixels decide: mostly sideways and the page is told not to scroll;
+     mostly vertical and the strip lets go. */
+  let touchY0 = 0, touchLock = '';
+  reelGrid.addEventListener('touchstart', (e) => {
+    if (e.touches.length !== 1) return;
+    const t = e.touches[0];
+    stripBegin(t.clientX);
+    touchY0 = t.clientY; touchLock = '';
+  }, { passive: true });
+  reelGrid.addEventListener('touchmove', (e) => {
+    if (!stripDown || e.touches.length !== 1) return;
+    const t = e.touches[0];
+    const dx = t.clientX - stripFrom, dy = t.clientY - touchY0;
+    if (!touchLock) {
+      if (Math.abs(dx) < 5 && Math.abs(dy) < 5) return;
+      touchLock = Math.abs(dx) >= Math.abs(dy) * 0.7 ? 'x' : 'y';
+      if (touchLock === 'y') {                      /* a scroll: let it go */
+        stripDown = false;
+        setStrip(stripIdx, true);
+        return;
+      }
+    }
+    if (touchLock !== 'x') return;
+    if (e.cancelable) e.preventDefault();
+    stripMove(t.clientX);
+  }, { passive: false });
+  const touchEnd = (e) => {
+    if (!stripDown) return;
+    stripDown = false;
+    const t = e.changedTouches && e.changedTouches[0];
+    if (!touchLock && e.type === 'touchend' && t) {
+      /* the browser still sends a click after a tap; keep it from counting twice */
+      stripMoved = 5;
+      stripTap(t.clientX);
+      return;
+    }
+    stripLand();
+  };
+  reelGrid.addEventListener('touchend', touchEnd);
+  reelGrid.addEventListener('touchcancel', touchEnd);
   reelGrid.addEventListener('pointerup', endStrip);
   reelGrid.addEventListener('pointercancel', endStrip);
   reelGrid.addEventListener('pointerleave', endStrip);
