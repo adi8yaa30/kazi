@@ -14,7 +14,7 @@
 (() => {
   const TO = 'vikram@kazinetwork.in';
   /* paste the Apps Script web app URL here (ends in /exec) */
-  const SHEET_URL = 'https://script.google.com/macros/s/AKfycbw4yoqP3iWCD0Nk7mesv7yBaej63ejeSF04705nb47e_q-7jTnaTCLtyH0EYHFRFqNp/exec';
+  const SHEET_URL = 'https://script.google.com/macros/s/AKfycbwy7RY2HgAu2rmpbx2xSeisdzwxx47unDKVss_tKvQ5dKTIZvrMBbqKW15DcraeUvjV/exec';
 
   /* A plain form-encoded POST is a "simple" request, so the browser sends it
      without a CORS preflight, which Apps Script does not answer. no-cors
