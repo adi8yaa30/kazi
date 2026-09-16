@@ -16,7 +16,7 @@
      ------------------------------------------------------------ */
   /* ctile is where a cover sits when the canvas shows the case studies on
      their own: a separate, smaller wrap tile packed evenly for just the six
-     covers (~125px apart at 1440), so they are not left scattered across
+     covers (~100px apart at 1440, drawn 1.25x), so they are not left scattered across
      gaps that were sized around the reels. */
   /* tile fx/fy/w are packed together as one set — see the note in
      layoutBases(). They are solved so no two cards overlap anywhere on the
@@ -47,17 +47,17 @@
 
   const ITEMS = [
     { id: 'rab',    type: 'cover', name: 'RAB Automotors', industry: 'automotive',    img: 'assets/img/work-rab.webp',    page: 'rab-automotors',
-      tile: { fx: 0.2854, fy: 0.1794, w: 0.31 }, ctile: { fx: 0.1832, fy: 0.3690 },  stack: { x: 0.25, y: 0.1711, w: 0.505, h: 0.4605, z: 9 } },
+      tile: { fx: 0.2854, fy: 0.1794, w: 0.31 }, ctile: { fx: 0.7903, fy: 0.2115 },  stack: { x: 0.25, y: 0.1711, w: 0.505, h: 0.4605, z: 9 } },
     { id: 'orient', type: 'cover', name: 'Orient Yarn', industry: 'textile',        img: 'assets/img/work-orient.webp', page: 'orient-yarn',
-      tile: { fx: 0.6702, fy: 0.2254, w: 0.29 }, ctile: { fx: 0.9000, fy: 0.0540 },  stack: { x: 0.63, y: 0.1316, w: 0.30, h: 0.4737, z: 3 } },
+      tile: { fx: 0.6702, fy: 0.2254, w: 0.29 }, ctile: { fx: 0.5737, fy: 0.5985 },  stack: { x: 0.63, y: 0.1316, w: 0.30, h: 0.4737, z: 3 } },
     { id: 'studio', type: 'cover', name: 'Studio Artitecting', industry: 'interiors', img: 'assets/img/work-studio.webp', page: 'studio-artitecting',
-      tile: { fx: 0.7033, fy: 0.6771, w: 0.32 }, ctile: { fx: 0.5984, fy: 0.6770 },  stack: { x: 0.08, y: 0.3421, w: 0.22, h: 0.3684, z: 4 } },
+      tile: { fx: 0.7033, fy: 0.6771, w: 0.32 }, ctile: { fx: 0.1469, fy: 0.8948 },  stack: { x: 0.08, y: 0.3421, w: 0.22, h: 0.3684, z: 4 } },
     { id: 'rs',     type: 'cover', name: 'Relentless Strength', industry: 'fitness', img: 'assets/img/work-rs.webp',   page: 'relentless-strength',
-      tile: { fx: 0.3870, fy: 0.5270, w: 0.22 }, ctile: { fx: 0.1687, fy: 0.7636 },  stack: null },
+      tile: { fx: 0.3870, fy: 0.5270, w: 0.22 }, ctile: { fx: 0.3614, fy: 0.3020 },  stack: null },
     { id: 'orfab',  type: 'cover', name: 'Orfab By Orient', industry: 'textile',      img: 'assets/img/work-orfab.webp', page: 'orfab-by-orient',
-      tile: { fx: 0.4429, fy: 0.9984, w: 0.17 }, ctile: { fx: 0.5406, fy: 0.1554 },  stack: null },
+      tile: { fx: 0.4429, fy: 0.9984, w: 0.17 }, ctile: { fx: 0.7338, fy: 0.9648 },  stack: null },
     { id: 'jorhat', type: 'cover', name: 'Jorhat Stallions', industry: 'fitness',     img: 'assets/img/work-jorhat.webp', page: 'jorhat-stallions',
-      tile: { fx: 0.0714, fy: 0.6597, w: 0.20 }, ctile: { fx: 0.7393, fy: 0.4032 },  stack: null },
+      tile: { fx: 0.0714, fy: 0.6597, w: 0.20 }, ctile: { fx: 0.1132, fy: 0.5619 },  stack: null },
     { id: 'r1',   type: 'reel', n: 1, name: 'Ugha at Hasthkala', industry: 'fashion',  tile: { fx: 0.4324, fy: 0.7772, w: 0.125 }, stack: { x: 0.60, y: 0.5263, w: 0.14, h: 0.3421, z: 5 } },
     { id: 'r2',   type: 'reel', n: 2, name: 'Mosaic — Signature Sips', industry: 'food',  tile: { fx: 0.1835, fy: 0.2996, w: 0.100 }, stack: { x: 0.02, y: 0.0526, w: 0.26, h: 0.6579, z: 1 } },
     { id: 'r3',   type: 'reel', n: 3, name: 'hatk. — Store Film', industry: 'fashion',  tile: { fx: 0.5584, fy: 0.3206, w: 0.115 }, stack: null },
@@ -238,11 +238,19 @@
   const vwz = () => Math.max(vw(), Math.min(1280, 975 + (vw() - 375) * 0.35));
 
   let tileW = 0, tileH = 0, Mx = 0, My = 0;
+  /* with the case studies on their own the covers are drawn a quarter larger:
+     the wrap tile cannot shrink below the screen plus the widest card, so
+     bigger cards are what lets the six sit closer together */
+  /* ...but never past 85% of a phone's width (the widest cover is 0.32) */
+  const coversOnlyScale = () => Math.max(1, Math.min(1.25, 0.85 * vw() / (0.32 * vwz())));
   function layoutBases() {
     let maxW = 0, maxH = 0;
+    const packed = coversOnly();
     ITEMS.forEach((it) => {
-      it.w = it.tile.w * vwz();
+      it.w = it.tile.w * vwz() * (packed && it.type === 'cover' ? coversOnlyScale() : 1);
       it.h = it.w * aspect(it);
+      /* hidden reels do not wrap, so they do not widen the margin */
+      if (packed && it.type !== 'cover') return;
       maxW = Math.max(maxW, it.w);
       maxH = Math.max(maxH, it.h);
     });
@@ -258,7 +266,6 @@
     /* the first term keeps the fill density, the second guarantees the period
        still covers the real viewport so the wrap never shows a seam */
     /* case studies on their own use the smallest tile the wrap allows */
-    const packed = coversOnly();
     tileW = packed ? vw() + Mx + 8 : Math.max(vwz() * 1.18, vw() + Mx + 8);
     tileH = packed ? vh() + My + 8 : Math.max(vwz() * 1.06, vh() + My + 8);
     ITEMS.forEach((it) => {
@@ -1460,7 +1467,7 @@
            the card is really at before it tweens to the new one */
         gsap.set(it.el, { x: it.x, y: it.y });
         it.x = x; it.y = y;
-        gsap.to(it.el, { x, y, duration: dur, ease: 'power3.inOut' });
+        gsap.to(it.el, { x, y, width: it.w, height: it.h, duration: dur, ease: 'power3.inOut' });
       } else if (showReels) {
         setHidden(it, false);
         it.x = x; it.y = y;
