@@ -997,3 +997,15 @@ if (document.readyState === 'loading') {
 // Recalculate pinned/scroll positions once everything (images) has loaded.
 window.addEventListener('load', () => ScrollTrigger.refresh());
 window.addEventListener('resize', () => ScrollTrigger.refresh());
+
+/* ---------- Home links on the home page ----------
+   They point at "./" so the address never picks up a "#top". Here, on the
+   page they lead to, a click just scrolls back up instead of reloading. */
+if (location.hash === '#top') history.replaceState(null, '', location.pathname + location.search);
+document.querySelectorAll('a[href="./"]').forEach((a) => {
+  a.addEventListener('click', (e) => {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+    e.preventDefault();
+    window.scrollTo({ top: 0, behavior: prefersReduced ? 'auto' : 'smooth' });
+  });
+});
