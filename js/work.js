@@ -1053,6 +1053,7 @@
      again. Here a drag tracks the finger and then lands on exactly one card. */
   let stripIdx = 0;
   let stripDown = false, stripFrom = 0, stripStartX = 0, stripDX = 0, stripMoved = 0;
+  let stripLastX = 0, stripLastT = 0, stripV = 0;   /* px per ms, for flicks */
 
   const visTiles = () => [...reelGrid.children].filter((el) => !el.hidden);
   /* one card's pitch: width + gap, read off the first two tiles */
@@ -1169,7 +1170,8 @@
     armStrip();
     gsap.killTweensOf(reelGrid);
     stripDown = true; stripMoved = 0; stripDX = 0;
-    stripFrom = e.clientX;
+    stripFrom = stripLastX = e.clientX;
+    stripLastT = performance.now(); stripV = 0;
     stripStartX = Number(gsap.getProperty(reelGrid, 'x')) || 0;
     /* Without capture the drag dies the moment the finger leaves the strip's
        box — pointerleave fires and ends it — which on a phone is most of the
@@ -1180,6 +1182,9 @@
   reelGrid.addEventListener('pointermove', (e) => {
     if (!stripDown) return;
     stripDX = e.clientX - stripFrom;
+    const now = performance.now(), dt = now - stripLastT;
+    if (dt > 0) stripV = stripV * 0.3 + ((e.clientX - stripLastX) / dt) * 0.7;
+    stripLastX = e.clientX; stripLastT = now;
     if (Math.abs(stripDX) > 3) stripMoved = Math.abs(stripDX);
     gsap.set(reelGrid, { x: stripStartX + stripDX });
   });
@@ -1201,7 +1206,18 @@
       else setStrip(hit, true);
       return;
     }
-    setStrip(stripIdx + Math.round(-stripDX / stripPitch()), true);
+    /* Distance alone asked a phone for half a card's width of drag before
+       anything moved, so a quick flick sprang back and the only swipe that
+       worked was a slow, held one. A short flick or a modest drag is enough
+       now to go one card; a long drag still travels as far as it asks. A
+       flick that has already stopped (finger held still at the end) does not
+       count as fast. */
+    const pitch = stripPitch();
+    const still = performance.now() - stripLastT > 90;
+    const fast = !still && Math.abs(stripV) > 0.3 && Math.abs(stripDX) > 12;
+    let steps = Math.round(-stripDX / pitch);
+    if (steps === 0 && (fast || Math.abs(stripDX) > Math.min(40, pitch * 0.18))) steps = stripDX < 0 ? 1 : -1;
+    setStrip(stripIdx + steps, true);
   };
   reelGrid.addEventListener('pointerup', endStrip);
   reelGrid.addEventListener('pointercancel', endStrip);
