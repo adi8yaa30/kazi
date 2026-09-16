@@ -115,6 +115,7 @@
   const filterMenu = document.getElementById('exFilterMenu');
   const filterOpts = document.getElementById('exFilterOpts');
   const layoutBtn = document.getElementById('exLayout');
+  const reelToggle = document.getElementById('exReelToggle');
   const brandSec = document.getElementById('exListBrands');
   const reelSec = document.getElementById('exListReels');
   const brandRows = document.getElementById('exBrandRows');
@@ -298,6 +299,14 @@
   let focused = null;           /* focused reel data */
   let filter = 'all';           /* industry key, or 'all' */
   let listOpen = false;
+  /* The All Projects canvas opens on the case studies alone; the snippets
+     toggle brings the reels in around them. */
+  let showReels = false;
+  const inAll = (it) => it.type === 'cover' || showReels;
+  function syncReelToggle() {
+    reelToggle.hidden = !(view === 'all' && !listOpen);
+    reelToggle.setAttribute('aria-pressed', String(showReels));
+  }
 
   /* Hidden cards keep their box in the layout (they are only faded to
      opacity 0 / parked off-stage), so they would still win hit-testing and
@@ -474,36 +483,63 @@
     ex.classList.add('is-open');
     ex.setAttribute('aria-hidden', 'false');
 
+    /* The list is the way in, so the cards no longer fly out of the stack
+       here — they wait, invisible, at their canvas positions, and the
+       expanding flight plays when "Canvas View" is picked instead. */
+    ITEMS.forEach((it) => {
+      gsap.killTweensOf(it.el);
+      setHidden(it, true);
+      gsap.set(it.washEl, { opacity: 0 });
+      gsap.set(it.el, {
+        x: wrap(it.bx + Mx, tileW) - Mx, y: wrap(it.by + My, tileH) - My,
+        width: it.w, height: it.h, opacity: 0, scale: 1,
+      });
+    });
+    const dur = reduce ? 0.01 : 0.6;
+    gsap.to([landing, footer, nav], { opacity: 0, duration: 0.5, ease: 'power2.out' });
+    gsap.delayedCall(0.55, () => { landing.style.visibility = footer.style.visibility = nav.style.visibility = 'hidden'; });
+    gsap.delayedCall(dur * 0.4, () => {
+      setNavActive('all'); view = 'all';
+      openList();
+    });
+    gsap.delayedCall(dur, () => {
+      ox = 0; oy = 0;
+      panEnabled = true; setBusy(false);
+    });
+    gsap.fromTo('.ex__top', { opacity: 0, y: -14 }, { opacity: 1, y: 0, duration: 0.6, delay: dur * 0.5 });
+  }
+
+  /* Leaving the list for the All Projects canvas: the cards expand out of the
+     landing stack into the field — the flight "Click to Unveil" used to play.
+     The stack is only hidden, not removed, so its boxes still measure. */
+  function expandCanvas() {
+    busy = true; panEnabled = false;
+    pauseAll();
+    ox = 0; oy = 0;
     const dur = reduce ? 0.01 : 1.15;
     ITEMS.forEach((it) => {
-      setHidden(it, false);
-      it.el.style.opacity = 1;
+      gsap.killTweensOf(it.el);
+      gsap.set(it.washEl, { opacity: 0 });
+      const on = inAll(it);
+      setHidden(it, !on);
       const tx = wrap(it.bx + Mx, tileW) - Mx;
       const ty = wrap(it.by + My, tileH) - My;
-      if (it.stackEl) {
+      if (!on) {
+        gsap.set(it.el, { x: tx, y: ty, width: it.w, height: it.h, opacity: 0, scale: 1 });
+      } else if (it.stackEl) {
         const r = it.stackEl.getBoundingClientRect();
-        gsap.set(it.el, { x: r.left, y: r.top, width: r.width, height: r.height });
+        gsap.set(it.el, { x: r.left, y: r.top, width: r.width, height: r.height, opacity: 1, scale: 1 });
         gsap.to(it.el, { x: tx, y: ty, width: it.w, height: it.h, duration: dur, ease: 'power4.inOut' });
       } else {
         gsap.set(it.el, { x: tx, y: ty, width: it.w, height: it.h, opacity: 0, scale: 0.85 });
         gsap.to(it.el, { opacity: 1, scale: 1, duration: dur * 0.7, delay: dur * 0.35, ease: 'power3.out' });
       }
     });
-    gsap.to([landing, footer, nav], { opacity: 0, duration: 0.5, ease: 'power2.out' });
-    gsap.delayedCall(0.55, () => { landing.style.visibility = footer.style.visibility = nav.style.visibility = 'hidden'; });
-    /* The list is the default way in: it fades up over the cards while they
-       are still flying, so the canvas is only a click on "Canvas View" away
-       rather than the first thing to load and play. */
-    gsap.delayedCall(dur * 0.5, () => {
-      setNavActive('all'); view = 'all';
-      openList();
-    });
     gsap.delayedCall(dur, () => {
-      ox = 0; oy = 0; render();
+      render();
       panEnabled = true; setBusy(false);
-      if (!listOpen) playAll();
+      playAll();
     });
-    gsap.fromTo('.ex__top', { opacity: 0, y: -14 }, { opacity: 1, y: 0, duration: 0.6, delay: dur * 0.5 });
   }
 
   function closeExplorer() {
@@ -568,6 +604,7 @@
     modeBtn.classList.toggle('is-visible', v === 'snippets');
     /* the caption plates belong to the canvas only — CSS reads this */
     canvas.classList.toggle('is-all', v === 'all');
+    syncReelToggle();
   }
 
   function setView(v) {
@@ -583,11 +620,12 @@
       hideLabel();
       const dur = reduce ? 0.01 : 1.0;
       ITEMS.forEach((it) => {
-        setHidden(it, false);
+        const on = inAll(it);
+        setHidden(it, !on);
         const tx = wrap(it.bx + Mx, tileW) - Mx;
         const ty = wrap(it.by + My, tileH) - My;
         gsap.to(it.washEl, { opacity: 0, duration: 0.5 });
-        gsap.to(it.el, { x: tx, y: ty, width: it.w, height: it.h, opacity: 1, scale: 1, duration: dur, ease: 'power4.inOut' });
+        gsap.to(it.el, { x: tx, y: ty, width: it.w, height: it.h, opacity: on ? 1 : 0, scale: on ? 1 : 0.9, duration: dur, ease: 'power4.inOut' });
       });
       gsap.delayedCall(dur, () => { ox = 0; oy = 0; render(); panEnabled = true; playAll(); done(); });
     } else if (v === 'featured') {
@@ -1290,6 +1328,7 @@
     stripArmed = false;          /* a fresh visit never starts talking by itself */
     listEl.classList.add('is-open');
     listEl.setAttribute('aria-hidden', 'false');
+    syncReelToggle();
     /* the strip has a real width only once the list is displayed */
     requestAnimationFrame(() => setStrip(stripIdx, false));
   }
@@ -1301,6 +1340,7 @@
     if (listPlaying) stopListVideo(listPlaying);
     listEl.classList.remove('is-open');
     listEl.setAttribute('aria-hidden', 'true');
+    syncReelToggle();
     if (!keepFilter) { filter = 'all'; syncFilterUI(); }
     if (view === 'featured') return;              /* featured covers hold still */
     if (view === 'snippets' && snippetMode === 'arranged') syncArrangedAudio();
@@ -1387,12 +1427,42 @@
   exploreBtn.addEventListener('click', openExplorer);
   stage.addEventListener('click', (e) => { if (e.target !== exploreBtn) openExplorer(); });
   closeBtn.addEventListener('click', closeExplorer);
-  layoutBtn.addEventListener('click', () => (listOpen ? closeList() : openList()));
+  layoutBtn.addEventListener('click', () => {
+    if (busy) return;
+    if (!listOpen) { openList(); return; }
+    closeList();
+    if (view === 'all') expandCanvas();
+  });
+  reelToggle.addEventListener('click', () => {
+    if (busy || view !== 'all' || listOpen) return;
+    if (focused) unfocusReel(true);
+    showReels = !showReels;
+    syncReelToggle();
+    reels.forEach((r) => {
+      gsap.killTweensOf(r.el);
+      if (showReels) {
+        setHidden(r, false);
+        /* only opacity tweens: render() owns the transform while panning */
+        r.x = wrap(r.bx + ox + Mx, tileW) - Mx;
+        r.y = wrap(r.by + oy + My, tileH) - My;
+        gsap.set(r.el, { x: r.x, y: r.y, width: r.w, height: r.h, scale: 1, opacity: 0 });
+        gsap.to(r.el, { opacity: 1, duration: reduce ? 0.01 : 0.45, ease: 'power2.out' });
+      } else {
+        setHidden(r, true);
+        gsap.to(r.el, { opacity: 0, duration: reduce ? 0.01 : 0.3, ease: 'power2.in' });
+      }
+    });
+    syncCanvasPlayback();
+  });
   /* the nav is also the way back out of the list: picking a canvas view drops
      the list and its filter, so the canvas is never showing a hidden subset */
   exNavLinks.forEach((b) => b.addEventListener('click', () => {
     const v = b.dataset.view;
-    if (listOpen) { closeList(); if (v === view) { setNavActive(v); return; } }
+    if (listOpen) {
+      if (busy) return;
+      closeList();
+      if (v === view) { setNavActive(v); if (v === 'all') expandCanvas(); return; }
+    }
     setView(v);
   }));
   window.addEventListener('keydown', (e) => {

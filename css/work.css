@@ -374,6 +374,28 @@
 .ex__layout:hover { border-color: var(--color-bg); }
 .ex__layout[aria-pressed="true"] { background: var(--color-bg); color: var(--color-accent); border-color: var(--color-bg); }
 
+/* snippets on/off for the All Projects canvas — the canvas opens on the case
+   studies alone, and this brings the reels in around them */
+.ex__nav .ex__reeltoggle {
+  display: inline-flex; align-items: center; gap: 9px;
+  border: 1px solid rgba(255, 255, 240, 0.34); border-radius: 3px;
+  padding: 8px 17px; background: none;
+  transition: border-color 0.25s ease, background 0.25s ease, color 0.25s ease;
+}
+.ex__nav .ex__reeltoggle[hidden] { display: none; }
+.ex__reeltoggle:hover { border-color: var(--color-bg); }
+.ex__reeltoggle i {
+  position: relative; width: 20px; height: 11px; flex: 0 0 auto;
+  border: 1px solid currentColor; border-radius: 6px;
+}
+.ex__reeltoggle i::after {
+  content: ''; position: absolute; top: 1px; left: 1px;
+  width: 7px; height: 7px; border-radius: 50%; background: currentColor;
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.ex__reeltoggle[aria-pressed="true"] { background: var(--color-bg); color: var(--color-accent); border-color: var(--color-bg); }
+.ex__reeltoggle[aria-pressed="true"] i::after { transform: translateX(9px); }
+
 /* ---------------- List view ----------------
    Sits above the canvas and below the top block, and scrolls on its own.
    Brands read as rows (a name is the thing you scan for); snippets read as a
@@ -600,11 +622,16 @@ body.is-leaving .ex__list { opacity: 0 !important; transition: opacity 0.4s ease
   /* block, not inline: text-overflow needs a block box, and an inline one
      reports its full text as a minimum width, so the pill would not shrink */
   .ex__nav .ex__filterbtn span { display: block; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
-  .ex__nav .ex__layout, .ex__nav .ex__closebtn { flex: 0 0 auto; }
+  .ex__nav .ex__layout, .ex__nav .ex__closebtn, .ex__nav .ex__reeltoggle { flex: 0 0 auto; }
+  /* the arrange toggle and the snippets toggle never show together, so on a
+     phone the hidden one gives its width back to the row */
+  .ex__mode:not(.is-visible) { display: none; }
+  /* no room for the switch drawing here; the filled pill still says "on" */
+  .ex__reeltoggle i { display: none; }
   /* The filter was an unlabelled icon here, so nothing said it was a filter.
      The word is short and the row now has space for it. */
 
-  .ex__nav .ex__filterbtn, .ex__nav .ex__layout, .ex__nav .ex__closebtn {
+  .ex__nav .ex__filterbtn, .ex__nav .ex__layout, .ex__nav .ex__closebtn, .ex__nav .ex__reeltoggle {
     /* these read as filled pills once they are on, so the label needs room to
        sit inside one rather than against its edges */
     padding: 9px 12px;
@@ -633,4 +660,11 @@ body.is-leaving .ex__list { opacity: 0 !important; transition: opacity 0.4s ease
   .wl__story-p { font-size: clamp(13px, 4vw, 16px); }
   .wp__stat-num { font-size: clamp(22px, 7vw, 34px); }
   .wp__stat-label { font-size: clamp(14px, 4vw, 20px); }
+}
+
+/* the narrowest phones: four controls share the row on the canvas, so the
+   pills pull their side padding in rather than clipping "Filter" */
+@media (max-width: 380px) {
+  .ex__nav .ex__filterbtn, .ex__nav .ex__layout, .ex__nav .ex__reeltoggle { padding-left: 9px; padding-right: 9px; }
+  .ex__nav .ex__filterbtn { gap: 6px; }
 }
