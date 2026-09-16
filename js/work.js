@@ -42,17 +42,17 @@
   const industryLabel = (k) => (INDUSTRIES.find((i) => i.key === k) || {}).label || '';
 
   const ITEMS = [
-    { id: 'rab',    type: 'cover', name: 'RAB Automotors', industry: 'automotive',    img: 'assets/img/work-rab.webp',    page: 'work-rab.html',
+    { id: 'rab',    type: 'cover', name: 'RAB Automotors', industry: 'automotive',    img: 'assets/img/work-rab.webp',    page: 'rab-automotors',
       tile: { fx: 0.3099, fy: 0.1794, w: 0.31 },  stack: { x: 0.25, y: 0.1711, w: 0.505, h: 0.4605, z: 9 } },
-    { id: 'orient', type: 'cover', name: 'Orient Yarn', industry: 'textile',        img: 'assets/img/work-orient.webp', page: 'work-orient.html',
+    { id: 'orient', type: 'cover', name: 'Orient Yarn', industry: 'textile',        img: 'assets/img/work-orient.webp', page: 'orient-yarn',
       tile: { fx: 0.6802, fy: 0.2290, w: 0.29 },  stack: { x: 0.63, y: 0.1316, w: 0.30, h: 0.4737, z: 3 } },
-    { id: 'studio', type: 'cover', name: 'Studio Artitecting', industry: 'interiors', img: 'assets/img/work-studio.webp', page: 'work-studio.html',
+    { id: 'studio', type: 'cover', name: 'Studio Artitecting', industry: 'interiors', img: 'assets/img/work-studio.webp', page: 'studio-artitecting',
       tile: { fx: 0.7301, fy: 0.6759, w: 0.32 },  stack: { x: 0.08, y: 0.3421, w: 0.22, h: 0.3684, z: 4 } },
-    { id: 'rs',     type: 'cover', name: 'Relentless Strength', industry: 'fitness', img: 'assets/img/work-rs.webp',   page: 'work-rs.html',
+    { id: 'rs',     type: 'cover', name: 'Relentless Strength', industry: 'fitness', img: 'assets/img/work-rs.webp',   page: 'relentless-strength',
       tile: { fx: 0.3980, fy: 0.5270, w: 0.22 },  stack: null },
-    { id: 'orfab',  type: 'cover', name: 'Orfab By Orient', industry: 'textile',      img: 'assets/img/work-orfab.webp', page: 'work-orfab.html',
+    { id: 'orfab',  type: 'cover', name: 'Orfab By Orient', industry: 'textile',      img: 'assets/img/work-orfab.webp', page: 'orfab-by-orient',
       tile: { fx: 0.4429, fy: 0.9958, w: 0.17 },  stack: null },
-    { id: 'jorhat', type: 'cover', name: 'Jorhat Stallions', industry: 'fitness',     img: 'assets/img/work-jorhat.webp', page: 'work-jorhat.html',
+    { id: 'jorhat', type: 'cover', name: 'Jorhat Stallions', industry: 'fitness',     img: 'assets/img/work-jorhat.webp', page: 'jorhat-stallions',
       tile: { fx: 0.0700, fy: 0.6575, w: 0.20 },  stack: null },
     { id: 'r1',   type: 'reel', n: 1, name: 'Ugha at Hasthkala', industry: 'fashion',  tile: { fx: 0.4324, fy: 0.7798, w: 0.125 }, stack: { x: 0.60, y: 0.5263, w: 0.14, h: 0.3421, z: 5 } },
     { id: 'r2',   type: 'reel', n: 2, name: 'Mosaic — Signature Sips', industry: 'food',  tile: { fx: 0.1636, fy: 0.2902, w: 0.100 }, stack: { x: 0.02, y: 0.0526, w: 0.26, h: 0.6579, z: 1 } },
