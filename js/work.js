@@ -16,7 +16,7 @@
      ------------------------------------------------------------ */
   /* tile fx/fy/w are packed together as one set — see the note in
      layoutBases(). They are solved so no two cards overlap anywhere on the
-     wrapping canvas with ~34px of clear space at 1440px wide; nudging one by
+     wrapping canvas with ~26px of clear space at 1440px wide; nudging one by
      hand can push it into a neighbour, so re-solve the whole set instead. */
   /* ------------------------------------------------------------
      INDUSTRIES — the filter taxonomy.
@@ -43,41 +43,41 @@
 
   const ITEMS = [
     { id: 'rab',    type: 'cover', name: 'RAB Automotors', industry: 'automotive',    img: 'assets/img/work-rab.webp',    page: 'rab-automotors',
-      tile: { fx: 0.3099, fy: 0.1794, w: 0.31 },  stack: { x: 0.25, y: 0.1711, w: 0.505, h: 0.4605, z: 9 } },
+      tile: { fx: 0.3011, fy: 0.1794, w: 0.31 },  stack: { x: 0.25, y: 0.1711, w: 0.505, h: 0.4605, z: 9 } },
     { id: 'orient', type: 'cover', name: 'Orient Yarn', industry: 'textile',        img: 'assets/img/work-orient.webp', page: 'orient-yarn',
-      tile: { fx: 0.6802, fy: 0.2290, w: 0.29 },  stack: { x: 0.63, y: 0.1316, w: 0.30, h: 0.4737, z: 3 } },
+      tile: { fx: 0.6749, fy: 0.2290, w: 0.29 },  stack: { x: 0.63, y: 0.1316, w: 0.30, h: 0.4737, z: 3 } },
     { id: 'studio', type: 'cover', name: 'Studio Artitecting', industry: 'interiors', img: 'assets/img/work-studio.webp', page: 'studio-artitecting',
-      tile: { fx: 0.7301, fy: 0.6759, w: 0.32 },  stack: { x: 0.08, y: 0.3421, w: 0.22, h: 0.3684, z: 4 } },
+      tile: { fx: 0.7159, fy: 0.6759, w: 0.32 },  stack: { x: 0.08, y: 0.3421, w: 0.22, h: 0.3684, z: 4 } },
     { id: 'rs',     type: 'cover', name: 'Relentless Strength', industry: 'fitness', img: 'assets/img/work-rs.webp',   page: 'relentless-strength',
-      tile: { fx: 0.3980, fy: 0.5270, w: 0.22 },  stack: null },
+      tile: { fx: 0.3964, fy: 0.5270, w: 0.22 },  stack: null },
     { id: 'orfab',  type: 'cover', name: 'Orfab By Orient', industry: 'textile',      img: 'assets/img/work-orfab.webp', page: 'orfab-by-orient',
       tile: { fx: 0.4429, fy: 0.9958, w: 0.17 },  stack: null },
     { id: 'jorhat', type: 'cover', name: 'Jorhat Stallions', industry: 'fitness',     img: 'assets/img/work-jorhat.webp', page: 'jorhat-stallions',
-      tile: { fx: 0.0700, fy: 0.6575, w: 0.20 },  stack: null },
+      tile: { fx: 0.0699, fy: 0.6625, w: 0.20 },  stack: null },
     { id: 'r1',   type: 'reel', n: 1, name: 'Ugha at Hasthkala', industry: 'fashion',  tile: { fx: 0.4324, fy: 0.7798, w: 0.125 }, stack: { x: 0.60, y: 0.5263, w: 0.14, h: 0.3421, z: 5 } },
-    { id: 'r2',   type: 'reel', n: 2, name: 'Mosaic — Signature Sips', industry: 'food',  tile: { fx: 0.1636, fy: 0.2902, w: 0.100 }, stack: { x: 0.02, y: 0.0526, w: 0.26, h: 0.6579, z: 1 } },
-    { id: 'r3',   type: 'reel', n: 3, name: 'hatk. — Store Film', industry: 'fashion',  tile: { fx: 0.5552, fy: 0.3063, w: 0.115 }, stack: null },
-    { id: 'r4',   type: 'reel', n: 4, name: 'Arizona Sports Arena', industry: 'fitness',  tile: { fx: 0.9831, fy: 0.7824, w: 0.090 }, stack: null },
-    { id: 'r5',   type: 'reel', n: 5, name: 'Atlanta Industries x Ikigai', industry: 'food',  tile: { fx: 0.8617, fy: 0.4158, w: 0.130 }, stack: null },
+    { id: 'r2',   type: 'reel', n: 2, name: 'Mosaic — Signature Sips', industry: 'food',  tile: { fx: 0.1636, fy: 0.2877, w: 0.100 }, stack: { x: 0.02, y: 0.0526, w: 0.26, h: 0.6579, z: 1 } },
+    { id: 'r3',   type: 'reel', n: 3, name: 'hatk. — Store Film', industry: 'fashion',  tile: { fx: 0.5614, fy: 0.3120, w: 0.115 }, stack: null },
+    { id: 'r4',   type: 'reel', n: 4, name: 'Arizona Sports Arena', industry: 'fitness',  tile: { fx: 0.9842, fy: 0.7824, w: 0.090 }, stack: null },
+    { id: 'r5',   type: 'reel', n: 5, name: 'Atlanta Industries x Ikigai', industry: 'food',  tile: { fx: 0.8624, fy: 0.4158, w: 0.130 }, stack: null },
     { id: 'r6',   type: 'reel', n: 6, name: 'Atlanta Industries — Crockery', industry: 'food',  tile: { fx: 0.3326, fy: 0.9087, w: 0.105 }, stack: { x: 0.77, y: 0.3158, w: 0.20, h: 0.5263, z: 6 } },
-    { id: 'r7',   type: 'reel', n: 7, name: 'Lakm&eacute; Salon — Soft Glam', industry: 'beauty',  tile: { fx: 0.0662, fy: 0.4692, w: 0.120 }, stack: { x: 0.30, y: 0.6053, w: 0.23, h: 0.3947, z: 7 } },
-    { id: 'r8',   type: 'reel', n: 8, name: 'Lakm&eacute; Salon — Good Hair', industry: 'beauty',  tile: { fx: 0.9140, fy: 0.1509, w: 0.095 }, stack: null },
-    { id: 'r9',   type: 'reel', n: 9, name: 'Lakm&eacute; Salon — The Glow', industry: 'beauty',  tile: { fx: 0.5909, fy: 0.7699, w: 0.110 }, stack: { x: 0.52, y: 0.5526, w: 0.16, h: 0.3684, z: 2 } },
-    { id: 'r10',  type: 'reel', n: 10, name: 'hatk. — Photo Booth', industry: 'fashion', tile: { fx: 0.5804, fy: 0.5544, w: 0.085 }, stack: { x: 0.30, y: 0.0, w: 0.26, h: 0.3158, z: 8 } },
-    { id: 'r11',  type: 'reel', n: 11, name: 'Rani — Shinobu Jacket', industry: 'fashion', tile: { fx: 0.1940, fy: 0.8821, w: 0.125 }, stack: null },
-    { id: 'r12',  type: 'reel', n: 12, name: 'Rani — Introducing', industry: 'fashion', tile: { fx: 0.0645, fy: 0.7856, w: 0.100 }, stack: null },
-    { id: 'r13',  type: 'reel', n: 13, name: 'Rani — The Collection', industry: 'fashion', tile: { fx: 0.1483, fy: 0.1081, w: 0.115 }, stack: null },
-    { id: 'r14',  type: 'reel', n: 14, name: 'Rani — Five Years', industry: 'fashion', tile: { fx: 0.7781, fy: 0.4575, w: 0.090 }, stack: null },
-    { id: 'r15',  type: 'reel', n: 15, name: 'Axel Public School — Every Dream', industry: 'education', tile: { fx: 0.2354, fy: 0.6669, w: 0.130 }, stack: null },
-    { id: 'r16',  type: 'reel', n: 16, name: 'Axel Public School x Physics Wallah', industry: 'education', tile: { fx: 0.9989, fy: 0.9498, w: 0.105 }, stack: null },
-    { id: 'r17',  type: 'reel', n: 17, name: 'Axel Public School — Cultural Symphony', industry: 'education', tile: { fx: 0.6637, fy: 0.4654, w: 0.120 }, stack: null },
-    { id: 'r18',  type: 'reel', n: 18, name: 'Axel Public School — Krida Samar', industry: 'education', tile: { fx: 0.5758, fy: 0.1538, w: 0.095 }, stack: null },
-    { id: 'r19',  type: 'reel', n: 19, name: 'Relax — The Build', industry: 'interiors', tile: { fx: 0.6413, fy: 0.9515, w: 0.110 }, stack: null },
+    { id: 'r7',   type: 'reel', n: 7, name: 'Lakm&eacute; Salon — Soft Glam', industry: 'beauty',  tile: { fx: 0.0662, fy: 0.4595, w: 0.120 }, stack: { x: 0.30, y: 0.6053, w: 0.23, h: 0.3947, z: 7 } },
+    { id: 'r8',   type: 'reel', n: 8, name: 'Lakm&eacute; Salon — Good Hair', industry: 'beauty',  tile: { fx: 0.9193, fy: 0.1509, w: 0.095 }, stack: null },
+    { id: 'r9',   type: 'reel', n: 9, name: 'Lakm&eacute; Salon — The Glow', industry: 'beauty',  tile: { fx: 0.5909, fy: 0.7670, w: 0.110 }, stack: { x: 0.52, y: 0.5526, w: 0.16, h: 0.3684, z: 2 } },
+    { id: 'r10',  type: 'reel', n: 10, name: 'hatk. — Photo Booth', industry: 'fashion', tile: { fx: 0.5853, fy: 0.5544, w: 0.085 }, stack: { x: 0.30, y: 0.0, w: 0.26, h: 0.3158, z: 8 } },
+    { id: 'r11',  type: 'reel', n: 11, name: 'Rani — Shinobu Jacket', industry: 'fashion', tile: { fx: 0.1940, fy: 0.8817, w: 0.125 }, stack: null },
+    { id: 'r12',  type: 'reel', n: 12, name: 'Rani — Introducing', industry: 'fashion', tile: { fx: 0.0701, fy: 0.7952, w: 0.100 }, stack: null },
+    { id: 'r13',  type: 'reel', n: 13, name: 'Rani — The Collection', industry: 'fashion', tile: { fx: 0.1488, fy: 0.0925, w: 0.115 }, stack: null },
+    { id: 'r14',  type: 'reel', n: 14, name: 'Rani — Five Years', industry: 'fashion', tile: { fx: 0.7767, fy: 0.4575, w: 0.090 }, stack: null },
+    { id: 'r15',  type: 'reel', n: 15, name: 'Axel Public School — Every Dream', industry: 'education', tile: { fx: 0.2430, fy: 0.6632, w: 0.130 }, stack: null },
+    { id: 'r16',  type: 'reel', n: 16, name: 'Axel Public School x Physics Wallah', industry: 'education', tile: { fx: 0.9989, fy: 0.9670, w: 0.105 }, stack: null },
+    { id: 'r17',  type: 'reel', n: 17, name: 'Axel Public School — Cultural Symphony', industry: 'education', tile: { fx: 0.6671, fy: 0.4654, w: 0.120 }, stack: null },
+    { id: 'r18',  type: 'reel', n: 18, name: 'Axel Public School — Krida Samar', industry: 'education', tile: { fx: 0.5758, fy: 0.1481, w: 0.095 }, stack: null },
+    { id: 'r19',  type: 'reel', n: 19, name: 'Relax — The Build', industry: 'interiors', tile: { fx: 0.6413, fy: 0.9544, w: 0.110 }, stack: null },
     { id: 'r20',  type: 'reel', n: 20, name: 'Emerald by Relax', industry: 'interiors', tile: { fx: 0.1792, fy: 0.4664, w: 0.085 }, stack: null },
-    { id: 'r21',  type: 'reel', n: 21, name: 'Relax — Lasting Comfort', industry: 'interiors', tile: { fx: 0.0358, fy: 0.2346, w: 0.125 }, stack: null },
-    { id: 'r22',  type: 'reel', n: 22, name: 'Lynchpin EduFest', industry: 'education', tile: { fx: 0.3079, fy: 0.4107, w: 0.100 }, stack: null },
+    { id: 'r21',  type: 'reel', n: 21, name: 'Relax — Lasting Comfort', industry: 'interiors', tile: { fx: 0.0353, fy: 0.2346, w: 0.125 }, stack: null },
+    { id: 'r22',  type: 'reel', n: 22, name: 'Lynchpin EduFest', industry: 'education', tile: { fx: 0.3027, fy: 0.4107, w: 0.100 }, stack: null },
     { id: 'r23',  type: 'reel', n: 23, name: 'Munchies — The Interrogation', industry: 'food', tile: { fx: 0.7523, fy: 0.0037, w: 0.115 }, stack: null },
-    { id: 'r24',  type: 'reel', n: 24, name: 'Munchies — Signature Plates', industry: 'food', tile: { fx: 0.9780, fy: 0.4653, w: 0.090 }, stack: null },
+    { id: 'r24',  type: 'reel', n: 24, name: 'Munchies — Signature Plates', industry: 'food', tile: { fx: 0.9799, fy: 0.4653, w: 0.090 }, stack: null },
     { id: 'r25',  type: 'reel', n: 25, name: 'Munchies — Ain&rsquo;t Polite', industry: 'food', tile: { fx: 0.8633, fy: 0.8939, w: 0.130 }, stack: null },
   ];
   ITEMS.forEach((it) => {
@@ -245,13 +245,13 @@
     /* The tile is the wrap period of the infinite canvas, so it also sets the
        density: every card lives inside one tile. It was sized for 15 cards;
        with 30 it has to grow in step or the field packs shoulder to shoulder.
-       These multipliers keep the fill around 42%, and the tile fractions in
+       These multipliers keep the fill around 50%, and the tile fractions in
        ITEMS are packed against exactly this geometry — change one and the
        cards will start to touch. */
     /* the first term keeps the fill density, the second guarantees the period
        still covers the real viewport so the wrap never shows a seam */
-    tileW = Math.max(vwz() * 1.40, vw() + Mx + 20);
-    tileH = Math.max(vwz() * 1.30, vh() + My + 20);
+    tileW = Math.max(vwz() * 1.26, vw() + Mx + 20);
+    tileH = Math.max(vwz() * 1.14, vh() + My + 20);
     ITEMS.forEach((it) => {
       it.bx = it.tile.fx * tileW;
       it.by = it.tile.fy * tileH;
