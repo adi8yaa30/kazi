@@ -52,6 +52,9 @@
        element and the only thing worth preloading. The video itself must not
        be preloaded here: it would compete with the poster for bandwidth. -->
   <link rel="preload" as="image" href="assets/img/hero-reel-poster.webp" fetchpriority="high" />
+  <!-- The preloader's wordmark is the first thing painted and the first LCP
+       candidate: fetch it ahead of everything else. -->
+  <link rel="preload" as="image" imagesrcset="assets/img/kazi-wordmark-900.webp 900w, assets/img/kazi-wordmark.webp 2600w" imagesizes="(max-width: 1217px) 46vw, 560px" fetchpriority="high" />
 
 
   <script type="application/ld+json">
@@ -269,7 +272,7 @@
       <span></span><span></span><span></span><span></span><span></span>
     </div>
     <div class="preloader__logo">
-      <img loading="lazy" decoding="async" srcset="assets/img/kazi-wordmark-900.webp 900w, assets/img/kazi-wordmark.webp 2600w" sizes="(max-width: 768px) 92vw, 1280px" src="assets/img/kazi-wordmark.webp" alt="Kazi Network" width="2600" height="856" />
+      <img fetchpriority="high" decoding="async" srcset="assets/img/kazi-wordmark-900.webp 900w, assets/img/kazi-wordmark.webp 2600w" sizes="(max-width: 1217px) 46vw, 560px" src="assets/img/kazi-wordmark-900.webp" alt="Kazi Network" width="2600" height="856" />
     </div>
   </div>
 
@@ -406,7 +409,7 @@
       <div class="container work__grid">
 
         <article class="card card--rab" data-cat="Automotive">
-          <video class="card__video" autoplay muted loop playsinline preload="auto" poster="assets/video/posters/rab.webp" data-autoplay="inview">
+          <video class="card__video" muted loop playsinline preload="none" poster="assets/video/posters/rab.webp" data-autoplay="inview">
             <source src="assets/video/rab.mp4" type="video/mp4" />
           </video>
           <div class="card__meta">
@@ -418,7 +421,7 @@
         </article>
 
         <article class="card card--orient" data-cat="Commerce">
-          <video class="card__video" autoplay muted loop playsinline preload="auto" poster="assets/video/posters/craft-6.webp" data-autoplay="inview">
+          <video class="card__video" muted loop playsinline preload="none" poster="assets/video/posters/craft-6.webp" data-autoplay="inview">
             <source src="assets/video/craft-6.mp4" type="video/mp4" />
           </video>
           <div class="card__meta">
@@ -429,7 +432,7 @@
         </article>
 
         <article class="card card--jorhat" data-cat="Sports">
-          <video class="card__video" autoplay muted loop playsinline preload="auto" poster="assets/video/posters/jorhat-stallions.webp" data-autoplay="inview">
+          <video class="card__video" muted loop playsinline preload="none" poster="assets/video/posters/jorhat-stallions.webp" data-autoplay="inview">
             <source src="assets/video/jorhat-stallions.mp4" type="video/mp4"/>
           </video>
           <div class="card__meta">
@@ -440,7 +443,7 @@
         </article>
 
         <article class="card card--rs" data-cat="Fitness">
-          <video class="card__video" autoplay muted loop playsinline preload="auto" poster="assets/video/posters/rs.webp" data-autoplay="inview">
+          <video class="card__video" muted loop playsinline preload="none" poster="assets/video/posters/rs.webp" data-autoplay="inview">
             <source src="assets/video/rs.mp4" type="video/mp4" />
           </video>
           <div class="card__meta">
@@ -451,7 +454,7 @@
         </article>
 
         <article class="card card--eye" data-cat="Healthcare">
-          <video class="card__video" autoplay muted loop playsinline preload="auto" poster="assets/video/posters/eye-centre.webp" data-autoplay="inview">
+          <video class="card__video" muted loop playsinline preload="none" poster="assets/video/posters/eye-centre.webp" data-autoplay="inview">
             <source src="assets/video/eye-centre.webm" type="video/webm" />
             <source src="assets/video/eye-centre.mp4" type="video/mp4" />
           </video>

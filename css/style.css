@@ -276,6 +276,15 @@ textarea.lead__input { resize: vertical; min-height: 76px; }
   opacity: 0;
 }
 .preloader__logo img { width: 100%; height: auto; }
+/* The pop-in runs in CSS so the wordmark paints as soon as the page does,
+   without waiting for GSAP to arrive from the CDN; js/main.js picks the
+   sequence up from there. */
+.preloader__logo { animation: preloaderPop .7s cubic-bezier(.215, .61, .355, 1) both; }
+@keyframes preloaderPop {
+  from { opacity: 0; transform: scale(.86); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) { .preloader__logo { animation-duration: .01s; } }
 .preloader__blinds {
   position: absolute; inset: 0; z-index: 3; display: flex;
   pointer-events: none;

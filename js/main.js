@@ -204,9 +204,15 @@ function playHero() {
 
 /* ---------- Preloader ---------- */
 let preloaderFinished = false;
+/* work that should not compete with the first paint waits for the reveal */
+const afterPreloader = [];
+function whenPreloaderDone(fn) {
+  if (preloaderFinished) fn(); else afterPreloader.push(fn);
+}
 function finishPreloader(skipHeroAnim) {
   if (preloaderFinished) return;
   preloaderFinished = true;
+  afterPreloader.splice(0).forEach((fn) => fn());
   const pre = document.getElementById('preloader');
   pre.style.display = 'none';
   document.body.classList.remove('is-locked');
@@ -238,12 +244,12 @@ function runPreloader() {
   const safety = setTimeout(() => finishPreloader(true), 4500);
 
   const tl = gsap.timeline({
+    paused: true,
     onComplete: () => { clearTimeout(safety); finishPreloader(false); }
   });
 
-  // Logo pops in
-  tl.to(logo, { opacity: 1, scale: 1, duration: 0.7, ease: 'power3.out' })
-    .to(logo, { scale: 1.04, duration: 0.5, ease: 'power1.inOut' }, '+=0.15')
+  // Logo pops in (CSS, see .preloader__logo), then breathes
+  tl.to(logo, { scale: 1.04, duration: 0.5, ease: 'power1.inOut' }, '+=0.15')
     // Logo fades, blinds wipe down to reveal the page
     .to(logo, { opacity: 0, duration: 0.35, ease: 'power2.in' }, '+=0.1')
     .to(blinds, {
@@ -256,6 +262,17 @@ function runPreloader() {
       yPercent: -100, duration: 0.7, ease: 'power3.inOut',
       stagger: { each: 0.05, from: 'end' }
     }, '+=0.05');
+
+  /* hand over from the CSS pop-in: hold its end state inline, drop the
+     animation, and carry on — whether it is still running or long done */
+  const go = () => {
+    gsap.set(logo, { opacity: 1, scale: 1 });
+    logo.style.animation = 'none';
+    tl.play();
+  };
+  const pop = logo.getAnimations ? logo.getAnimations().find((a) => a.animationName === 'preloaderPop') : null;
+  if (pop && pop.playState !== 'finished') pop.finished.then(go, go);
+  else go();
 }
 
 /* ---------- Services: interactive columns + slider ----------
@@ -693,6 +710,9 @@ function testimonials() {
       c.dataset.idx = i;
       const img = document.createElement('img');
       img.src = t.img; img.alt = t.name; img.draggable = false; img.loading = 'lazy';
+      /* cards are at most 480px wide (full width under 920px), so smaller screens take the 600px cut */
+      img.srcset = t.img.replace(/\.webp$/, '-600.webp') + ' 600w, ' + t.img + ' 1000w';
+      img.sizes = '(max-width: 920px) 92vw, 480px';
       c.appendChild(img);
       c.addEventListener('click', () => goTo(i));
       frag.appendChild(c);
@@ -914,8 +934,10 @@ function scrollReveals() {
 }
 
 /* ---------- Keep every portfolio video playing ----------
-   The clips carry `autoplay` and `preload="auto"`, so the browser starts them
-   on its own; this keeps them running and covers the cases it will not.
+   The clips carry `preload="none"` and no `autoplay`: all five used to start
+   downloading while the page was still parsing — about 17MB racing the
+   preloader and the hero for a phone's bandwidth. They are started here once
+   the preloader has lifted, and kept running from then on.
 
    Browsers may still refuse an unattended play() (power saving, low battery),
    so the first user interaction retries all of them. */
@@ -968,7 +990,7 @@ function ensureVideosPlay() {
     window.addEventListener(ev, playAll, { once: true, passive: true })
   );
 
-  playAll();
+  whenPreloaderDone(playAll);
 }
 
 /* ---------- Init ---------- */
