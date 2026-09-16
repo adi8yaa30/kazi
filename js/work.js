@@ -489,11 +489,17 @@
     });
     gsap.to([landing, footer, nav], { opacity: 0, duration: 0.5, ease: 'power2.out' });
     gsap.delayedCall(0.55, () => { landing.style.visibility = footer.style.visibility = nav.style.visibility = 'hidden'; });
+    /* The list is the default way in: it fades up over the cards while they
+       are still flying, so the canvas is only a click on "Canvas View" away
+       rather than the first thing to load and play. */
+    gsap.delayedCall(dur * 0.5, () => {
+      setNavActive('all'); view = 'all';
+      openList();
+    });
     gsap.delayedCall(dur, () => {
       ox = 0; oy = 0; render();
       panEnabled = true; setBusy(false);
-      setNavActive('all'); view = 'all';
-      playAll();
+      if (!listOpen) playAll();
     });
     gsap.fromTo('.ex__top', { opacity: 0, y: -14 }, { opacity: 1, y: 0, duration: 0.6, delay: dur * 0.5 });
   }
