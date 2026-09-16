@@ -626,8 +626,6 @@ body.is-leaving .ex__list { opacity: 0 !important; transition: opacity 0.4s ease
   /* the arrange toggle and the snippets toggle never show together, so on a
      phone the hidden one gives its width back to the row */
   .ex__mode:not(.is-visible) { display: none; }
-  /* no room for the switch drawing here; the filled pill still says "on" */
-  .ex__reeltoggle i { display: none; }
   /* The filter was an unlabelled icon here, so nothing said it was a filter.
      The word is short and the row now has space for it. */
 
@@ -662,9 +660,12 @@ body.is-leaving .ex__list { opacity: 0 !important; transition: opacity 0.4s ease
   .wp__stat-label { font-size: clamp(14px, 4vw, 20px); }
 }
 
-/* the narrowest phones: four controls share the row on the canvas, so the
-   pills pull their side padding in rather than clipping "Filter" */
-@media (max-width: 380px) {
+/* phones: four controls share the row on the canvas, so the pills pull
+   their side padding in rather than clipping "Filter" */
+@media (max-width: 440px) {
   .ex__nav .ex__filterbtn, .ex__nav .ex__layout, .ex__nav .ex__reeltoggle { padding-left: 9px; padding-right: 9px; }
-  .ex__nav .ex__filterbtn { gap: 6px; }
+  .ex__nav .ex__filterbtn, .ex__nav .ex__reeltoggle { gap: 6px; }
+  .ex__nav .ex__right button { letter-spacing: 0.05em; }
+  .ex__reeltoggle i { width: 16px; }
+  .ex__reeltoggle[aria-pressed="true"] i::after { transform: translateX(5px); }
 }
