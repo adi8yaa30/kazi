@@ -14,6 +14,10 @@
      DATA — stack fractions are of the landing stage box;
      tile fractions are of the infinite-canvas tile; w in vw.
      ------------------------------------------------------------ */
+  /* ctile is where a cover sits when the canvas shows the case studies on
+     their own: a separate, smaller wrap tile packed evenly for just the six
+     covers (~125px apart at 1440), so they are not left scattered across
+     gaps that were sized around the reels. */
   /* tile fx/fy/w are packed together as one set — see the note in
      layoutBases(). They are solved so no two cards overlap anywhere on the
      wrapping canvas with ~18px of clear space at 1440px wide (12px on a phone); nudging one by
@@ -43,17 +47,17 @@
 
   const ITEMS = [
     { id: 'rab',    type: 'cover', name: 'RAB Automotors', industry: 'automotive',    img: 'assets/img/work-rab.webp',    page: 'rab-automotors',
-      tile: { fx: 0.2854, fy: 0.1794, w: 0.31 },  stack: { x: 0.25, y: 0.1711, w: 0.505, h: 0.4605, z: 9 } },
+      tile: { fx: 0.2854, fy: 0.1794, w: 0.31 }, ctile: { fx: 0.1832, fy: 0.3690 },  stack: { x: 0.25, y: 0.1711, w: 0.505, h: 0.4605, z: 9 } },
     { id: 'orient', type: 'cover', name: 'Orient Yarn', industry: 'textile',        img: 'assets/img/work-orient.webp', page: 'orient-yarn',
-      tile: { fx: 0.6702, fy: 0.2254, w: 0.29 },  stack: { x: 0.63, y: 0.1316, w: 0.30, h: 0.4737, z: 3 } },
+      tile: { fx: 0.6702, fy: 0.2254, w: 0.29 }, ctile: { fx: 0.9000, fy: 0.0540 },  stack: { x: 0.63, y: 0.1316, w: 0.30, h: 0.4737, z: 3 } },
     { id: 'studio', type: 'cover', name: 'Studio Artitecting', industry: 'interiors', img: 'assets/img/work-studio.webp', page: 'studio-artitecting',
-      tile: { fx: 0.7033, fy: 0.6771, w: 0.32 },  stack: { x: 0.08, y: 0.3421, w: 0.22, h: 0.3684, z: 4 } },
+      tile: { fx: 0.7033, fy: 0.6771, w: 0.32 }, ctile: { fx: 0.5984, fy: 0.6770 },  stack: { x: 0.08, y: 0.3421, w: 0.22, h: 0.3684, z: 4 } },
     { id: 'rs',     type: 'cover', name: 'Relentless Strength', industry: 'fitness', img: 'assets/img/work-rs.webp',   page: 'relentless-strength',
-      tile: { fx: 0.3870, fy: 0.5270, w: 0.22 },  stack: null },
+      tile: { fx: 0.3870, fy: 0.5270, w: 0.22 }, ctile: { fx: 0.1687, fy: 0.7636 },  stack: null },
     { id: 'orfab',  type: 'cover', name: 'Orfab By Orient', industry: 'textile',      img: 'assets/img/work-orfab.webp', page: 'orfab-by-orient',
-      tile: { fx: 0.4429, fy: 0.9984, w: 0.17 },  stack: null },
+      tile: { fx: 0.4429, fy: 0.9984, w: 0.17 }, ctile: { fx: 0.5406, fy: 0.1554 },  stack: null },
     { id: 'jorhat', type: 'cover', name: 'Jorhat Stallions', industry: 'fitness',     img: 'assets/img/work-jorhat.webp', page: 'jorhat-stallions',
-      tile: { fx: 0.0714, fy: 0.6597, w: 0.20 },  stack: null },
+      tile: { fx: 0.0714, fy: 0.6597, w: 0.20 }, ctile: { fx: 0.7393, fy: 0.4032 },  stack: null },
     { id: 'r1',   type: 'reel', n: 1, name: 'Ugha at Hasthkala', industry: 'fashion',  tile: { fx: 0.4324, fy: 0.7772, w: 0.125 }, stack: { x: 0.60, y: 0.5263, w: 0.14, h: 0.3421, z: 5 } },
     { id: 'r2',   type: 'reel', n: 2, name: 'Mosaic — Signature Sips', industry: 'food',  tile: { fx: 0.1835, fy: 0.2996, w: 0.100 }, stack: { x: 0.02, y: 0.0526, w: 0.26, h: 0.6579, z: 1 } },
     { id: 'r3',   type: 'reel', n: 3, name: 'hatk. — Store Film', industry: 'fashion',  tile: { fx: 0.5584, fy: 0.3206, w: 0.115 }, stack: null },
@@ -253,11 +257,14 @@
        cards will start to touch. */
     /* the first term keeps the fill density, the second guarantees the period
        still covers the real viewport so the wrap never shows a seam */
-    tileW = Math.max(vwz() * 1.18, vw() + Mx + 8);
-    tileH = Math.max(vwz() * 1.06, vh() + My + 8);
+    /* case studies on their own use the smallest tile the wrap allows */
+    const packed = coversOnly();
+    tileW = packed ? vw() + Mx + 8 : Math.max(vwz() * 1.18, vw() + Mx + 8);
+    tileH = packed ? vh() + My + 8 : Math.max(vwz() * 1.06, vh() + My + 8);
     ITEMS.forEach((it) => {
-      it.bx = it.tile.fx * tileW;
-      it.by = it.tile.fy * tileH;
+      const t = packed && it.ctile ? it.ctile : it.tile;
+      it.bx = t.fx * tileW;
+      it.by = t.fy * tileH;
     });
   }
   const wrap = (v, t) => ((v % t) + t) % t;
@@ -303,6 +310,7 @@
      toggle brings the reels in around them. */
   let showReels = false;
   const inAll = (it) => it.type === 'cover' || showReels;
+  const coversOnly = () => !showReels && view !== 'snippets';
   function syncReelToggle() {
     reelToggle.hidden = !(view === 'all' && !listOpen);
     reelToggle.setAttribute('aria-pressed', String(showReels));
@@ -515,6 +523,7 @@
   function expandCanvas() {
     busy = true; panEnabled = false;
     pauseAll();
+    layoutBases();
     ox = 0; oy = 0;
     const dur = reduce ? 0.01 : 1.15;
     ITEMS.forEach((it) => {
@@ -613,6 +622,7 @@
     const from = view;
     view = v; busy = true;
     setNavActive(v);
+    layoutBases();          /* the covers-only tile applies to All Projects alone */
     const done = () => { setBusy(false); };
 
     if (v === 'all') {
@@ -1438,21 +1448,35 @@
     if (focused) unfocusReel(true);
     showReels = !showReels;
     syncReelToggle();
-    reels.forEach((r) => {
-      gsap.killTweensOf(r.el);
-      if (showReels) {
-        setHidden(r, false);
-        /* only opacity tweens: render() owns the transform while panning */
-        r.x = wrap(r.bx + ox + Mx, tileW) - Mx;
-        r.y = wrap(r.by + oy + My, tileH) - My;
-        gsap.set(r.el, { x: r.x, y: r.y, width: r.w, height: r.h, scale: 1, opacity: 0 });
-        gsap.to(r.el, { opacity: 1, duration: reduce ? 0.01 : 0.45, ease: 'power2.out' });
+    busy = true; panEnabled = false;
+    layoutBases();          /* switches between the covers-only and full tiles */
+    const dur = reduce ? 0.01 : 0.8;
+    ITEMS.forEach((it) => {
+      gsap.killTweensOf(it.el);
+      const x = wrap(it.bx + ox + Mx, tileW) - Mx;
+      const y = wrap(it.by + oy + My, tileH) - My;
+      if (it.type === 'cover') {
+        /* render() writes the transform directly, so hand gsap the position
+           the card is really at before it tweens to the new one */
+        gsap.set(it.el, { x: it.x, y: it.y });
+        it.x = x; it.y = y;
+        gsap.to(it.el, { x, y, duration: dur, ease: 'power3.inOut' });
+      } else if (showReels) {
+        setHidden(it, false);
+        it.x = x; it.y = y;
+        gsap.set(it.el, { x, y, width: it.w, height: it.h, scale: 1, opacity: 0 });
+        gsap.to(it.el, { opacity: 1, duration: dur * 0.6, delay: dur * 0.4, ease: 'power2.out' });
       } else {
-        setHidden(r, true);
-        gsap.to(r.el, { opacity: 0, duration: reduce ? 0.01 : 0.3, ease: 'power2.in' });
+        setHidden(it, true);
+        gsap.to(it.el, { opacity: 0, duration: dur * 0.4, ease: 'power2.in' });
       }
     });
     syncCanvasPlayback();
+    gsap.delayedCall(dur, () => {
+      render();
+      panEnabled = true; setBusy(false);
+      syncCanvasPlayback();
+    });
   });
   /* the nav is also the way back out of the list: picking a canvas view drops
      the list and its filter, so the canvas is never showing a hidden subset */
