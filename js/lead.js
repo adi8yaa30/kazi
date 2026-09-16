@@ -62,10 +62,10 @@
     + '<h2 class="lead__title" id="leadTitle">Grow my brand</h2>'
     + '<p class="lead__sub">Tell us who you are and what you are building. We answer every one.</p>'
     + '<div class="lead__grid">'
-    + field('name', 'Name', 'required autocomplete="name" placeholder="Your name"')
-    + field('email', 'Email', 'type="email" required autocomplete="email" placeholder="you@company.com"')
-    + field('company', 'Company', 'required autocomplete="organization" placeholder="Company name"')
-    + field('phone', 'Phone', 'type="tel" required autocomplete="tel" inputmode="tel" placeholder="+91 00000 00000"')
+    + field('name', 'Name*', 'required autocomplete="name" placeholder="Your name"')
+    + field('email', 'Email*', 'type="email" required autocomplete="email" placeholder="you@company.com"')
+    + field('company', 'Company*', 'required autocomplete="organization" placeholder="Company name"')
+    + field('phone', 'Phone*', 'type="tel" required autocomplete="tel" inputmode="tel" placeholder="+91 00000 00000"')
     + field('message', 'Message', '', '(optional)')
     + '</div>'
     + HONEYPOT
