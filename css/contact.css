@@ -179,6 +179,26 @@
   padding: 0;
 }
 
+/* Field errors and the sent state (js/lead.js) */
+.ct__input.is-wrong { border-bottom-color: var(--color-bg); border-bottom-width: 2px; }
+.ct__error {
+  margin-top: -4px;
+  font-family: var(--font-body); font-size: clamp(12px, 0.95vw, 14px); line-height: 1.4;
+  color: var(--color-bg);
+}
+.ct__error[hidden] { display: none; }
+.ct__submit:disabled { opacity: .6; cursor: default; }
+.ct__thanks { text-align: center; color: var(--color-bg); padding: clamp(12px, 3vw, 40px) 0; }
+.ct__thanks:focus { outline: none; }
+.ct__thanks-h {
+  font-family: var(--font-display); font-weight: 800; text-transform: uppercase;
+  font-size: clamp(28px, 4vw, 56px); line-height: .95; letter-spacing: -0.02em;
+}
+.ct__thanks-p {
+  margin-top: 14px;
+  font-family: var(--font-body); font-size: clamp(15px, 1.2vw, 18px); line-height: 1.5;
+}
+
 /* ---------------- Intro animation states (set by contact.js) ----------------
    Pre-hidden only when JS tags the page as animating, so no-JS still renders. */
 .ct--animate .ct__word { transform: translateY(110%); }

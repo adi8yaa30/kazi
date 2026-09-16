@@ -5,20 +5,42 @@
    were reading. The contact page is still there, and still linked from the
    nav and the footer.
 
-   There is no server behind this site, so the form cannot post anywhere.
-   Sending hands the filled-in details to the visitor's own mail app,
-   addressed to us — which works today, with nothing to sign up for. Swap the
-   submit handler for a form service's endpoint and the rest stays as it is.
+   Leads go to a Google Sheet. The site has no server of its own, so the
+   Sheet has a small Apps Script attached (google-sheet-leads/Code.gs, kept
+   outside the site folder) deployed as a web app; both this popup and the
+   contact page's form post to its /exec address below. Until that address
+   is filled in, sending falls back to opening the visitor's mail app.
    ============================================================ */
 (() => {
   const TO = 'vikram@kazinetwork.in';
+  /* paste the Apps Script web app URL here (ends in /exec) */
+  const SHEET_URL = '';
+
+  /* A plain form-encoded POST is a "simple" request, so the browser sends it
+     without a CORS preflight, which Apps Script does not answer. no-cors
+     means the reply cannot be read: a request that reaches Google counts as
+     sent, and only a network failure (offline, blocked) is reported. */
+  const sendToSheet = (data) => fetch(SHEET_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    body: new URLSearchParams(Object.assign({}, data, { page: location.href })),
+  });
+  const mailto = (subject, lines) => {
+    window.location.href = 'mailto:' + TO
+      + '?subject=' + encodeURIComponent(subject)
+      + '&body=' + encodeURIComponent(lines.join('\n'));
+  };
+  /* bots fill every field they find; people never see this one */
+  const HONEYPOT = '<input type="text" name="botcheck" tabindex="-1" autocomplete="off" aria-hidden="true"'
+    + ' style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0" />';
+  /* both roll labels on a button carry the same text */
+  const setLabel = (btn, text) => btn.querySelectorAll('.btn__t, .lnk__t').forEach((t) => { t.textContent = text; });
 
   /* every "Grow My Brand" on the page: the nav's, the hero's, the closing
      call. The label is carried twice for the roll, so match on the start. */
   const label = (el) => el.textContent.replace(/\s+/g, ' ').trim().toLowerCase();
   const buttons = [...document.querySelectorAll('a.btn, button.btn')]
     .filter((b) => label(b).startsWith('grow my brand'));
-  if (!buttons.length) return;
 
   const field = (name, text, attrs, note) =>
     '<label class="lead__field' + (name === 'message' ? ' lead__field--full' : '') + '">'
@@ -46,17 +68,29 @@
     + field('phone', 'Phone', 'type="tel" required autocomplete="tel" inputmode="tel" placeholder="+91 00000 00000"')
     + field('message', 'Message', '', '(optional)')
     + '</div>'
+    + HONEYPOT
     + '<p class="lead__note" role="status" hidden></p>'
     + '<div class="lead__actions">'
     + '<button type="submit" class="btn btn--filled lead__send">'
     + '<span class="btn__label"><span class="btn__t">Send it over</span>'
     + '<span class="btn__t" aria-hidden="true">Send it over</span></span></button>'
     + '</div>'
+    + '<div class="lead__thanks" role="status" tabindex="-1" hidden>'
+    + '<p class="eyebrow lead__eyebrow">Received</p>'
+    + '<h2 class="lead__title">Thanks for reaching out</h2>'
+    + '<p class="lead__sub">We have your details and will get back to you shortly.</p>'
+    + '<div class="lead__actions">'
+    + '<button type="button" class="btn btn--filled lead__done">'
+    + '<span class="btn__label"><span class="btn__t">Close</span>'
+    + '<span class="btn__t" aria-hidden="true">Close</span></span></button>'
+    + '</div>'
+    + '</div>'
     + '</form>';
-  document.body.appendChild(dlg);
 
   const form = dlg.querySelector('form');
   const note = dlg.querySelector('.lead__note');
+  const thanks = dlg.querySelector('.lead__thanks');
+  const sendBtn = dlg.querySelector('.lead__send');
 
   /* What each field has to be before we will send it. Checked here rather
      than left to the browser: "required" only asks for something, and a lead
@@ -104,6 +138,12 @@
     },
   };
 
+  /* the contact page's form reuses the same checks */
+  window.KaziLead = { rules: RULES, configured: !!SHEET_URL, send: sendToSheet, mailto, HONEYPOT, setLabel, TO };
+
+  if (!buttons.length) return;
+  document.body.appendChild(dlg);
+
   const showError = (input, msg) => {
     const slot = input.parentElement.querySelector('.lead__error');
     if (slot) { slot.textContent = msg; slot.hidden = !msg; }
@@ -129,7 +169,16 @@
      the preloader and the mobile menu both take that off when they are done,
      and one of them was clearing it out from under an open form. */
   let scrollLock = '';
+  /* after a lead has gone through, the next open starts from a clean form */
+  const panelParts = () => [...form.children].filter((el) => el !== thanks && !el.classList.contains('lead__close'));
+  const resetSent = () => {
+    if (thanks.hidden) return;
+    thanks.hidden = true;
+    panelParts().forEach((el) => { el.hidden = el === note; });
+    form.reset();
+  };
   const open = () => {
+    resetSent();
     note.hidden = true;
     if (dlg.showModal) dlg.showModal(); else dlg.setAttribute('open', '');
     scrollLock = document.body.style.overflow;
@@ -143,6 +192,7 @@
 
   buttons.forEach((b) => b.addEventListener('click', (e) => { e.preventDefault(); open(); }));
   dlg.querySelector('.lead__close').addEventListener('click', close);
+  dlg.querySelector('.lead__done').addEventListener('click', close);
   /* the sheet is the panel; a click on the backdrop around it closes */
   dlg.addEventListener('click', (e) => { if (e.target === dlg) close(); });
   dlg.addEventListener('close', () => { document.body.style.overflow = scrollLock; });
@@ -153,20 +203,123 @@
     Object.keys(RULES).forEach((n) => { if (checkField(form.elements[n]) && !first) first = form.elements[n]; });
     if (first) { first.focus(); return; }
     const v = (n) => (form.elements[n].value || '').trim();
-    const subject = 'New enquiry — ' + (v('company') || v('name'));
-    const body = [
-      'Name: ' + v('name'),
-      'Email: ' + v('email'),
-      'Company: ' + v('company'),
-      'Phone: ' + v('phone'),
-      '',
-      v('message') || '(no message)',
-    ].join('\n');
-    window.location.href = 'mailto:' + TO
-      + '?subject=' + encodeURIComponent(subject)
-      + '&body=' + encodeURIComponent(body);
-    note.hidden = false;
-    note.textContent = 'Opening your mail app, addressed to ' + TO
-      + '. If nothing happens, write to us there and we will pick it up.';
+    if (v('botcheck')) return;
+    if (!SHEET_URL) {
+      mailto('New enquiry — ' + (v('company') || v('name')), [
+        'Name: ' + v('name'),
+        'Email: ' + v('email'),
+        'Company: ' + v('company'),
+        'Phone: ' + v('phone'),
+        '',
+        v('message') || '(no message)',
+      ]);
+      note.hidden = false;
+      note.textContent = 'Opening your mail app, addressed to ' + TO
+        + '. If nothing happens, write to us there and we will pick it up.';
+      return;
+    }
+    note.hidden = true;
+    sendBtn.disabled = true;
+    setLabel(sendBtn, 'Sending…');
+    sendToSheet({
+      form: 'Grow My Brand popup',
+      name: v('name'), email: v('email'), company: v('company'), phone: v('phone'),
+      message: v('message'),
+    }).then(() => {
+      panelParts().forEach((el) => { el.hidden = true; });
+      thanks.hidden = false;
+      thanks.focus({ preventScroll: true });
+    }).catch(() => {
+      note.hidden = false;
+      note.textContent = 'That did not go through — please check your connection and try again, or write to us at ' + TO + '.';
+    }).finally(() => {
+      sendBtn.disabled = false;
+      setLabel(sendBtn, 'Send it over');
+    });
+  });
+})();
+
+
+/* ---------- Contact page form → the same Google Sheet ---------- */
+(() => {
+  const form = document.getElementById('ctForm');
+  const L = window.KaziLead;
+  if (!form || !L) return;
+  form.insertAdjacentHTML('beforeend', L.HONEYPOT);
+  const submit = form.querySelector('.ct__submit');
+  const SUBMIT_TEXT = "[LET'S TALK]";
+
+  const need = (msg) => (v) => (v ? '' : msg);
+  const RULES = {
+    name: L.rules.name,
+    email: L.rules.email,
+    service: need('Please pick a service.'),
+    phone: L.rules.phone,
+    website: need('Please add your website or Instagram.'),
+    details: need('Tell us a little about the project.'),
+  };
+  const showError = (input, msg) => {
+    let slot = input.parentElement.querySelector('.ct__error');
+    if (!slot && msg) {
+      slot = document.createElement('span');
+      slot.className = 'ct__error';
+      slot.id = input.id + '-err';
+      input.setAttribute('aria-describedby', slot.id);
+      input.after(slot);
+    }
+    if (slot) { slot.textContent = msg; slot.hidden = !msg; }
+    input.classList.toggle('is-wrong', !!msg);
+    input.setAttribute('aria-invalid', msg ? 'true' : 'false');
+  };
+  const check = (input) => {
+    const msg = RULES[input.name]((input.value || '').trim());
+    showError(input, msg);
+    return msg;
+  };
+  Object.keys(RULES).forEach((n) => {
+    const input = form.elements[n];
+    input.addEventListener('blur', () => { if (input.value.trim()) check(input); });
+    input.addEventListener(input.tagName === 'SELECT' ? 'change' : 'input', () => {
+      if (input.classList.contains('is-wrong')) showError(input, '');
+    });
+  });
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    let first = null;
+    Object.keys(RULES).forEach((n) => { if (check(form.elements[n]) && !first) first = form.elements[n]; });
+    if (first) { first.focus(); return; }
+    const v = (n) => (form.elements[n].value || '').trim();
+    if (v('botcheck')) return;
+    const sel = form.elements.service;
+    const service = sel.options[sel.selectedIndex].text;
+    if (!L.configured) {
+      L.mailto('New enquiry — ' + (v('company') || v('name')), [
+        'Name: ' + v('name'), 'Email: ' + v('email'), 'Company: ' + v('company'),
+        'Service: ' + service, 'Phone: ' + v('phone'), 'Website / Instagram: ' + v('website'),
+        '', v('details'),
+      ]);
+      return;
+    }
+    submit.disabled = true;
+    L.setLabel(submit, '[SENDING…]');
+    L.send({
+      form: 'Contact page',
+      name: v('name'), email: v('email'), company: v('company'), phone: v('phone'),
+      service, website: v('website'), message: v('details'),
+    }).then(() => {
+      const done = document.createElement('div');
+      done.className = 'ct__thanks';
+      done.setAttribute('role', 'status');
+      done.tabIndex = -1;
+      done.innerHTML = '<h3 class="ct__thanks-h">Thanks for reaching out</h3>'
+        + '<p class="ct__thanks-p">We have your details and will get back to you shortly.</p>';
+      form.replaceWith(done);
+      done.focus({ preventScroll: true });
+    }).catch(() => {
+      submit.disabled = false;
+      L.setLabel(submit, SUBMIT_TEXT);
+      showError(form.elements.details, 'That did not go through — please check your connection and try again, or write to us at ' + L.TO + '.');
+    });
   });
 })();

@@ -249,11 +249,15 @@ textarea.lead__input { resize: vertical; min-height: 76px; }
   color: var(--color-accent);
 }
 .lead__actions { display: flex; justify-content: flex-end; margin-top: clamp(20px, 3vw, 28px); }
+/* the sent state hides the form parts; flex/grid rules would otherwise win */
+.lead [hidden] { display: none !important; }
+.lead__thanks:focus { outline: none; }
+.lead__send:disabled { opacity: .6; pointer-events: none; }
 
 @media (max-width: 560px) {
   .lead__grid { grid-template-columns: 1fr; }
   .lead__actions { justify-content: stretch; }
-  .lead__send { width: 100%; }
+  .lead__send, .lead__done { width: 100%; }
 }
 
 /* ============================================================
